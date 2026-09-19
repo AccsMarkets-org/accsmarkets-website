@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@page {
+    size: A4;
+    margin: 1.6cm 1.4cm;
+}
+body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+}
+h1 {
+    font-size: 19pt;
+    color: #0b3d91;
+    border-bottom: 2px solid #0b3d91;
+    padding-bottom: 6px;
+    margin-top: 0;
+}
+h2 {
+    font-size: 14pt;
+    color: #0b3d91;
+    margin-top: 22px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 3px;
+}
+h3 {
+    font-size: 11.5pt;
+    color: #333;
+    margin-top: 14px;
+}
+p { margin: 6px 0; }
+blockquote {
+    background: #fff6da;
+    border-left: 4px solid #e0a800;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-size: 9pt;
+}
+code {
+    background: #f0f0f0;
+    padding: 1px 3px;
+    font-family: Courier, monospace;
+    font-size: 8.3pt;
+}
+pre {
+    background: #f0f0f0;
+    padding: 6px;
+    font-size: 8pt;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 8px 0 14px 0;
+    font-size: 7.6pt;
+}
+th, td {
+    border: 0.6px solid #999;
+    padding: 3px 5px;
+    text-align: left;
+    vertical-align: top;
+}
+th {
+    background: #0b3d91;
+    color: #ffffff;
+    font-weight: bold;
+}
+tr:nth-child(even) td {
+    background: #f4f6fb;
+}
+ul, ol {
+    margin: 4px 0 4px 18px;
+    padding: 0;
+}
+li { margin: 2px 0; }
+hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 16px 0;
+}
+strong { color: #0b3d91; }
+</style>
+</head>
+<body>
+<h1 id="accsmarkets-complete-deep-dive-audit-report">AccsMarkets -- Complete Deep-Dive Audit Report</h1>
+<p><strong>Date:</strong> 2026-09-16
+<strong>Scope:</strong> Full codebase (read-only analysis, no code changes made) -- 1657-line Prisma schema (75 models), ~223 API route files, 112 pages across public/dashboard/admin, 133 shared components, all <code>src/lib</code> business logic, all deployment/config/scripts.
+<strong>Method:</strong> Parallel deep-read audit across 6 top-level workstreams (which further split into 17 total sub-audits) -- database, public frontend, dashboard frontend, admin panel + authorization, core business logic, integrations/background jobs, and tests/config/cross-cutting concerns. Every finding below is backed by a specific file path and, wherever practical, a line number, verified by actually reading the code -- not inferred from filenames or page titles.</p>
+<blockquote>
+<p><strong>Read this first:</strong> <code>README.md</code> and <code>MILESTONE_2_PLAN.md</code> are <strong>stale and materially wrong</strong> about what's built. They describe dispute resolution, TOTP 2FA, WebAuthn, achievement badges, reviews, KYC, and subscriptions as "deferred to Milestone 2." <strong>All of these are fully implemented in the current code.</strong> Conversely, the README claims hCaptcha protects signup -- it does not; verification is hard-stubbed to always pass. Do not use the README as a source of truth for feature status; this document supersedes it.</p>
+</blockquote>
+<hr />
+<h2 id="a-executive-summary">A. Executive Summary</h2>
+<p><strong>What this project is:</strong> A production, feature-rich escrow marketplace for buying/selling social media accounts (Next.js 14 App Router, TypeScript, Prisma/MySQL, NextAuth, Socket.IO, custom <code>server.js</code>). It is materially larger and more complete than its own README suggests -- 75 database models, 223 API routes, a full admin console (42 pages), a full user dashboard (31 pages), a full public marketing/SEO site (39 pages), a developer API portal, an AI blog-automation pipeline, and a multi-rail payment system (crypto via NOWPayments, manual USDT, bank wire, Stripe card scaffolding).</p>
+<p><strong>Overall maturity: mid-to-late-stage production build with a few load-bearing gaps.</strong> The core money-moving path (list -&gt; offer -&gt; fund escrow -&gt; submit credentials -&gt; verify -&gt; transfer -&gt; complete/dispute -&gt; payout) is real, transactionally sound in the places that matter most, and thoroughly built out on both client and server. The weak points are concentrated in <strong>authorization depth</strong> (admin RBAC and 2FA), a <strong>handful of specific broken flows</strong> (bank-wire withdrawal, hCaptcha, one escrow state-machine bypass), and <strong>operational hygiene</strong> (zero automated tests, stale deployment configs, silent-failure logging gaps).</p>
+<p><strong>Strongest areas:</strong>
+- The escrow state machine and money-moving transactions (fund, complete, cancel, dispute-resolve) are correctly wrapped in <code>$transaction</code> with in-transaction re-checks against race conditions.
+- Dispute resolution is a complete, phased system (evidence -&gt; review -&gt; mediation/ruling -&gt; appeal) with a full audit trail -- despite docs claiming it doesn't exist yet.
+- The listing creation wizard, escrow detail page, and messaging system are the most thoroughly built features in the app -- real-time, validated, error-handled, no shortcuts found.
+- Credential encryption (AES-256-GCM) is implemented correctly with no hardcoded keys and proper buyer/status-gated access.
+- 92% of API routes that accept a JSON body validate it with Zod.</p>
+<p><strong>Weakest areas:</strong>
+- <strong>Admin authorization has a critical hole</strong>: admin password login silently bypasses TOTP 2FA entirely, and the granular staff-permission system (<code>StaffRole</code>) is enforced on well under 20% of the routes it should gate -- a staff account scoped to "blog only" can, today, ban users, move money, and change platform settings.
+- <strong>hCaptcha is a no-op</strong> despite real credentials being configured -- signup has zero actual bot protection, and the frontend <code>&lt;Captcha&gt;</code> component isn't even rendered on the register page.
+- <strong>Bank-wire withdrawal is completely non-functional</strong> -- a payload/schema mismatch means every submission gets HTTP 400. This is a real, live money-feature gap, not a cosmetic bug.
+- <strong>Zero automated tests</strong> exist anywhere in the codebase for a live financial marketplace.
+- Deployment configuration is split across three contradictory pictures (Windows/PM2 -- the real one; Docker Compose; Vercel) and two of the three are confirmed stale/dead, including a fully-configured AI blog pipeline with no working trigger.</p>
+<p><strong>Biggest missing functionality:</strong> Subscription cancellation/downgrade (no path exists at all once a user upgrades), enforced granular admin permissions, working bank-wire withdrawal, real bot protection on signup, and an automated test suite.</p>
+<p><strong>Biggest production risks (ranked):</strong>
+1. Admin accounts effectively cannot be protected by 2FA against password compromise (auth.ts:113).
+2. Any admin-role staff account has unrestricted access regardless of the permissions the owner assigned them.
+3. Wallet debit paths (escrow purchase, withdrawal approval) use read-then-write balance arithmetic instead of atomic decrements -- a real (if unconfirmed-in-production) double-spend race under concurrent load.
+4. Signup has no working bot/abuse protection.
+5. Bank-wire withdrawals silently fail for every user who tries them.</p>
+<hr />
+<h2 id="b-project-architecture">B. Project Architecture</h2>
+<ul>
+<li><strong>Framework:</strong> Next.js 14 (App Router), TypeScript, custom Node server (<code>server.js</code>) -- <strong>not</strong> Vercel serverless, because Socket.IO requires a long-lived process (this is explicit and correct in the README, but contradicted by a stale <code>vercel.json</code>).</li>
+<li><strong>Database:</strong> MySQL 8.4 via Prisma ORM, 75 models, single "baseline" migration (no incremental history retained).</li>
+<li><strong>Auth:</strong> NextAuth with a credentials provider (email/password + TOTP), Google OAuth, and a separate WebAuthn/passkey credentials provider scoped to the admin subdomain.</li>
+<li><strong>Real-time:</strong> Socket.IO, mounted on the same HTTP server as Next.js (<code>server.js</code> + <code>socket-server.js</code>), used for messaging, escrow status pushes, and admin live views. Explicitly designed to <strong>no-op safely</strong> if disconnected -- REST is the source of truth, sockets are a convenience layer only.</li>
+<li><strong>Payments:</strong> NOWPayments (crypto, HMAC-SHA512-verified, idempotent), manual USDT (admin-confirmed), bank wire (admin-confirmed, receipt/invoice generation), Stripe (fully coded but the <code>stripe</code> npm package isn't installed and no keys are configured -- completely inert today).</li>
+<li><strong>Storage:</strong> Google Drive (primary) with Cloudinary fallback for uploads; Google Drive also used for hourly/daily DB backup uploads.</li>
+<li><strong>Background processing:</strong> BullMQ + Redis is fully optional -- the app is designed to gracefully fall back to direct/synchronous processing when Redis is absent (which it currently is in production). A separate <code>worker.js</code> process exists for when Redis <em>is</em> configured, but has no process-supervisor entry for the real (non-Docker) deployment.</li>
+<li><strong>Admin subdomain routing:</strong> <code>admin.accsmarkets.org</code> and <code>maintenance.accsmarkets.org</code> are handled by host-based logic in <code>src/middleware.ts</code>, rewriting to <code>/admin/*</code> and <code>/maintenance</code> respectively.</li>
+<li><strong>Real deployment topology (verified this session and by the audit):</strong> PM2 process manager + Windows Task Scheduler watchdog scripts on a bare Windows Server VM, fronted by a Cloudflare Tunnel. <code>docker-compose.yml</code>/<code>Dockerfile</code> and <code>vercel.json</code> are both <strong>stale, unused artifacts</strong> of alternate deployment plans that were never kept in sync with reality (confirmed: <code>docker-compose.yml</code> references the wrong encryption-key env var name; <code>vercel.json</code>'s cron targets a route that only accepts <code>POST</code>, while Vercel Cron calls via <code>GET</code>, and relies on a <code>CRON_SECRET</code> that's never set).</li>
+<li><strong>Third-party content platforms:</strong> Opinly (external CMS for <code>/resources/*</code>, Svix-signature-verified webhook) and a custom "AutoSEO" blog-sync webhook -- two distinct content pipelines, separate from the in-house AI blog-generation system (Groq/Grok/OpenAI/Gemini fallback chain).</li>
+</ul>
+<hr />
+<h2 id="c-complete-existing-feature-list">C. Complete Existing Feature List</h2>
+<p>Legend: [OK] Fully Implemented - [PARTIAL] Partial - [MISSING] Missing - [BROKEN] Implemented but Broken - [MOCK] Prototype/Mock - [NEEDS WORK] Needs Improvement</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Frontend</th>
+<th>Backend</th>
+<th>Database</th>
+<th>Prod Ready</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Auth</strong></td>
+<td>Email/password login + lockout</td>
+<td>[OK]</td>
+<td><code>login/page.tsx</code></td>
+<td><code>src/lib/auth.ts</code></td>
+<td><code>User</code>, <code>LoginAttempt</code></td>
+<td>Y</td>
+<td>5-attempt/15-min lockout via DB table, real</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Google OAuth</td>
+<td>[OK]</td>
+<td>login/register pages</td>
+<td>NextAuth google provider</td>
+<td><code>Account</code></td>
+<td>Y</td>
+<td>Standard, auto-verifies</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Email verification (mandatory)</td>
+<td>[OK]</td>
+<td><code>verify-email/page.tsx</code></td>
+<td><code>api/auth/verify-email</code></td>
+<td><code>VerificationToken</code></td>
+<td>Y</td>
+<td>Real token flow</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>TOTP 2FA (setup/verify/disable)</td>
+<td>[OK]</td>
+<td><code>settings/security/page.tsx</code></td>
+<td><code>api/auth/2fa/*</code>, <code>src/lib/totp.ts</code></td>
+<td><code>TwoFactorAuth</code></td>
+<td>Y</td>
+<td>Real RFC 4226/6238 math. <strong>Enforced at login for regular users only -- bypassed entirely for ADMIN role (see Security SectionI)</strong></td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>WebAuthn/passkey (admin only)</td>
+<td>[OK]</td>
+<td><code>admin/login/page.tsx</code></td>
+<td>inline in <code>src/lib/auth.ts</code>, <code>api/admin/webauthn/*</code></td>
+<td><code>WebAuthnCredential</code></td>
+<td>Y</td>
+<td>README wrongly calls this "Milestone 2"</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Password reset</td>
+<td>[OK]</td>
+<td><code>forgot-password</code>, <code>reset-password</code></td>
+<td><code>api/auth/forgot-password</code>, <code>reset-password</code></td>
+<td><code>VerificationToken</code></td>
+<td>Y</td>
+<td>Anti-enumeration (same response either way); [BROKEN] client silently shows success even on fetch failure/rate-limit (no <code>res.ok</code> check)</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>hCaptcha bot protection</td>
+<td>[BROKEN] <strong>Broken</strong></td>
+<td><code>Captcha.tsx</code> (real widget, real keys)</td>
+<td><code>src/lib/hcaptcha.ts</code></td>
+<td>--</td>
+<td><strong>N</strong></td>
+<td><code>verifyCaptcha()</code> hardcoded <code>return true</code>. Register page never even renders <code>&lt;Captcha&gt;</code>. Zero real bot protection despite configured keys</td>
+</tr>
+<tr>
+<td><strong>Onboarding</strong></td>
+<td>Buyer/seller intent wizard</td>
+<td>[OK]</td>
+<td><code>onboarding/page.tsx</code></td>
+<td><code>api/onboarding</code></td>
+<td><code>User</code></td>
+<td>Y</td>
+<td>Deliberately fails open (navigates on save error)</td>
+</tr>
+<tr>
+<td><strong>Listings</strong></td>
+<td>Create (3-step wizard)</td>
+<td>[OK]</td>
+<td><code>ListingWizard.tsx</code></td>
+<td><code>api/listings</code></td>
+<td><code>Listing</code></td>
+<td>Y</td>
+<td>Most complete flow in the app; real ownership verification, auto-moderation, draft autosave</td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Ownership verification (YouTube/Telegram API)</td>
+<td>[OK]</td>
+<td><code>OwnershipVerifier.tsx</code></td>
+<td><code>api/listings/verify/*</code></td>
+<td>--</td>
+<td>Y</td>
+<td>Manual platforms -&gt; admin review flag</td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Auto-moderation scoring</td>
+<td>[OK]</td>
+<td>--</td>
+<td><code>src/lib/moderation.ts</code></td>
+<td><code>Listing.status</code></td>
+<td>Y</td>
+<td>Blocks &gt;=40 score, re-runs on every edit</td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Edit (5-tab form, forces re-review)</td>
+<td>[OK]</td>
+<td><code>EditListingForm.tsx</code></td>
+<td><code>api/listings/[id]</code> PATCH</td>
+<td><code>Listing</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Delete</td>
+<td>[OK]</td>
+<td>listings page</td>
+<td><code>api/listings/[id]</code> DELETE</td>
+<td><code>Listing</code></td>
+<td>Y</td>
+<td>Only DRAFT/PENDING/REJECTED deletable</td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Admin approve/reject/suspend</td>
+<td>[OK]</td>
+<td><code>admin/listings/[id]</code></td>
+<td><code>api/admin/listings/[id]</code></td>
+<td><code>Listing</code>, <code>AdminAuditLog</code></td>
+<td>Y</td>
+<td>Transactional, audited, IndexNow ping on approve</td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Browse/search/filter</td>
+<td>[OK]</td>
+<td><code>listings/page.tsx</code>, <code>ListingFilters.tsx</code></td>
+<td>direct Prisma (server component)</td>
+<td><code>Listing</code></td>
+<td>Y</td>
+<td>Private listings correctly excluded from public browse</td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Plan-based listing limits</td>
+<td>[OK]</td>
+<td>--</td>
+<td><code>api/listings</code> create-gate</td>
+<td><code>SubscriptionPlan.listingLimit</code></td>
+<td>Y</td>
+<td>Enforced against live DB value, not the display-only <code>plan-features.ts</code></td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Private listings + invites</td>
+<td>[OK]</td>
+<td><code>PrivateListingInvites.tsx</code></td>
+<td><code>api/listings/[id]/invite</code></td>
+<td><code>PrivateListingInvite</code></td>
+<td>Y</td>
+<td>Full GET/POST/DELETE</td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Auctions (bidding)</td>
+<td>[OK]</td>
+<td>listing detail</td>
+<td><code>api/listings/[id]/bids</code></td>
+<td><code>AuctionBid</code></td>
+<td>Y</td>
+<td>No DB-level guard against tied top bids (app-logic only)</td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Saved searches + alerts</td>
+<td>[OK]</td>
+<td><code>saved-searches/page.tsx</code></td>
+<td><code>api/saved-searches</code></td>
+<td><code>SavedSearch</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>Watchlist</td>
+<td>[OK]</td>
+<td><code>watchlist/page.tsx</code></td>
+<td>direct Prisma</td>
+<td><code>Watchlist</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Listings</td>
+<td>"Wanted" buy-requests</td>
+<td>[OK]</td>
+<td><code>wanted/page.tsx</code>, <code>wanted/new</code></td>
+<td><code>api/wanted-listings</code></td>
+<td><code>WantedListing</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Offers</strong></td>
+<td>Send/accept/decline/counter/cancel</td>
+<td>[OK]</td>
+<td><code>OfferList.tsx</code>, <code>MakeOfferForm.tsx</code></td>
+<td><code>api/offers</code>, <code>api/offers/[id]</code></td>
+<td><code>Offer</code></td>
+<td>Y</td>
+<td>Accept auto-declines other pending offers</td>
+</tr>
+<tr>
+<td>Offers</td>
+<td>72h auto-expiry</td>
+<td>[PARTIAL]</td>
+<td>--</td>
+<td>lazy-check on read + <code>api/internal/sweep</code></td>
+<td><code>Offer</code></td>
+<td>Partial</td>
+<td>Lazy-checked on every read/action; the proactive sweep endpoint exists and is production-ready code but <strong>is not confirmed to be running on any active schedule</strong> on the live box (see SectionJ)</td>
+</tr>
+<tr>
+<td>Offers</td>
+<td>Chat-embedded offers</td>
+<td>[OK]</td>
+<td><code>ChatOfferCard</code>, <code>SendOfferModal</code> (in <code>MessageThread.tsx</code>)</td>
+<td><code>api/messages/chat-offer*</code></td>
+<td><code>Message</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Escrow</strong></td>
+<td>Full state machine</td>
+<td>[PARTIAL]</td>
+<td><code>EscrowStepper</code>, <code>EscrowActions</code></td>
+<td><code>src/lib/escrow-state-machine.ts</code> + 10 routes</td>
+<td><code>Escrow</code></td>
+<td>Mostly Y</td>
+<td><strong>One route bypasses the state machine entirely</strong> (see SectionE)</td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Fund/checkout</td>
+<td>[OK]</td>
+<td><code>CheckoutForm.tsx</code></td>
+<td><code>api/escrows</code> POST</td>
+<td><code>Escrow</code>, <code>Transaction</code></td>
+<td>Y</td>
+<td>Transactional, in-tx re-check</td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Credential submit + AES-256-GCM handoff</td>
+<td>[OK]</td>
+<td><code>EscrowActions.tsx</code></td>
+<td><code>api/escrows/[id]/submit</code></td>
+<td><code>Escrow</code></td>
+<td>Y</td>
+<td>Correct crypto, buyer/status-gated decrypt</td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Manager-add flow (YouTube-style transfer)</td>
+<td>[OK]</td>
+<td><code>EscrowActions.tsx</code></td>
+<td><code>submit-manager-add</code>, <code>add-buyer-manager</code>, <code>confirm-handover</code></td>
+<td><code>Escrow</code>, <code>EscrowManagerEmail</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Trustless admin handover</td>
+<td>[OK]</td>
+<td>admin escrow page</td>
+<td><code>api/admin/escrows/[id]/execute-trustless-handover</code></td>
+<td><code>Escrow</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Complete</td>
+<td>[OK]</td>
+<td><code>EscrowActions.tsx</code></td>
+<td><code>api/escrows/[id]/complete</code></td>
+<td><code>Escrow</code>, <code>Transaction</code></td>
+<td>Y</td>
+<td>Transactional double-release guard</td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Cancel (FUNDED/AWAITING_MANAGER_ADD)</td>
+<td>[OK]</td>
+<td><code>EscrowActions.tsx</code></td>
+<td><code>api/escrows/[id]/cancel</code></td>
+<td><code>Escrow</code>, <code>Transaction</code></td>
+<td>Y</td>
+<td>Full refund incl. fee, correct</td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Split-payment milestones</td>
+<td>[BROKEN] <strong>Broken transition</strong></td>
+<td><code>MilestoneChecklist</code>, <code>ProposeMilestones</code></td>
+<td><code>api/escrows/[id]/milestones/*</code></td>
+<td><code>EscrowMilestone</code></td>
+<td>N</td>
+<td>Release route sets <code>VERIFIED-&gt;COMPLETED</code> directly, bypassing <code>assertTransition</code> -- the one confirmed state-machine violation</td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Dispute (open/evidence/mediation/phases/ruling)</td>
+<td>[OK]</td>
+<td><code>DisputeEvidenceForm</code>, admin dispute pages</td>
+<td><code>api/escrows/[id]/dispute*</code>, <code>api/admin/disputes/*</code></td>
+<td><code>Dispute</code>, <code>DisputeEvidence</code>, <code>DisputeTimeline</code></td>
+<td>Y</td>
+<td>Complete phased system; README wrongly calls it unbuilt. Gap: deadlines not auto-swept</td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Reviews</td>
+<td>[OK]</td>
+<td><code>ReviewForm.tsx</code></td>
+<td><code>api/reviews</code></td>
+<td><code>Review</code></td>
+<td>Y</td>
+<td><code>@@unique([escrowId,reviewerId])</code> prevents duplicates</td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Trust score (+5 on completion)</td>
+<td>[NEEDS WORK]</td>
+<td>--</td>
+<td>3+ completion routes</td>
+<td><code>User.trustScore</code></td>
+<td>Y but one-directional</td>
+<td>No penalty path for disputes lost/cancellations</td>
+</tr>
+<tr>
+<td>Escrow</td>
+<td>Achievement badges</td>
+<td>[OK]</td>
+<td><code>AchievementBadgeShelf</code></td>
+<td><code>src/lib/badges.ts</code></td>
+<td><code>UserAchievementBadge</code></td>
+<td>Y</td>
+<td>Real aggregation, seller-only by design</td>
+</tr>
+<tr>
+<td><strong>Messaging</strong></td>
+<td>Real-time DMs</td>
+<td>[OK]</td>
+<td><code>MessageThread.tsx</code> (1474 lines), <code>ConversationList.tsx</code></td>
+<td><code>api/messages*</code></td>
+<td><code>Message</code></td>
+<td>Y</td>
+<td>REST-first, socket is best-effort convenience only -- no message loss on disconnect</td>
+</tr>
+<tr>
+<td>Messaging</td>
+<td>Escrow chat</td>
+<td>[OK]</td>
+<td>embedded in escrow detail</td>
+<td><code>api/escrows/[id]/messages</code></td>
+<td><code>Message</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Messaging</td>
+<td>File attachments</td>
+<td>[OK]</td>
+<td><code>MessageThread.tsx</code></td>
+<td><code>api/upload/message</code></td>
+<td>--</td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Messaging</td>
+<td>Admin canned responses</td>
+<td>[OK]</td>
+<td>admin support tools</td>
+<td><code>api/admin/canned-responses</code></td>
+<td><code>CannedResponse</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Notifications</strong></td>
+<td>In-app + push (web + Expo mobile)</td>
+<td>[OK]</td>
+<td>bell dropdown, <code>notifications/page.tsx</code></td>
+<td><code>src/lib/notifications.ts</code> (36 call sites)</td>
+<td><code>Notification</code>, <code>PushSubscription</code></td>
+<td>Y</td>
+<td>DB-first, survives offline. Gaps: offer-cancel, withdrawal-request, deposit-creation don't notify</td>
+</tr>
+<tr>
+<td><strong>Wallet</strong></td>
+<td>Balance, transaction history</td>
+<td>[OK]</td>
+<td><code>WalletClient.tsx</code></td>
+<td>direct Prisma</td>
+<td><code>Transaction</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Wallet</td>
+<td>Crypto deposit (NOWPayments)</td>
+<td>[OK]</td>
+<td><code>DepositWidget.tsx</code></td>
+<td><code>api/wallet/deposit</code>, <code>webhooks/nowpayments</code></td>
+<td><code>CryptoWallet</code></td>
+<td>Y</td>
+<td>HMAC-SHA512 verified, idempotent</td>
+</tr>
+<tr>
+<td>Wallet</td>
+<td>Manual USDT deposit</td>
+<td>[OK]</td>
+<td><code>DepositWidget.tsx</code></td>
+<td><code>api/wallet/deposit/manual</code> + admin confirm</td>
+<td><code>CryptoWallet</code></td>
+<td>Y</td>
+<td>Idempotent, rate-limited</td>
+</tr>
+<tr>
+<td>Wallet</td>
+<td>Bank-wire deposit</td>
+<td>[OK]</td>
+<td><code>DepositWidget.tsx</code>, order tracking page</td>
+<td><code>api/wallet/deposit/bank-transfer/*</code></td>
+<td><code>BankTransferOrder</code></td>
+<td>Y</td>
+<td>Mark-sent, invoice, admin verify all real</td>
+</tr>
+<tr>
+<td>Wallet</td>
+<td>Card deposit (Stripe)</td>
+<td>[BROKEN] <strong>Inert</strong></td>
+<td>Elements form (hidden if no key)</td>
+<td><code>api/wallet/deposit/card</code>, <code>webhooks/stripe</code></td>
+<td><code>FiatPayment</code></td>
+<td><strong>N</strong></td>
+<td>Fully coded but <code>stripe</code> package not installed, no keys -- always 503</td>
+</tr>
+<tr>
+<td>Wallet</td>
+<td>Crypto withdrawal</td>
+<td>[OK]</td>
+<td><code>withdraw/page.tsx</code></td>
+<td><code>api/wallet/withdraw</code></td>
+<td><code>Transaction</code></td>
+<td>Y</td>
+<td>Rate-limited 3/hr; debit deferred to admin approval (transactional)</td>
+</tr>
+<tr>
+<td>Wallet</td>
+<td>Bank-wire withdrawal</td>
+<td>[BROKEN] <strong>Completely broken</strong></td>
+<td><code>withdraw/page.tsx</code> bank tab</td>
+<td><code>api/wallet/withdraw</code> (same route)</td>
+<td><code>Transaction</code></td>
+<td><strong>N</strong></td>
+<td>Payload the form sends never matches the schema the route validates against -- every submission is HTTP 400</td>
+</tr>
+<tr>
+<td>Wallet</td>
+<td>Admin deposit/withdrawal approval</td>
+<td>[OK]</td>
+<td>admin deposits/withdrawals pages</td>
+<td><code>api/admin/deposits/[id]</code>, <code>withdrawals/[id]</code></td>
+<td><code>Transaction</code>, <code>AdminAuditLog</code></td>
+<td>Y</td>
+<td>Transactional, idempotent, audited</td>
+</tr>
+<tr>
+<td><strong>Subscriptions</strong></td>
+<td>View plans, upgrade (balance or crypto)</td>
+<td>[OK]</td>
+<td><code>settings/subscription</code>, <code>SubscribePlanGrid.tsx</code></td>
+<td><code>api/payments/subscribe*</code></td>
+<td><code>SubscriptionPlan</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Subscriptions</td>
+<td>Cancel / downgrade</td>
+<td>[MISSING] <strong>Missing</strong></td>
+<td>none</td>
+<td>none</td>
+<td>--</td>
+<td>N</td>
+<td>No path exists anywhere once upgraded (see SectionD)</td>
+</tr>
+<tr>
+<td><strong>Organizations</strong></td>
+<td>Create, invite/remove members, KYB</td>
+<td>[OK]</td>
+<td><code>organization/page.tsx</code></td>
+<td><code>api/organizations/*</code></td>
+<td><code>Organization</code>, <code>OrganizationMember</code>, <code>KybSubmission</code></td>
+<td>Y</td>
+<td>Backend member role-change route exists with <strong>no UI to trigger it</strong></td>
+</tr>
+<tr>
+<td><strong>Referrals</strong></td>
+<td>Code, milestones, rewards</td>
+<td>[OK]</td>
+<td><code>referrals/page.tsx</code></td>
+<td><code>api/referrals</code></td>
+<td><code>ReferralCode</code>, <code>Referral</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Settings</strong></td>
+<td>Profile, currency, sign-out</td>
+<td>[OK]</td>
+<td><code>settings/page.tsx</code></td>
+<td><code>api/user/me</code></td>
+<td><code>User</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Settings</td>
+<td>Notification preferences</td>
+<td>[OK]</td>
+<td><code>settings/notifications</code></td>
+<td><code>api/settings/notifications</code></td>
+<td><code>User</code></td>
+<td>Y</td>
+<td>Rare example of a proper loading+error UI</td>
+</tr>
+<tr>
+<td>Settings</td>
+<td>Privacy (GDPR export/erasure)</td>
+<td>[OK]</td>
+<td><code>settings/privacy</code></td>
+<td><code>api/user/export-data</code>, <code>request-deletion</code></td>
+<td><code>DataExportRequest</code>, <code>DataErasureRequest</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Settings</td>
+<td>Sessions (list/revoke)</td>
+<td>[OK]</td>
+<td><code>settings/sessions</code></td>
+<td><code>api/auth/sessions*</code></td>
+<td><code>ActiveSession</code></td>
+<td>Y</td>
+<td>Confirm-dialog gated revoke-all</td>
+</tr>
+<tr>
+<td>Settings</td>
+<td>Identity verification (email + KYC upload)</td>
+<td>[PARTIAL]</td>
+<td><code>settings/verification</code></td>
+<td><code>api/verification/email/*</code>, <code>api/kyc/verify</code></td>
+<td><code>KycSubmission</code></td>
+<td>Partial</td>
+<td>Email+ID/selfie fully built; <strong>the "phone" step is dead code</strong> -- real phone-verify endpoints exist but are never called from this page; the KYC level is actually advanced by email alone</td>
+</tr>
+<tr>
+<td><strong>Developer Portal</strong></td>
+<td>API keys, webhooks, third-party apps</td>
+<td>[OK]</td>
+<td><code>developer/page.tsx</code>, <code>DeveloperDashboard.tsx</code></td>
+<td><code>api/developer/*</code>, <code>api/apps*</code></td>
+<td><code>ApiKey</code>, <code>WebhookEndpoint</code>, <code>AppListing</code></td>
+<td>Y</td>
+<td>Fully real CRUD</td>
+</tr>
+<tr>
+<td><strong>Admin -- Users</strong></td>
+<td>Ban/unban, balance adjust, trust override, badges</td>
+<td>[OK]</td>
+<td><code>admin/users/*</code></td>
+<td><code>api/admin/users/[id]</code></td>
+<td><code>User</code>, <code>AdminAuditLog</code></td>
+<td>Y</td>
+<td>Audited, but <strong>not permission-gated</strong> (see SectionI)</td>
+</tr>
+<tr>
+<td>Admin -- Listings</td>
+<td>Moderation queue</td>
+<td>[OK]</td>
+<td><code>admin/listings/*</code></td>
+<td><code>api/admin/listings/*</code></td>
+<td><code>Listing</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Admin -- Escrows</td>
+<td>Monitor, manual verify/transfer</td>
+<td>[OK]</td>
+<td><code>admin/escrows/*</code></td>
+<td><code>api/admin/escrows/*</code></td>
+<td><code>Escrow</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Admin -- Disputes</td>
+<td>Full mediation/ruling console</td>
+<td>[OK]</td>
+<td><code>admin/disputes/*</code></td>
+<td><code>api/admin/disputes/*</code></td>
+<td><code>Dispute</code></td>
+<td>Y</td>
+<td></td>
+</tr>
+<tr>
+<td>Admin -- Finance</td>
+<td>Deposits, withdrawals, bank accounts, pricing</td>
+<td>[OK]</td>
+<td><code>admin/deposits</code>, <code>withdrawals</code>, <code>bank-accounts</code>, <code>pricing</code></td>
+<td><code>api/admin/*</code></td>
+<td><code>Transaction</code>, <code>PlatformBankAccount</code></td>
+<td>Y</td>
+<td>Functional, but <strong>not permission-gated</strong>; bank-account changes <strong>unaudited</strong></td>
+</tr>
+<tr>
+<td>Admin -- Staff/RBAC</td>
+<td>Staff accounts + permission assignment</td>
+<td>[NEEDS WORK]</td>
+<td><code>admin/staff</code></td>
+<td><code>api/admin/staff/*</code></td>
+<td><code>StaffRole</code>, <code>User.staffRoleId</code></td>
+<td>Y (UI) / <strong>N</strong> (enforcement)</td>
+<td>UI is real; the permissions it assigns are enforced by &lt;20% of routes</td>
+</tr>
+<tr>
+<td>Admin -- Settings</td>
+<td>Platform config, maintenance mode, feature flags</td>
+<td>[OK]</td>
+<td><code>admin/settings</code>, <code>maintenance</code>, <code>feature-flags</code></td>
+<td><code>api/admin/settings</code>, <code>maintenance</code>, <code>feature-flags</code></td>
+<td><code>PlatformSettings</code>, <code>FeatureFlag</code></td>
+<td>Y (UI)</td>
+<td>Settings/feature-flag changes <strong>unaudited</strong>; <code>FeatureFlag</code> gates nothing (see SectionF)</td>
+</tr>
+<tr>
+<td>Admin -- Content</td>
+<td>Blog CMS + AI generation, announcements, email templates</td>
+<td>[OK]</td>
+<td><code>admin/blog</code>, <code>announcements</code>, <code>email-templates</code></td>
+<td><code>api/admin/blog/*</code></td>
+<td><code>BlogPost</code>, <code>Announcement</code>, <code>EmailTemplate</code></td>
+<td>Y</td>
+<td>Real AI pipeline; <strong>no working scheduled trigger</strong> on the live deployment (see SectionJ)</td>
+</tr>
+<tr>
+<td>Admin -- Audit</td>
+<td>Audit log viewer</td>
+<td>[NEEDS WORK]</td>
+<td><code>admin/audit-log</code></td>
+<td>direct Prisma</td>
+<td><code>AdminAuditLog</code></td>
+<td>Y (UI), Partial (data)</td>
+<td>Viewer works; underlying log only captures ~50% of mutating admin actions</td>
+</tr>
+<tr>
+<td><strong>Public site</strong></td>
+<td>Marketing, browse, blog, legal, SEO landing pages</td>
+<td>[OK]</td>
+<td>39 pages under <code>(public)</code></td>
+<td>mostly direct Prisma (server components)</td>
+<td>various</td>
+<td>Y</td>
+<td>Uniformly well-built; only one is an intentional stub (Careers, honestly labeled "not hiring yet")</td>
+</tr>
+<tr>
+<td>Public -- Status page</td>
+<td>System status</td>
+<td>[BROKEN] <strong>Misleading</strong></td>
+<td><code>status/page.tsx</code></td>
+<td><code>api/health</code></td>
+<td>--</td>
+<td>N/A</td>
+<td>4 "service" rows all mirror one single aggregate DB check -- can show false "Operational" for Socket.IO/escrow if only DB is actually up</td>
+</tr>
+<tr>
+<td>Public -- API docs</td>
+<td>Developer docs page</td>
+<td>[BROKEN] <strong>Mostly fictional</strong></td>
+<td><code>docs/page.tsx</code></td>
+<td>--</td>
+<td>--</td>
+<td>N/A</td>
+<td>Documents 7 <code>/v1/*</code> endpoints; 5 of 7 have no backing route</td>
+</tr>
+<tr>
+<td><strong>Backups</strong></td>
+<td>Hourly DB dump -&gt; Google Drive</td>
+<td>[OK] (fixed this session)</td>
+<td>--</td>
+<td><code>scripts/backup-to-drive.ts</code></td>
+<td>--</td>
+<td>Y</td>
+<td>Was not scheduled at all before this session; now registered and verified working</td>
+</tr>
+<tr>
+<td>Background -- Sweep</td>
+<td>Offer expiry, escrow flags, referral rewards, saved-search alerts</td>
+<td>[PARTIAL]</td>
+<td>--</td>
+<td><code>api/internal/sweep</code>, <code>scripts/sweep.mjs</code></td>
+<td>various</td>
+<td><strong>Unconfirmed running</strong></td>
+<td>Code is production-ready; <strong>no scheduled task for it currently exists on the live box</strong> (verified via <code>schtasks</code> this session)</td>
+</tr>
+<tr>
+<td>Background -- AI blog cron</td>
+<td>Scheduled blog generation</td>
+<td>[MISSING] <strong>No working trigger</strong></td>
+<td>--</td>
+<td><code>api/cron/blog</code></td>
+<td><code>BlogTopicQueue</code>, <code>BlogAutomationLog</code></td>
+<td>N</td>
+<td>Fully coded/configured; only trigger (<code>vercel.json</code>) is dead on this deployment target</td>
+</tr>
+<tr>
+<td>Testing</td>
+<td>Automated tests (unit/integration/e2e)</td>
+<td>[MISSING] <strong>Missing entirely</strong></td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>N</td>
+<td>Zero test files, zero test framework in <code>package.json</code>, confirmed by direct search</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="d-missing-features">D. Missing Features</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Module</th>
+<th>Missing Feature</th>
+<th>Current State</th>
+<th>Required Work</th>
+<th>Business Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Critical</td>
+<td>Admin Auth</td>
+<td>Enforce 2FA on admin password login</td>
+<td>2FA exists but is hardcoded to skip for <code>role === "ADMIN"</code></td>
+<td>1-line-cause, real-effort fix: remove the <code>user.role !== "ADMIN"</code> short-circuit in <code>src/lib/auth.ts</code>, verify admin login page's existing TOTP UI still matches</td>
+<td>Highest-privilege accounts are one leaked password away from full compromise</td>
+</tr>
+<tr>
+<td>Critical</td>
+<td>Admin RBAC</td>
+<td>Enforce <code>StaffRole</code> permissions across all sensitive routes</td>
+<td>Permission catalog + UI exist; enforcement is opt-in per-route and missing on most financial/user-management routes</td>
+<td>Systematically pass the correct <code>Permission</code> argument to <code>requireAdmin()</code> in every route listed in SectionI; consider making it required (no-arg call becomes a compile error)</td>
+<td>Any admin-role staff account has unrestricted access regardless of assigned scope</td>
+</tr>
+<tr>
+<td>Critical</td>
+<td>Wallet</td>
+<td>Fix bank-wire withdrawal</td>
+<td>Form submits fields the shared endpoint's schema doesn't accept; always 400s</td>
+<td>Either branch <code>api/wallet/withdraw</code> on <code>method</code>, or split into a dedicated bank-withdrawal endpoint/schema mirroring the deposit side's pattern</td>
+<td>Users literally cannot withdraw via bank wire; a shipped, discoverable feature silently fails every time</td>
+</tr>
+<tr>
+<td>Critical</td>
+<td>Auth</td>
+<td>Real hCaptcha verification</td>
+<td><code>verifyCaptcha()</code> hardcoded to always pass; frontend widget never rendered on register</td>
+<td>Remove the stub, call the real hCaptcha siteverify API; render <code>&lt;Captcha&gt;</code> in <code>register/page.tsx</code> and wire <code>captchaToken</code> state</td>
+<td>Signup has zero bot/abuse protection despite the operator believing otherwise</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Subscriptions</td>
+<td>Cancel / downgrade</td>
+<td>Only upgrade flows exist; the only "Cancel" button aborts an in-progress crypto payment, not the subscription</td>
+<td>New <code>POST /api/payments/cancel</code> (or similar) that reverts <code>subscriptionPlanId</code> to Free at next renewal boundary; UI in <code>settings/subscription</code></td>
+<td>Users on a paid plan have no self-service way to stop paying/downgrade -- support burden + potential billing disputes</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Operations</td>
+<td>Register the sweep task on the live server</td>
+<td><code>api/internal/sweep</code> + <code>scripts/sweep.mjs</code> are production-ready; no scheduled task currently exists (confirmed via <code>schtasks</code> this session)</td>
+<td>Register a Windows Scheduled Task (mirroring the pattern used for the hourly backup fixed this session) hitting the sweep endpoint every 10-15 min</td>
+<td>Offer 72h expiry, escrow transfer-deadline flags, referral rewards, and saved-search alerts are not being proactively processed -- only lazily on next read, which for a low-traffic listing means they may never flip at all</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Testing</td>
+<td>Automated test suite (at minimum: escrow state machine, fee calc, wallet debit/credit, auth)</td>
+<td>None exist</td>
+<td>Introduce Vitest/Jest; start with pure-function unit tests (<code>fees.ts</code>, <code>escrow-state-machine.ts</code>, <code>credentials-crypto.ts</code>) then integration tests against a test DB for the money-moving API routes</td>
+<td>A financial marketplace with zero regression protection on escrow/wallet logic is a standing risk for every future change</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Verification</td>
+<td>Real SMS phone verification (or remove the misleading "phone" step)</td>
+<td>Backend routes exist (<code>api/verification/phone/*</code>) but are never called; the "Verify Identity" step actually only does email</td>
+<td>Either wire the existing phone-verify routes into <code>settings/verification/page.tsx</code> with a real SMS provider (Twilio et al. -- currently none integrated at all), or delete the dead code/UI copy that implies phone verification happens</td>
+<td>KYC level naming/UX implies stronger verification than actually occurs; also dead code maintenance burden</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Admin</td>
+<td>Audit-log coverage for financial/settings/compliance actions</td>
+<td>~50% of mutating admin routes write to <code>AdminAuditLog</code>; bank accounts, platform settings, feature flags, KYB decisions are unaudited</td>
+<td>Add <code>auditLog()</code> calls to the ~13 identified unaudited route files (SectionI has the list)</td>
+<td>Compliance/forensic gap -- sensitive changes (e.g., who changed the platform's crypto wallet addresses) have no trail</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Observability</td>
+<td>Error tracking / APM (e.g. Sentry)</td>
+<td>None integrated; only a homegrown console-log + <code>/api/client-errors</code> sink</td>
+<td>Add Sentry (or equivalent) for both server and client; wire existing <code>logger.ts</code> calls and uncaught-exception paths into it</td>
+<td>Production incidents are currently only debuggable via raw log files, no alerting</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Deployment</td>
+<td>Reconcile deployment configs</td>
+<td><code>docker-compose.yml</code> and <code>vercel.json</code> are both stale/wrong relative to the real PM2/Windows deployment; several <code>scripts/*.bat</code>/<code>.ps1</code> still reference the pre-rename <code>accsmarkets.org</code> path</td>
+<td>Either delete the unused Docker/Vercel configs (if genuinely abandoned) or fix them; fix the remaining stale-path scripts identified in SectionF</td>
+<td>Confusion for any future operator/developer; the stale-path scripts are silently non-functional today</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Dispute resolution</td>
+<td>Auto-advance dispute phases on evidence/mediation deadline</td>
+<td>Phase machine exists but nothing sweeps deadline expiry</td>
+<td>Extend <code>api/internal/sweep</code> to also check <code>Dispute.evidenceDeadline</code>-style fields and auto-transition per <code>dispute-phases.ts</code> rules</td>
+<td>Disputes could sit indefinitely in a phase if a party never acts and no admin manually intervenes</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Dashboard</td>
+<td>Fix the always-zero "Saved" listings count</td>
+<td>Code references a <code>SavedListing</code> Prisma model that doesn't exist in the schema; silently caught, always renders 0</td>
+<td>Either add the model (if "saved" should be distinct from <code>Watchlist</code>) or point the count at <code>Watchlist</code> instead</td>
+<td>Cosmetic metric, but a broken number displayed to every buyer</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Public site</td>
+<td>Fix or remove the <code>/sitemap.xml</code> link and the fictional <code>/v1/*</code> API-docs endpoints</td>
+<td><code>sitemap/page.tsx</code> links to a nonexistent XML sitemap; <code>docs/page.tsx</code> documents 5 endpoints that don't exist</td>
+<td>Generate a real <code>sitemap.xml</code> (or remove the link); trim the docs page to the 2 real <code>/v1/*</code> endpoints or build the missing ones</td>
+<td>Broken link (minor SEO/UX); public developer docs currently overpromise a v1 API that's 70% fictional</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Status page</td>
+<td>Real per-service health checks</td>
+<td>All 4 displayed "services" mirror one aggregate DB check</td>
+<td>Add independent checks for Socket.IO and escrow-processing health, or reduce the page to what's actually monitored</td>
+<td>Could show false "all operational" during a partial outage</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="e-partial-broken-features">E. Partial / Broken Features</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Feature</th>
+<th>Problem</th>
+<th>Evidence</th>
+<th>Recommended Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Critical</td>
+<td>Admin TOTP 2FA</td>
+<td>Silently bypassed for all admin accounts on password login</td>
+<td><code>src/lib/auth.ts:113</code> -- <code>tfa</code> hardcoded <code>null</code> when <code>role === "ADMIN"</code></td>
+<td>Remove the role-based short-circuit; enforce identically to regular users</td>
+</tr>
+<tr>
+<td>Critical</td>
+<td>Bank-wire withdrawal</td>
+<td>Every submission returns HTTP 400</td>
+<td><code>src/app/(dashboard)/dashboard/wallet/withdraw/page.tsx:140-164</code> sends <code>{method:"bank", bankAccountName,...}</code>; <code>src/app/api/wallet/withdraw/route.ts:19-24</code> unconditionally validates against <code>withdrawSchema</code> (<code>src/lib/validation/wallet.ts:15-19</code>) which requires <code>network</code>+<code>address</code></td>
+<td>Branch server route on <code>method</code>, or split endpoints</td>
+</tr>
+<tr>
+<td>Critical</td>
+<td>hCaptcha verification</td>
+<td>Always passes regardless of token</td>
+<td><code>src/lib/hcaptcha.ts:1-4</code> (<code>return true</code> unconditionally) + <code>register/page.tsx</code> never renders <code>&lt;Captcha&gt;</code></td>
+<td>Implement real siteverify call; render the widget and wire <code>captchaToken</code></td>
+</tr>
+<tr>
+<td>Critical</td>
+<td>Escrow state machine (milestone path)</td>
+<td>Bypasses <code>assertTransition</code> entirely, performs an illegal <code>VERIFIED-&gt;COMPLETED</code> transition</td>
+<td><code>src/app/api/escrows/[id]/milestones/[milestoneId]/release/route.ts:77-81</code></td>
+<td>Route the final-milestone completion through <code>assertTransition</code>/the same helper every other completion path uses</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Admin RBAC enforcement</td>
+<td><code>requireAdmin()</code> skips the permission check unless a permission argument is explicitly passed; most sensitive routes don't pass one</td>
+<td><code>src/lib/admin.ts:14</code>; dozens of call sites in <code>src/app/api/admin/**</code> listed in the original agent findings (users/[id], withdrawals/[id], deposits/[id], bank-accounts, settings, listings/[id], escrows/[id], disputes/[id] resolve)</td>
+<td>Make the permission argument required at the type level, or add a lint rule; audit and fix each listed route</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Wallet debit paths (escrow purchase, withdrawal approval)</td>
+<td>Read-then-write balance arithmetic instead of atomic <code>{decrement}</code>, inside <code>$transaction</code> but without a row lock -- theoretical lost-update race under concurrency</td>
+<td><code>src/app/api/escrows/route.ts:159-165</code>, <code>src/app/api/admin/withdrawals/[id]/route.ts:55-60</code></td>
+<td>Switch to <code>{decrement: amount}</code> mirroring the <code>{increment}</code> pattern already used for credits</td>
+</tr>
+<tr>
+<td>High</td>
+<td>Subscription cancellation</td>
+<td>No code path exists</td>
+<td><code>SubscribePlanGrid.tsx:249</code> "Cancel" only aborts an in-progress crypto payment</td>
+<td>Build the missing endpoint/UI (see SectionD)</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Cloudinary/upload size validation</td>
+<td>JSON/data-URI upload path never checks file size (only the FormData path does)</td>
+<td><code>src/app/api/upload/listing/route.ts:19-30</code> vs <code>:37-42</code></td>
+<td>Add the same 10MB check to the data-URI branch</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Withdrawal request "reserve" check</td>
+<td>Plain read-then-write outside any transaction; two concurrent requests can both pass the balance check</td>
+<td><code>src/app/api/wallet/withdraw/route.ts:32-56</code></td>
+<td>Wrap in <code>$transaction</code> with an in-tx re-check, or accept the current mitigation (approval step re-checks) as sufficient and just document it</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>PromoRedemption reuse</td>
+<td>Redemption is consumed via <code>DELETE</code> rather than a status flag; deleting the row removes the constraint blocking re-redemption</td>
+<td><code>src/app/api/escrows/route.ts:207-209</code>; <code>@@unique([promoCodeId,userId])</code> on <code>PromoRedemption</code></td>
+<td>Mark redemption as consumed (status/flag) instead of deleting the row; verify <code>/api/promo/route.ts</code> doesn't independently prevent replay</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>Forgot-password client error handling</td>
+<td>Fetch failures/rate-limits are silently treated as success</td>
+<td><code>src/app/(public)/forgot-password/page.tsx:14-27</code> (no <code>res.ok</code> check)</td>
+<td>Add the same <code>res.ok</code>/try-catch pattern already used correctly on the contact form</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Dashboard "Saved" count</td>
+<td>Always renders 0</td>
+<td><code>src/app/(dashboard)/dashboard/page.tsx:79</code> references a nonexistent <code>SavedListing</code> model</td>
+<td>See SectionD</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Public API docs page</td>
+<td>Documents mostly-fictional <code>/v1/*</code> surface</td>
+<td><code>src/app/(public)/docs/page.tsx</code></td>
+<td>See SectionD</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Status page</td>
+<td>Misleading multi-service display backed by one check</td>
+<td><code>src/components/...StatusClient.tsx</code> (public status page)</td>
+<td>See SectionD</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>Verification "phone" step</td>
+<td>Dead state/UI, orphaned backend routes</td>
+<td><code>settings/verification/page.tsx:149</code> (<code>phone</code> state never read again)</td>
+<td>See SectionD</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="f-hidden-unfinished-code">F. Hidden / Unfinished Code</h2>
+<p><strong>Genuine stub markers (rare -- this codebase is unusually clean of literal TODO/FIXME comments):</strong>
+- <code>src/lib/hcaptcha.ts:1-4</code> -- explicit comment <code>// Captcha temporarily disabled -- re-enable by removing this early return</code> above the always-<code>true</code> stub. The single most important "hidden" finding in the whole audit.
+- <code>src/app/api/settings/marketing-emails/route.ts:11</code> -- <code>// both handlers use raw queries instead of the typed client for now.</code> -- a genuine acknowledged tech-debt comment.</p>
+<p><strong>Dead code (fully written, zero call sites):</strong>
+- <code>src/lib/gemini.ts</code> -- standalone Gemini API client, superseded by the multi-provider fallback chain in <code>src/lib/ai.ts</code>, never called from anywhere else.
+- <code>src/components/admin/AdminDisputeActions.tsx</code> (89 lines), <code>AdminProfileClient.tsx</code> (<strong>746 lines</strong>), <code>AdminSettingsForm.tsx</code> (197 lines), <code>AdminStatCard.tsx</code> (69 lines) -- all fully built, superseded by inline reimplementations in <code>DisputePhaseControls.tsx</code> / <code>AdminSettingsClient.tsx</code>.
+- <code>src/components/dashboard/DashboardHeader.tsx</code> (220 lines), <code>src/components/social/ActivityFeedCard.tsx</code> (84 lines), <code>src/components/wallet/TransactionTable.tsx</code> (52 lines) -- same pattern: complete, working, unused v1 implementations left behind after inline rebuilds.
+- <code>src/app/(dashboard)/dashboard/settings/verification/page.tsx:149</code> -- <code>phone</code> state declared and never used again; the real <code>api/verification/phone/*</code> routes it should call are themselves unused by any frontend.</p>
+<p><strong>Scaffolded-but-inert database models:</strong>
+- <code>FeatureFlag</code> -- full admin CRUD UI + <code>isFeatureEnabled()</code> helper exist, but the helper is <strong>never called anywhere in the product</strong>. Flags can be created/toggled but gate nothing.
+- <code>NpsResponse</code> -- write-only. <code>POST /api/nps</code> accepts submissions; no admin page or route anywhere reads them back out.</p>
+<p><strong>Backend-ahead-of-frontend (API exists, no UI trigger):</strong>
+- <code>PATCH /api/organizations/[id]/members/[userId]</code> (role change) -- fully implemented, no button/control anywhere in <code>organization/page.tsx</code> calls it.
+- <code>api/verification/phone/send-code</code> + <code>/confirm</code> -- implemented, unused (see above).</p>
+<p><strong>Frontend-ahead-of-backend (UI exists, backend can't fulfill it):</strong>
+- Bank-wire withdrawal form (see SectionE -- the form's payload shape has no matching backend support).
+- <code>&lt;Captcha&gt;</code> component + <code>captchaToken</code> state on the register page -- present in code but never rendered/wired, so the backend's <code>verifyCaptcha()</code> call always receives an empty string (moot today only because that function is itself stubbed to always return true).</p>
+<p><strong>Stale/incorrect documentation-as-code:</strong>
+- README.md / MILESTONE_2_PLAN.md claiming dispute resolution, TOTP, WebAuthn, badges, reviews, KYC, subscriptions are unbuilt -- all are real. README also claims "hCaptcha on signup" works -- it doesn't.
+- <code>.env</code> comment referencing <code>scripts/run-sweep.ps1</code>, which doesn't exist (actual files are <code>sweep.bat</code>/<code>sweep.mjs</code>/<code>setup-sweep-task.bat</code>).
+- <code>docker-compose.yml</code> env var <code>ENCRYPTION_KEY</code> doesn't match the real <code>CREDENTIALS_ENCRYPTION_KEY</code> used everywhere else in the app -- proof this file has never actually been run against the real codebase.
+- Several deployment scripts still reference the pre-rename <code>accsmarkets.org</code> folder path and would fail if run today: <code>ecosystem.config.js</code>, <code>start-prod.ps1</code>, <code>scripts/sweep.bat</code>, <code>scripts/backup.bat</code>, <code>scripts/run-marketing-sweep.ps1</code>, <code>scripts/setup-backup-task.bat</code>, <code>scripts/setup-sweep-task.bat</code>. (<code>watchdog-website.ps1</code>, <code>watchdog-mysql.ps1</code>, <code>watchdog-tunnel.ps1</code>, and <code>run-backup.ps1</code> were already corrected and verified working during this session's infra work.)</p>
+<hr />
+<h2 id="g-workflow-gap-analysis">G. Workflow Gap Analysis</h2>
+<p><strong>Offer lifecycle</strong></p>
+<p><em>Current:</em> Buyer sends offer -&gt; seller accepts/declines/counters -&gt; Chat/notification fires -&gt; [X] <em>(proactive 72h expiry not confirmed scheduled)</em> -&gt; Buyer proceeds to checkout on accept
+<em>Expected:</em> Buyer sends offer -&gt; seller acts -&gt; <strong>sweep job actively expires stale offers every ~15 min, platform-wide</strong> -&gt; checkout on accept
+<em>Gap:</em> The sweep endpoint and script exist and are well-written; the Windows Scheduled Task that should invoke it every 15 minutes is not currently registered (verified directly this session). Today, an offer only expires when <em>someone</em> happens to load <code>GET /api/offers</code> or attempt a <code>PATCH</code> on it.</p>
+<p><strong>Escrow milestone completion</strong></p>
+<p><em>Current:</em> Buyer releases final milestone -&gt; route directly sets <code>Escrow.status = COMPLETED</code> -&gt; [X] <em>(state machine's own rule that <code>VERIFIED</code> cannot go directly to <code>COMPLETED</code> is silently violated)</em>
+<em>Expected:</em> Buyer releases final milestone -&gt; route calls <code>assertTransition(VERIFIED, IN_TRANSFER)</code> -&gt; ... -&gt; <code>assertTransition(IN_TRANSFER, COMPLETED)</code>, matching every other completion path
+<em>Gap:</em> One specific route doesn't use the shared state-machine guard at all.</p>
+<p><strong>Admin staff permission scoping</strong></p>
+<p><em>Current:</em> Owner creates a staff account, assigns e.g. "Content only" permissions in the UI -&gt; [X] <em>(most routes never check the permission)</em> -&gt; staff account can still ban users / move money / change settings
+<em>Expected:</em> Owner assigns "Content only" -&gt; every sensitive route checks <code>requireAdmin("MANAGE_X")</code> -&gt; staff account is actually restricted to content actions
+<em>Gap:</em> The enforcement layer exists (<code>requireAdmin(permission)</code>) but is opt-in per-route and used on a small minority of routes.</p>
+<p><strong>Signup bot protection</strong></p>
+<p><em>Current:</em> User fills registration form -&gt; submits -&gt; [X] <em>(no captcha ever collected)</em> -&gt; server "verifies" an empty token -&gt; always passes -&gt; account created
+<em>Expected:</em> User fills form -&gt; completes a real hCaptcha challenge -&gt; token sent -&gt; server calls hCaptcha's siteverify API -&gt; only proceeds on real success
+<em>Gap:</em> Both ends of this flow are individually broken (frontend never renders the widget; backend never actually checks it).</p>
+<p><strong>Bank-wire withdrawal</strong></p>
+<p><em>Current:</em> User fills bank details -&gt; submits -&gt; server 400s (schema mismatch) -&gt; user sees a generic error toast, has no way to actually withdraw via bank wire
+<em>Expected:</em> User fills bank details -&gt; server validates a bank-specific schema -&gt; creates a <code>PENDING</code> bank-withdrawal request -&gt; admin reviews and approves/rejects like the existing deposit/crypto-withdrawal flows
+<em>Gap:</em> The whole backend acceptance path for this specific payment method is missing; only the crypto path was actually finished on the server side.</p>
+<p><strong>Subscription lifecycle</strong></p>
+<p><em>Current:</em> Free -&gt; Upgrade (balance or crypto) -&gt; [OK] Active paid plan -&gt; [X] <em>(no further lifecycle step exists)</em>
+<em>Expected:</em> Free -&gt; Upgrade -&gt; Active -&gt; Cancel/Downgrade request -&gt; reverts to Free at next renewal boundary (or immediately, per business decision) -&gt; confirmation + notification
+<em>Gap:</em> The entire back half of the subscription lifecycle (cancel/downgrade) was never built.</p>
+<hr />
+<h2 id="h-frontend-backend-database-gap-matrix">H. Frontend / Backend / Database Gap Matrix</h2>
+<p><strong>Frontend exists, backend missing or broken:</strong>
+- Bank-wire withdrawal form -&gt; backend schema rejects it unconditionally.
+- Register page's Captcha component -&gt; never rendered, so the real (if it were fixed) backend check would never receive a token anyway.</p>
+<p><strong>Backend exists, frontend missing:</strong>
+- <code>PATCH /api/organizations/[id]/members/[userId]</code> (role change) -- no UI control.
+- <code>api/verification/phone/send-code</code> + <code>/confirm</code> -- no UI step calls these.
+- <code>MANAGE_FINANCE</code> / <code>MANAGE_USERS</code> permission constants -- declared and shown in the staff-role assignment UI, but literally zero route in the codebase checks for them, so assigning a staff member "Finance" or "Users" scope in the admin UI currently has no restrictive effect at all (they already have full access as any ADMIN would).</p>
+<p><strong>Database exists, functionality incomplete/missing:</strong>
+- <code>FeatureFlag</code> -- full schema + admin CRUD, zero product-code consumption.
+- <code>NpsResponse</code> -- write path only, no read/reporting surface anywhere.
+- <code>SavedListing</code> referenced by application code but <strong>doesn't exist in the schema at all</strong> -- inverse of the usual gap (code assumes a table that was never created).</p>
+<p><strong>Navigation exists, feature incomplete:</strong>
+- <code>settings/subscription</code> -&gt; "Cancel" only cancels an in-flight payment, not the subscription itself; a user landing here expecting to downgrade has no path.
+- <code>settings/verification</code> -&gt; "Verify Identity" step visually implies phone verification but is actually just email confirmation renamed.
+- Public <code>/docs</code> page -&gt; links out an API surface that's 70% non-existent.
+- Public <code>/sitemap</code> page -&gt; links to a <code>/sitemap.xml</code> that returns 404.</p>
+<hr />
+<h2 id="i-security-findings">I. Security Findings</h2>
+<h3 id="critical">Critical</h3>
+<ol>
+<li><strong>Admin TOTP 2FA is silently bypassed on password login.</strong> <code>src/lib/auth.ts:113</code> hardcodes <code>tfa = null</code> whenever <code>user.role === "ADMIN"</code>, so the entire TOTP-enforcement block is dead for admin accounts regardless of whether they've enabled 2FA. The admin login page still renders a TOTP input for a <code>TOTP_REQUIRED</code> error the server can never emit via this path. Only the separate WebAuthn provider actually enforces a second factor. <strong>Any admin with a leaked password logs in with password alone.</strong></li>
+<li><strong>hCaptcha verification is a hardcoded no-op.</strong> <code>src/lib/hcaptcha.ts:1-4</code> -- <code>verifyCaptcha()</code> always returns <code>true</code>. Real <code>HCAPTCHA_SITE_KEY</code>/<code>HCAPTCHA_SECRET_KEY</code> are configured in <code>.env</code>, so whoever operates this site believes signup is bot-protected; it is not. Compounded by <code>src/app/(public)/register/page.tsx</code>, which imports <code>&lt;Captcha&gt;</code> and declares <code>captchaToken</code> state but never renders the widget or calls <code>setCaptchaToken</code> -- the token sent to the server is always an empty string.</li>
+<li><strong>Granular admin permissions (<code>StaffRole</code>) are enforced on a small minority of sensitive routes.</strong> <code>requireAdmin(permission)</code> only performs the permission check when a caller passes one (<code>src/lib/admin.ts:14</code>); dozens of financially/operationally sensitive routes call it with no argument, including user ban/balance-adjust (<code>api/admin/users/[id]</code>), withdrawal/deposit approval, bank-account CRUD, platform settings, and (inconsistently vs. its own sibling routes) dispute resolution. <strong><code>MANAGE_FINANCE</code> and <code>MANAGE_USERS</code> -- the two most sensitive permission constants in the catalog -- have zero enforcing call sites anywhere in the codebase.</strong> A staff account the owner explicitly scoped away from Finance/Users can still perform every Finance/Users action.</li>
+</ol>
+<h3 id="high">High</h3>
+<ol start="4">
+<li><strong><code>/api/admin/**</code> has no middleware-level authorization at all</strong>, by design of <code>src/middleware.ts</code> (both the admin-subdomain and main-domain branches explicitly skip <code>/api/*</code>). Currently safe only because all 81 admin route files independently self-check role -- verified route-by-route -- but there is no structural safety net; a future route added without remembering the check would be fully public with no second line of defense.</li>
+<li><strong>Wallet debit paths use non-atomic read-then-write arithmetic</strong> instead of Prisma's atomic <code>{decrement}</code> (which credits already correctly use via <code>{increment}</code>). Sites: <code>src/app/api/escrows/route.ts:159-165</code> (escrow purchase debit), <code>src/app/api/admin/withdrawals/[id]/route.ts:55-60</code> (withdrawal approval debit). Both are inside <code>$transaction</code>, but a plain <code>SELECT</code> inside a MySQL transaction under Prisma's default isolation does not take a row lock -- two concurrent requests against the same user's balance could both read the same starting value and the second write clobbers the first. Not confirmed exploited; a real code-pattern risk under concurrent load.</li>
+<li><strong>No rate limiting on any authenticated admin mutation route</strong>, including money-moving ones (<code>withdrawals/[id]</code>, <code>deposits/[id]</code>, <code>bank-transfers/[orderId]</code>, user balance-adjust, dispute resolution, trustless handover) and -- most notably -- <strong>admin 2FA-setup TOTP code verification has no attempt limit at all</strong>, making it brute-forceable by anyone holding a valid (even non-2FA-enabled) admin session during the setup window.</li>
+</ol>
+<h3 id="medium">Medium</h3>
+<ol start="7">
+<li><strong><code>AdminAuditLog</code> covers roughly half of mutating admin actions.</strong> Confirmed unaudited despite sensitivity: platform bank-account create/update/delete, platform-wide settings changes (including crypto deposit addresses and fee windows), feature-flag creation/toggling, KYB approve/reject (uses <code>logger.info</code> instead), escrow-manager-email pool changes, transfer policies, canned responses, email templates, and an admin enabling/disabling their own 2FA.</li>
+<li><strong>Cloudinary/upload data-URI path has no server-side file-size check</strong> (<code>src/app/api/upload/listing/route.ts:19-30</code>), unlike its sibling FormData path which correctly enforces a 10MB cap -- a large base64 payload can bypass the limit entirely through this code path.</li>
+<li><strong><code>CREDENTIALS_ENCRYPTION_KEY</code> in the live <code>.env</code> is 66 hex characters</strong>, not the 64 (32-byte) length <code>src/lib/credentials-crypto.ts</code> expects/requires. This needs empirical verification (not confirmed broken in this read-only audit) -- if the running code path actually enforces the 64-char check and the live value doesn't match, escrow credential encryption could be failing or silently using a truncated/different key than intended. <strong>Flagged for immediate verification, not confirmed as an active incident.</strong></li>
+<li><strong>Admin page components have no per-page authorization check of their own</strong> -- <code>src/app/(admin)/admin/layout.tsx:46-47</code> renders children directly when there's no session at all (only redirects when a session exists but has the wrong role), relying entirely on middleware having already caught the unauthenticated case. No second line of defense for that specific state.</li>
+</ol>
+<h3 id="low">Low</h3>
+<ol start="11">
+<li>Public API docs page describes a largely fictional <code>/v1/*</code> surface -- not itself a vulnerability, but publishing documentation for endpoints that don't exist could mislead integrators or probing tools.</li>
+<li>Client-side-only error swallowing on <code>forgot-password</code> (silently reports success even on server error/rate-limit) -- low-severity information/UX issue, not an auth bypass (the server-side logic itself is correct and anti-enumeration-safe).</li>
+</ol>
+<p><strong>No evidence found of:</strong> SQL injection (Prisma parameterizes everything; the one raw-SQL usage in the blog-detail page is parameterized), XSS (content is sanitized via <code>src/lib/sanitize.ts</code> before render in the places checked), missing webhook signature verification (NOWPayments HMAC-SHA512, Stripe signature, Opinly Svix -- all verified correctly), or hardcoded secrets in application source (secrets live in <code>.env</code>, not committed code -- though <code>prisma/seed.ts</code> does hardcode and print a known admin password, see SectionF/SectionJ).</p>
+<hr />
+<h2 id="j-reliability-data-integrity-findings">J. Reliability &amp; Data Integrity Findings</h2>
+<ul>
+<li><strong>Wallet debit race condition</strong> (detailed in SectionI #5) -- theoretical double-spend/lost-update under concurrent escrow purchases or withdrawal approvals for the same user.</li>
+<li><strong>Offer/escrow sweep not confirmed scheduled</strong> -- verified directly this session via <code>schtasks /query</code> that no "AccsMarkets Internal Sweep" (or any sweep-related) task exists on the live server, despite <code>scripts/sweep.mjs</code> + <code>setup-sweep-task.bat</code> being written specifically for this purpose. In practice this means offer 72h expiry, escrow transfer-deadline flags, referral-milestone rewards, and saved-search alerts are currently <strong>only evaluated lazily</strong>, on whatever page load or action happens to trigger the same-request check -- a low-traffic listing's offer could sit expired-in-spirit but not-yet-flipped indefinitely.</li>
+<li><strong><code>Dispute</code> model has zero database indexes</strong> (<code>prisma/schema.prisma:524-547</code>) beyond the implicit unique on <code>escrowId</code>, while the primary admin moderation query (<code>api/admin/disputes-list/route.ts</code>) filters by <code>status</code> and sorts by <code>createdAt</code> -- this will become a full-table scan as dispute volume grows (contrast: <code>Escrow</code> and <code>Report</code> both correctly have <code>@@index([status])</code>).</li>
+<li><strong><code>PromoRedemption</code> consumed via row deletion rather than a status flag</strong> -- since the anti-replay protection is a unique constraint on the row itself, deleting it on use removes the very thing that would block a second redemption of the same code by the same user, unless <code>/api/promo/route.ts</code> independently guards against replay (not verified in this pass).</li>
+<li><strong>Duplicate-pending-offer check is not race-safe</strong> (plain <code>findFirst</code> + <code>create</code>, no transaction or unique constraint) -- two concurrent submissions from the same buyer on the same listing could create two <code>PENDING</code> offers. No money moves at this stage, so impact is limited to data cleanliness/UX confusion.</li>
+<li><strong>Money stored as <code>Float</code> in three config-level (not core-ledger) locations</strong>: <code>PlatformSettings.bankTransferShortfallToleranceUsd</code>, <code>DepositMethodFee.feeRate/minFee/maxFee</code>, <code>SubscriptionPlan.escrowFeeRate</code> -- all consumed directly in real dollar comparisons/calculations. The actual ledger fields (<code>walletBalance</code>, <code>Escrow.amount</code>, <code>Transaction.amount/balanceBefore/balanceAfter</code>, etc.) are correctly <code>Decimal</code>, so this is a lower-blast-radius issue than a Float ledger would be, but still a real rounding-precision risk in the specific flows that use these fields (bank-transfer auto-verification tolerance, deposit fee bounds, escrow fee-rate math).</li>
+<li><strong><code>internal/sweep</code> has no top-level try/catch</strong> despite running 6 sequential DB-mutating steps per invocation -- an unexpected error mid-sweep silently skips all later steps in that run with no record of why (Next.js returns a generic 500, but there's no application-level log of which step failed).</li>
+<li><strong>Very low structured-logging adoption</strong> (<code>src/lib/logger.ts</code> used in only 7 files/13 call sites) versus 74 files with <code>try/catch</code> -- most non-critical failures are caught and silently discarded (<code>.catch(() =&gt; null)</code> / <code>.catch(() =&gt; [])</code>), which is defensible for fire-and-forget side effects (notifications, activity events) but means production issues in those paths are invisible without adding logging.</li>
+<li><strong>No automated tests</strong> means every one of the above (and any future regression in escrow/wallet logic) can only be caught by manual QA or by users in production.</li>
+<li><strong>Zero server-managed cascade risk found</strong> on money/audit-critical relations -- <code>Escrow</code>, <code>Transaction</code>, and <code>AdminAuditLog</code> rows cannot be silently deleted via a parent cascade; this is a genuinely good pattern, not a finding.</li>
+</ul>
+<hr />
+<h2 id="k-recommended-implementation-roadmap">K. Recommended Implementation Roadmap</h2>
+<h3 id="phase-0-critical-fixes-security-correctness-money-integrity">Phase 0 -- Critical fixes (security, correctness, money-integrity)</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Reason</th>
+<th>Dependencies</th>
+<th>Frontend</th>
+<th>Backend</th>
+<th>Database</th>
+<th>Risk</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fix admin 2FA bypass</td>
+<td>Highest-severity auth hole</td>
+<td>none</td>
+<td>none</td>
+<td><code>src/lib/auth.ts</code> one-condition fix</td>
+<td>none</td>
+<td>Low (small, well-understood change)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Fix hCaptcha (real verify + render widget)</td>
+<td>Signup has zero bot protection</td>
+<td>hCaptcha account already exists</td>
+<td>render <code>&lt;Captcha&gt;</code> + wire state on register page</td>
+<td>implement real <code>siteverify</code> call</td>
+<td>none</td>
+<td>Low</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Fix escrow milestone state-machine bypass</td>
+<td>Violates the app's own core invariant</td>
+<td>none</td>
+<td>none</td>
+<td>route through <code>assertTransition</code> in the milestone-release route</td>
+<td>none</td>
+<td>Medium (touches a money-adjacent completion path -- needs careful testing)</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Enforce admin RBAC permissions</td>
+<td>Staff accounts have unrestricted access today</td>
+<td><code>permissions.ts</code> catalog already exists</td>
+<td>staff-role UI unaffected</td>
+<td>pass correct <code>Permission</code> to every <code>requireAdmin()</code> call identified in SectionI</td>
+<td>none</td>
+<td>Medium (broad but mechanical change; must not lock out the true owner account)</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Fix wallet debit race (atomic decrement)</td>
+<td>Theoretical double-spend under concurrency</td>
+<td>none</td>
+<td>none</td>
+<td>switch <code>escrows/route.ts</code> + <code>admin/withdrawals/[id]/route.ts</code> to <code>{decrement}</code></td>
+<td>none</td>
+<td>Low-Medium</td>
+<td>5</td>
+</tr>
+<tr>
+<td>Verify/fix <code>CREDENTIALS_ENCRYPTION_KEY</code> length</td>
+<td>Possible silent crypto misconfiguration</td>
+<td>none</td>
+<td>none</td>
+<td>confirm the deployed key is valid 64-hex; rotate if not (re-encrypt any affected data)</td>
+<td>none</td>
+<td>Medium (touches live encrypted data -- needs a careful, verified rollout)</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Fix bank-wire withdrawal</td>
+<td>A shipped payment feature is completely non-functional</td>
+<td>mirrors existing crypto-withdrawal pattern</td>
+<td>minor payload fix or none</td>
+<td>branch <code>withdraw/route.ts</code> on <code>method</code> or split endpoint</td>
+<td>none</td>
+<td>Low-Medium</td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-1-complete-existing-unfinished-features">Phase 1 -- Complete existing unfinished features</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Reason</th>
+<th>Dependencies</th>
+<th>Frontend</th>
+<th>Backend</th>
+<th>Database</th>
+<th>Risk</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Register the sweep task on the live server</td>
+<td>Offer/escrow deadlines aren't proactively processed</td>
+<td><code>scripts/sweep.mjs</code> already exists</td>
+<td>none</td>
+<td>none (ops task)</td>
+<td>none</td>
+<td>Low</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Fill in <code>AdminAuditLog</code> coverage gaps</td>
+<td>Compliance/forensic gap on sensitive actions</td>
+<td><code>auditLog()</code> helper already exists</td>
+<td>none</td>
+<td>add call to ~13 identified route files</td>
+<td>none</td>
+<td>Low</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Add server-side size check to data-URI upload path</td>
+<td>Bypassable upload cap</td>
+<td>none</td>
+<td>none</td>
+<td>mirror the existing FormData-path check</td>
+<td>none</td>
+<td>Low</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Fix forgot-password client error handling</td>
+<td>Silent failure reported as success</td>
+<td>none</td>
+<td>add <code>res.ok</code> check</td>
+<td>none</td>
+<td>none</td>
+<td>Low</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Fix "Saved" listings count</td>
+<td>Always-zero broken metric</td>
+<td>decide: reuse <code>Watchlist</code> or add <code>SavedListing</code></td>
+<td>none if reusing Watchlist</td>
+<td>update the query</td>
+<td>possibly none</td>
+<td>Low</td>
+<td>5</td>
+</tr>
+<tr>
+<td>Wire or remove phone-verification dead code</td>
+<td>Misleading UX / dead code maintenance</td>
+<td>needs an SMS provider decision if wiring for real</td>
+<td><code>settings/verification/page.tsx</code></td>
+<td>existing routes, or delete them</td>
+<td>none</td>
+<td>Low-Medium (depends on scope decision)</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Fix/trim public <code>/docs</code> and <code>/sitemap</code> pages</td>
+<td>Broken link + fictional API docs</td>
+<td>none</td>
+<td>update page content</td>
+<td>generate real <code>sitemap.xml</code> if keeping the link</td>
+<td>none</td>
+<td>Low</td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-2-critical-missing-business-functionality">Phase 2 -- Critical missing business functionality</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Reason</th>
+<th>Dependencies</th>
+<th>Frontend</th>
+<th>Backend</th>
+<th>Database</th>
+<th>Risk</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Subscription cancellation/downgrade</td>
+<td>No path exists today; real support/billing exposure</td>
+<td>existing subscription/payment infra</td>
+<td><code>settings/subscription</code> UI</td>
+<td>new cancel/downgrade endpoint</td>
+<td>none (uses existing <code>SubscriptionPlan</code>)</td>
+<td>Medium</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Automated test suite (core money paths first)</td>
+<td>Zero regression protection on financial logic</td>
+<td>test framework choice (Vitest recommended, matches existing tsx/TS tooling)</td>
+<td>none</td>
+<td>test files for <code>fees.ts</code>, <code>escrow-state-machine.ts</code>, <code>credentials-crypto.ts</code>, then integration tests for escrow/wallet routes</td>
+<td>test DB</td>
+<td>Low risk to add, high value</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Real SMS phone verification (or formal removal)</td>
+<td>Misleading current state</td>
+<td>SMS provider account (e.g. Twilio) if implementing for real</td>
+<td>wire existing UI step</td>
+<td>wire existing routes to real SMS send</td>
+<td>none</td>
+<td>Medium</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-3-operational-improvements">Phase 3 -- Operational improvements</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Reason</th>
+<th>Dependencies</th>
+<th>Frontend</th>
+<th>Backend</th>
+<th>Database</th>
+<th>Risk</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Error tracking / APM integration (Sentry or equivalent)</td>
+<td>No production alerting today</td>
+<td>account/SDK setup</td>
+<td>wrap <code>global-error.tsx</code> etc.</td>
+<td>wrap server error paths, <code>logger.ts</code></td>
+<td>none</td>
+<td>Low</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Reconcile/clean up deployment configs</td>
+<td>Confusing, contradictory, partly-broken configs</td>
+<td>decide: keep Docker path or delete it</td>
+<td>none</td>
+<td>fix or remove <code>docker-compose.yml</code>, <code>vercel.json</code>; fix remaining stale-path scripts</td>
+<td>none</td>
+<td>Low</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Add per-service health checks to status page</td>
+<td>Currently misleading</td>
+<td>none</td>
+<td>update <code>StatusClient.tsx</code></td>
+<td>add real Socket.IO/escrow-processing checks to <code>/api/health</code></td>
+<td>none</td>
+<td>Low</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Auto-advance dispute phases on deadline expiry</td>
+<td>Disputes can stall indefinitely</td>
+<td>sweep task must be running (Phase 1)</td>
+<td>none</td>
+<td>extend <code>internal/sweep</code> to check dispute deadlines</td>
+<td>possibly add deadline fields if not already present</td>
+<td>Medium</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-4-advanced-features">Phase 4 -- Advanced features</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Reason</th>
+<th>Dependencies</th>
+<th>Frontend</th>
+<th>Backend</th>
+<th>Database</th>
+<th>Risk</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wire <code>FeatureFlag</code> system into at least one real feature</td>
+<td>Currently fully built but gates nothing</td>
+<td>none</td>
+<td>conditional rendering using <code>isFeatureEnabled()</code></td>
+<td>none (helper exists)</td>
+<td>none</td>
+<td>Low</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Build an NPS reporting view</td>
+<td>Data is being collected into a black hole</td>
+<td><code>NpsResponse</code> model already populated</td>
+<td>new admin page</td>
+<td>new read endpoint</td>
+<td>none</td>
+<td>Low</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Consolidate duplicate admin components</td>
+<td>Maintainability, not correctness</td>
+<td>none</td>
+<td>delete the 7 identified orphaned components after confirming no future plans for them</td>
+<td>none</td>
+<td>none</td>
+<td>Low</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Bidirectional trust score (penalties for lost disputes/cancellations)</td>
+<td>Currently one-directional</td>
+<td>dispute resolution already implemented</td>
+<td>none</td>
+<td>add penalty logic to the dispute-resolve (seller-loses) and cancellation paths</td>
+<td>none</td>
+<td>Medium (product/policy decision needed on exact penalty amounts)</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Two-tier/granular roles beyond USER/ADMIN (e.g. MODERATOR)</td>
+<td>Currently binary at the DB level; <code>StaffRole</code> is the only granularity and it's under-enforced</td>
+<td>Phase 0's RBAC-enforcement fix should land first</td>
+<td>staff UI already mostly supports this</td>
+<td>schema addition if a true DB-level role tier is wanted (optional -- <code>StaffRole</code> may be sufficient once enforced)</td>
+<td>possible enum extension</td>
+<td>Medium</td>
+<td>5</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="l-final-master-checklist">L. Final Master Checklist</h2>
+<h3 id="critical_1">Critical</h3>
+<ul>
+<li>[ ] Remove the admin-role short-circuit that bypasses TOTP 2FA on password login (<code>src/lib/auth.ts:113</code>)</li>
+<li>[ ] Implement real hCaptcha <code>siteverify</code> call; render <code>&lt;Captcha&gt;</code> and wire <code>captchaToken</code> on the register page</li>
+<li>[ ] Route the milestone-release escrow completion through <code>assertTransition</code> instead of setting status directly</li>
+<li>[ ] Enforce <code>StaffRole</code> permissions on every sensitive admin route (especially <code>MANAGE_FINANCE</code>, <code>MANAGE_USERS</code>)</li>
+<li>[ ] Switch wallet debit paths (escrow purchase, withdrawal approval) to atomic <code>{decrement}</code></li>
+<li>[ ] Verify the live <code>CREDENTIALS_ENCRYPTION_KEY</code> is a valid 64-hex-char key; rotate/fix if not</li>
+<li>[ ] Fix bank-wire withdrawal payload/schema mismatch so submissions actually succeed</li>
+</ul>
+<h3 id="high-priority">High Priority</h3>
+<ul>
+<li>[ ] Register a Windows Scheduled Task for <code>api/internal/sweep</code> (offer expiry, escrow flags, referral rewards, saved-search alerts)</li>
+<li>[ ] Build subscription cancellation/downgrade (currently completely missing)</li>
+<li>[ ] Stand up an automated test suite starting with <code>fees.ts</code>, <code>escrow-state-machine.ts</code>, <code>credentials-crypto.ts</code>, and core escrow/wallet API routes</li>
+<li>[ ] Decide and act on phone verification: wire it up with a real SMS provider, or remove the dead code/misleading UI copy</li>
+<li>[ ] Fill <code>AdminAuditLog</code> gaps: bank accounts, platform settings, feature flags, KYB decisions, escrow-manager-emails, transfer policies, canned responses, email templates, admin's own 2FA toggle</li>
+<li>[ ] Add rate limiting to admin mutation routes, especially TOTP verification during 2FA setup</li>
+</ul>
+<h3 id="medium-priority">Medium Priority</h3>
+<ul>
+<li>[ ] Add server-side size validation to the data-URI upload path (<code>api/upload/listing</code>)</li>
+<li>[ ] Fix forgot-password client to surface real errors instead of always showing "sent"</li>
+<li>[ ] Fix or reconsider <code>PromoRedemption</code>'s delete-on-use pattern (potential replay)</li>
+<li>[ ] Make the duplicate-pending-offer check race-safe</li>
+<li>[ ] Convert the three identified config-level <code>Float</code> money fields to <code>Decimal</code></li>
+<li>[ ] Add a <code>@@index</code> to the <code>Dispute</code> model</li>
+<li>[ ] Add a top-level try/catch to <code>api/internal/sweep</code></li>
+<li>[ ] Integrate an error-tracking/APM service (Sentry or equivalent)</li>
+<li>[ ] Reconcile deployment configs: fix or remove <code>docker-compose.yml</code> and <code>vercel.json</code>; fix remaining stale <code>accsmarkets.org</code>-path scripts (<code>ecosystem.config.js</code>, <code>start-prod.ps1</code>, <code>scripts/sweep.bat</code>, <code>scripts/backup.bat</code>, <code>scripts/run-marketing-sweep.ps1</code>, <code>scripts/setup-backup-task.bat</code>, <code>scripts/setup-sweep-task.bat</code>)</li>
+<li>[ ] Auto-advance dispute phases on evidence/mediation deadline expiry</li>
+<li>[ ] Add real per-service checks to the public status page</li>
+</ul>
+<h3 id="low-priority">Low Priority</h3>
+<ul>
+<li>[ ] Fix the always-zero "Saved" listings dashboard metric</li>
+<li>[ ] Fix or remove the broken <code>/sitemap.xml</code> link on the public sitemap page</li>
+<li>[ ] Trim the public <code>/docs</code> page to only document real <code>/v1/*</code> endpoints (or build the missing ones)</li>
+<li>[ ] Wire the <code>FeatureFlag</code> system into at least one real product feature</li>
+<li>[ ] Build an admin-facing NPS response viewer</li>
+<li>[ ] Remove or consolidate the 7 identified orphaned/duplicate admin &amp; dashboard components</li>
+<li>[ ] Add a penalty path to trust score for lost disputes/cancellations (currently one-directional)</li>
+<li>[ ] Add notifications for offer-cancel, withdrawal-request-creation, and deposit-creation events (currently silent)</li>
+</ul>
+<hr />
+<p><em>This report is a snapshot as of 2026-09-16. It reflects direct code inspection (not README claims) across 6 parallel deep-dive workstreams covering the database schema, all API routes, all frontend pages/components, admin authorization, core business logic, and integrations/deployment. No code was modified as part of producing this report.</em></p>
+</body>
+</html>

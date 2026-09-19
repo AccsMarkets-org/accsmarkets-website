@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "AccsMarkets Dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server.js"],
+      "port": 3000,
+      "autoPort": false,
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  ]
+}

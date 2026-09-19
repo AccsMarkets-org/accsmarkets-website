@@ -1,0 +1,205 @@
+(node:11576) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ⨯ Error: Cannot find module 'C:\Users\americanhistory921\Desktop\accsmarkets\.next\server\app\(admin)\admin\subscriptions\page.js'
+Require stack:
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next-server.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\server.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1564:15)
+    at C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:55:36
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1674:12)
+    at mod.require (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:157:16) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\require.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next-server.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\server.js'
+  ]
+}
+ ⨯ Error: Cannot find module 'C:\Users\americanhistory921\Desktop\accsmarkets\.next\server\pages\_error.js'
+Require stack:
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next-server.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\server.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1564:15)
+    at C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:55:36
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1674:12)
+    at mod.require (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:157:16) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\require.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next-server.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\server.js'
+  ]
+}
+ ⨯ Error: Cannot find module 'C:\Users\americanhistory921\Desktop\accsmarkets\.next\server\app\api\admin\marketing\whatsapp\route.js'
+Require stack:
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next-server.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\server.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1564:15)
+    at C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:55:36
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1674:12)
+    at mod.require (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:157:16) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\require.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next-server.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\server.js'
+  ]
+}
+ ⨯ Error: Cannot find module 'C:\Users\americanhistory921\Desktop\accsmarkets\.next\server\pages\_error.js'
+Require stack:
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next-server.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\server.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1564:15)
+    at C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:55:36
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1674:12)
+    at mod.require (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:157:16) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\require.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next-server.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\server.js'
+  ]
+}
+ ⨯ Error: Cannot find module 'C:\Users\americanhistory921\Desktop\accsmarkets\.next\server\app\(admin)\admin\users\[id]\page.js'
+Require stack:
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next-server.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\server.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1564:15)
+    at C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:55:36
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1674:12)
+    at mod.require (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:157:16) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\require.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next-server.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\server.js'
+  ]
+}
+ ⨯ Error: Cannot find module 'C:\Users\americanhistory921\Desktop\accsmarkets\.next\server\pages\_error.js'
+Require stack:
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next-server.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\server.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1564:15)
+    at C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:55:36
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1674:12)
+    at mod.require (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:157:16) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\require.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next-server.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\server.js'
+  ]
+}
+ ⨯ Error: Cannot find module 'C:\Users\americanhistory921\Desktop\accsmarkets\.next\server\app\(admin)\admin\users\[id]\page.js'
+Require stack:
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next-server.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\server.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1564:15)
+    at C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:55:36
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1674:12)
+    at mod.require (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:157:16) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\require.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next-server.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\server.js'
+  ]
+}
+ ⨯ Error: Cannot find module 'C:\Users\americanhistory921\Desktop\accsmarkets\.next\server\pages\_error.js'
+Require stack:
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next-server.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\next.js
+- C:\Users\americanhistory921\Desktop\accsmarkets\server.js
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1564:15)
+    at C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:55:36
+    at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+    at Module._load (node:internal/modules/cjs/loader:1341:5)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1674:12)
+    at mod.require (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:157:16) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\require.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next-server.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\node_modules\\next\\dist\\server\\next.js',
+    'C:\\Users\\americanhistory921\\Desktop\\accsmarkets\\server.js'
+  ]
+}
+ ⨯ TypeError: Cannot read properties of undefined (reading 'entryCSSFiles')
+    at rH (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:17:3566)
+    at rK (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:17:11861)
+    at r7 (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:17:15099)
+    at no (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:17:22633)
+    at C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:20:726
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)
+    at Object.wrap (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:13:17831)
+    at C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:20:616
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)
+    at Object.wrap (C:\Users\americanhistory921\Desktop\accsmarkets\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:13:16935)

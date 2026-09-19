@@ -1,0 +1,348 @@
+> AccsMarkets ready on http://localhost:3000
+ ○ Compiling /api/notifications ...
+ ✓ Compiled /api/notifications in 522ms (304 modules)
+ GET /api/notifications 200 in 742ms
+ GET /api/notifications 200 in 22ms
+ ✓ Compiled /api/auth/[...nextauth] in 208ms (306 modules)
+ GET /api/notifications 200 in 37ms
+ GET /api/auth/session 200 in 668ms
+ GET /api/auth/session 200 in 30ms
+ GET /api/auth/session 200 in 26ms
+ ✓ Compiled /src/middleware in 198ms (180 modules)
+ ○ Compiling /dashboard/messages ...
+ ✓ Compiled /dashboard/messages in 5.8s (1095 modules)
+ GET /api/notifications 200 in 2083ms
+ GET /dashboard/messages 200 in 6489ms
+ ✓ Compiled /api/messages in 354ms (723 modules)
+ ✓ Compiled (1050 modules)
+ GET /api/auth/session 200 in 1822ms
+ GET /api/notifications 200 in 1868ms
+ GET /api/announcements 200 i   Reload env: .env
+essages?tab=inbox 200 in 5039ms
+ GET /api/notifications 200 in 3229ms
+ GET /api/auth/session 200 in 3264ms
+ GET /api/announcements 200 in 116ms
+ GET /api/messages?tab=inbox 200 in 145ms
+ GET /api/auth/session 200 in 81ms
+ GET /api/auth/session 200 in 55ms
+ GET /api/messages?tab=archived 200 in 489ms
+ ✓ Compiled in 1144ms (1424 modules)
+ ✓ Compiled in 1ms (1050 modules)
+ GET /api/messages?tab=inbox 200 in 1000ms
+ GET /dashboard/messages?_rsc=1x2hj 200 in 897ms
+ ✓ Compiled in 866ms (1424 modules)
+ ✓ Compiled in 1035ms (1424 modules)
+ ✓ Compiled in 176ms (374 modules)
+ GET /api/notifications 200 in 132ms
+ ✓ Compiled in 261ms (374 modules)
+ ✓ Compiled in 181ms (374 modules)
+ GET /api/notifications 200 in 19ms
+ ✓ Compiled in 153ms (374 modules)
+ ✓ Compiled in 467ms (1420 modules)
+ ✓ Compiled in 149ms (374 modules)
+ ✓ Compiled /api/auth/[...nextauth] in 79ms (721 modules)
+ GET /api/auth/session 200 in 145ms
+ GET /api/auth/session 200 in 27ms
+ ✓ Compiled in 506ms (1095 modules)
+ GET /api/auth/session 200 in 33ms
+ GET /api/auth/session 200 in 18ms
+ GET /dashboard/messages 200 in 154ms
+ GET /api/notifications 200 in 40ms
+ ✓ Compiled /api/announcements in 135ms (1048 modules)
+ ✓ Compiled (1050 modules)
+ GET /api/auth/session 200 in 287ms
+ GET /api/announcements 200 in 491ms
+ GET /api/notifications 200 in 504ms
+ GET /api/messages?tab=inbox 200 in 567ms
+ GET /api/auth/session 200 in 338ms
+ GET /api/announcements 200 in 125ms
+ GET /api/messages?tab=inbox 200 in 148ms
+ GET /api/auth/session 200 in 85ms
+ GET /api/notifications 200 in 17ms
+ GET /api/notifications 200 in 78ms
+ GET /api/notifications 200 in 20ms
+ GET /api/notifications 200 in 15ms
+ ✓ Compiled in 974ms (1259 modules)
+ GET /api/notifications 200 in 83ms
+ ✓ Compiled in 164ms (374 modules)
+ ✓ Compiled in 469ms (1259 modules)
+ ✓ Compiled in 326ms (374 modules)
+ ✓ Compiled in 279ms (374 modules)
+ ✓ Compiled /api/auth/[...nextauth] in 91ms (721 modules)
+ GET /api/auth/session 200 in 168ms
+ GET /api/auth/session 200 in 24ms
+ ○ Compiling /admin/escrows ...
+ ✓ Compiled /admin/escrows in 1345ms (1111 modules)
+ ✓ Compiled /admin/deposits in 353ms (1124 modules)
+ ○ Compiling /admin/withdrawals ...
+ ✓ Compiled /admin/withdrawals in 813ms (1126 modules)
+ GET /api/notifications 200 in 227ms
+ ○ Compiling /admin/disputes ...
+ ✓ Compiled /admin/disputes in 1879ms (1308 modules)
+ ○ Compiling /admin/support ...
+ ✓ Compiled /admin/support in 608ms (1135 modules)
+ ○ Compiling /admin/messages ...
+ ✓ Compiled /admin/messages in 813ms (1139 modules)
+ ✓ Compiled /admin in 230ms (1127 modules)
+ GET /api/auth/session 200 in 34ms
+ GET /api/auth/session 200 in 29ms
+ ✓ Compiled in 215ms (385 modules)
+ ✓ Compiled in 983ms (1307 modules)
+ ✓ Compiled in 957ms (1307 modules)
+ GET /api/notifications 200 in 37ms
+ ✓ Compiled in 172ms (385 modules)
+ ✓ Compiled in 193ms (385 modules)
+ ✓ Compiled in 332ms (385 modules)
+ GET /api/notifications 200 in 18ms
+ ✓ Compiled in 293ms (385 modules)
+ ✓ Compiled in 321ms (385 modules)
+ ✓ Compiled in 319ms (385 modules)
+ ✓ Compiled in 171ms (385 modules)
+ GET /api/notifications 200 in 59ms
+ GET /api/auth/session 200 in 45ms
+ GET /api/auth/session 200 in 24ms
+ GET /admin 200 in 156ms
+ GET /api/auth/session 200 in 26ms
+ GET /api/auth/session 200 in 26ms
+ GET /api/auth/session 200 in 26ms
+ GET /api/notifications 200 in 89ms
+ GET /api/auth/session 200 in 130ms
+ GET /api/auth/session 200 in 55ms
+ GET /dashboard/messages 200 in 184ms
+ ○ Compiling /api/messages ...
+ ✓ Compiled /api/messages in 556ms (739 modules)
+ ✓ Compiled (1065 modules)
+ GET /api/notifications 200 in 1478ms
+ GET /api/auth/session 200 in 1587ms
+ GET /api/announcements 200 in 1609ms
+ GET /api/messages?tab=inbox 200 in 1611ms
+ GET /api/notifications 200 in 190ms
+ GET /api/announcements 200 in 69ms
+ GET /api/auth/session 200 in 74ms
+ GET /api/messages?tab=inbox 200 in 63ms
+ GET /api/auth/session 200 in 21ms
+ GET /api/auth/session 200 in 20ms
+ PUT /api/notifications 200 in 25ms
+ ○ Compiling /dashboard/notifications ...
+ ✓ Compiled /dashboard/notifications in 655ms (1452 modules)
+ GET /admin/messages?_rsc=73bxg 200 in 83ms
+ GET /dashboard/notifications?_rsc=go02m 200 in 77ms
+ ○ Compiling /dashboard/settings ...
+ ✓ Compiled /dashboard/settings in 735ms (1458 modules)
+ ✓ Compiled /dashboard/settings/security in 485ms (1464 modules)
+ ○ Compiling /api/user/me ...
+ ✓ Compiled /api/user/me in 668ms (1088 modules)
+ GET /api/user/me 200 in 832ms
+ GET /api/user/me 200 in 53ms
+ ○ Compiling /api/auth/2fa/setup ...
+ ✓ Compiled /api/auth/2fa/setup in 536ms (1090 modules)
+ ⨯ Error: CREDENTIALS_ENCRYPTION_KEY must be a 32-byte hex string (64 chars)
+    at getKey (webpack-internal:///(rsc)/./src/lib/credentials-crypto.ts:13:15)
+    at encryptCredentials (webpack-internal:///(rsc)/./src/lib/credentials-crypto.ts:19:92)
+    at encryptSecret (webpack-internal:///(rsc)/./src/lib/totp.ts:22:87)
+    at POST (webpack-internal:///(rsc)/./src/app/api/auth/2fa/setup/route.ts:52:77)
+    at async C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:57228
+    at async eT.execute (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:46851)
+    at async eT.handle (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:6:58760)
+    at async doRender (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\base-server.js:1496:28)
+    at async DevServer.renderPageComponent (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\base-server.js:1962:32)
+    at async DevServer.pipeImpl (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\base-server.js:818:17)
+    at async C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\lib\router-server.js:179:21)
+    at async handleRequest (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\lib\router-server.js:359:24)
+    at async NextCustomServer.requestHandlerImpl [as requestHandler] (C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\node_modules\next\dist\server\lib\router-server.js:383:13)
+ POST /api/auth/2fa/setup 500 in 1445ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 638ms (1471 modules)
+ ○ Compiling /dashboard/wallet ...
+ ✓ Compiled /dashboard/wallet in 892ms (1474 modules)
+ GET /api/notifications 200 in 153ms
+ GET /dashboard/wallet?_rsc=4vxhh 200 in 110ms
+ GET /api/auth/session 200 in 25ms
+ GET /api/auth/session 200 in 21ms
+ ✓ Compiled /admin/deposits in 313ms (1102 modules)
+ GET /admin/deposits 200 in 106ms
+ GET /api/auth/session 200 in 26ms
+ GET /api/auth/session 200 in 20ms
+ GET /api/auth/session 200 in 21ms
+ GET /api/auth/session 200 in 21ms
+ GET /api/auth/session 200 in 16ms
+ GET /api/auth/session 200 in 24ms
+ GET /api/auth/session 200 in 20ms
+ GET /api/notifications 200 in 16ms
+ GET /api/notifications 200 in 64ms
+ GET /api/notifications 200 in 19ms
+ GET /api/notifications 200 in 18ms
+ GET /api/notifications 200 in 18ms
+ GET /api/notifications 200 in 20ms
+ GET /api/notifications 200 in 23ms
+ GET /api/notifications 200 in 18ms
+ GET /api/notifications 200 in 16ms
+ GET /api/notifications 200 in 17ms
+ GET /api/notifications 200 in 25ms
+ GET /api/notifications 200 in 20ms
+ GET /api/notifications 200 in 22ms
+ GET /api/notifications 200 in 25ms
+ GET /api/notifications 200 in 19ms
+ GET /api/notifications 200 in 22ms
+ GET /api/notifications 200 in 18ms
+ ✓ Compiled in 910ms (393 modules)
+ ✓ Compiled in 323ms (393 modules)
+ GET /dashboard/wallet?_rsc=1vy82 200 in 114ms
+ GET /api/notifications 200 in 18ms
+ ✓ Compiled in 220ms (393 modules)
+ ✓ Compiled in 141ms (393 modules)
+ GET /api/notifications 200 in 15ms
+ ✓ Compiled in 366ms (393 modules)
+ ✓ Compiled in 170ms (393 modules)
+ ✓ Compiled in 151ms (393 modules)
+ GET /api/notifications 200 in 17ms
+ ✓ Compiled in 279ms (393 modules)
+ GET /api/notifications 200 in 16ms
+ ✓ Compiled in 222ms (393 modules)
+ ✓ Compiled in 220ms (393 modules)
+ ✓ Compiled in 712ms (1311 modules)
+ ✓ Compiled in 417ms (393 modules)
+ ✓ Compiled in 153ms (393 modules)
+ GET /api/notifications 200 in 166ms
+ ✓ Compiled in 149ms (393 modules)
+ GET /api/notifications 200 in 18ms
+ ✓ Compiled in 149ms (393 modules)
+ ✓ Compiled in 462ms (393 modules)
+ ✓ Compiled in 142ms (393 modules)
+ ✓ Compiled in 346ms (393 modules)
+ ✓ Compiled in 503ms (393 modules)
+ GET /api/notifications 200 in 21ms
+ GET /api/notifications 200 in 20ms
+ GET /api/notifications 200 in 28ms
+ GET /api/notifications 200 in 53ms
+ ✓ Compiled in 559ms (393 modules)
+ GET /api/notifications 200 in 27ms
+ ✓ Compiled in 167ms (393 modules)
+ ✓ Compiled in 246ms (393 modules)
+ GET /api/notifications 200 in 21ms
+ ✓ Compiled in 370ms (752 modules)
+ ✓ Compiled in 960ms (1117 modules)
+ ✓ Compiled /api/notifications in 130ms (752 modules)
+ GET /api/notifications 200 in 226ms
+ ✓ Compiled in 934ms (1147 modules)
+ ✓ Compiled in 991ms (1149 modules)
+ GET /api/notifications 200 in 62ms
+ ✓ Compiled in 151ms (394 modules)
+ ✓ Compiled in 156ms (394 modules)
+ GET /api/notifications 200 in 21ms
+ ✓ Compiled in 147ms (394 modules)
+ ✓ Compiled in 188ms (394 modules)
+ ✓ Compiled in 700ms (1149 modules)
+ GET /api/notifications 200 in 28ms
+ ✓ Compiled in 1044ms (1149 modules)
+ GET /api/notifications 200 in 25ms
+ ✓ Compiled in 1248ms (1329 modules)
+ ✓ Compiled in 397ms (394 modules)
+ GET /api/notifications 200 in 57ms
+ GET /api/notifications 200 in 19ms
+ ✓ Compiled in 200ms (394 modules)
+ ✓ Compiled in 163ms (394 modules)
+ GET /api/notifications 200 in 20ms
+ ✓ Compiled in 150ms (394 modules)
+ ✓ Compiled in 338ms (394 modules)
+ ✓ Compiled in 178ms (394 modules)
+ ✓ Compiled in 133ms (394 modules)
+ GET /api/notifications 200 in 15ms
+ ✓ Compiled in 413ms (394 modules)
+ ✓ Compiled in 509ms (394 modules)
+ ✓ Compiled in 225ms (394 modules)
+ ✓ Compiled in 231ms (394 modules)
+ GET /api/notifications 200 in 19ms
+ ✓ Compiled in 153ms (394 modules)
+ ✓ Compiled in 150ms (394 modules)
+ GET /api/notifications 200 in 16ms
+ ✓ Compiled in 184ms (394 modules)
+ ✓ Compiled in 383ms (394 modules)
+ ✓ Compiled in 152ms (394 modules)
+ ✓ Compiled in 305ms (394 modules)
+ GET /api/notifications 200 in 15ms
+ ✓ Compiled in 268ms (394 modules)
+ ✓ Compiled in 208ms (394 modules)
+ ✓ Compiled in 556ms (394 modules)
+ ✓ Compiled in 650ms (394 modules)
+ ✓ Compiled in 2.2s (394 modules)
+ GET /api/notifications 200 in 25ms
+ ✓ Compiled /api/auth/[...nextauth] in 373ms (757 modules)
+ GET /api/auth/session 200 in 674ms
+ GET /api/notifications 200 in 678ms
+ GET /api/auth/session 200 in 23ms
+ ✓ Compiled /dashboard/messages in 438ms (764 modules)
+ ○ Compiling /api/messages ...
+ ✓ Compiled /api/messages in 722ms (1090 modules)
+ GET /api/messages?tab=inbox 200 in 890ms
+ GET /api/messages?tab=inbox 200 in 24ms
+ GET /dashboard/messages 200 in 137ms
+ GET /api/notifications 200 in 87ms
+ ✓ Compiled /api/announcements in 299ms (1092 modules)
+ GET /api/auth/session 200 in 696ms
+ GET /api/messages?tab=inbox 200 in 702ms
+ GET /api/announcements 200 in 740ms
+ GET /api/notifications 200 in 658ms
+ GET /api/auth/session 200 in 70ms
+ GET /api/announcements 200 in 64ms
+ GET /api/messages?tab=inbox 200 in 96ms
+ GET /api/auth/session 200 in 35ms
+ GET /api/notifications 200 in 16ms
+ GET /api/notifications 200 in 37ms
+ GET /api/notifications 200 in 15ms
+ GET /api/notifications 200 in 18ms
+ GET /api/notifications 200 in 20ms
+ GET /api/notifications 200 in 15ms
+ GET /api/notifications 200 in 22ms
+ ✓ Compiled in 308ms (394 modules)
+ GET /api/messages?tab=inbox 200 in 27ms
+ GET /api/messages?tab=inbox 200 in 23ms
+ GET /api/notifications 200 in 16ms
+ ✓ Compiled in 156ms (394 modules)
+ ✓ Compiled in 130ms (394 modules)
+ ✓ Compiled in 364ms (394 modules)
+ GET /api/notifications 200 in 18ms
+ ✓ Compiled in 771ms (1474 modules)
+ ✓ Compiled in 282ms (394 modules)
+ ✓ Compiled in 181ms (394 modules)
+ ✓ Compiled in 177ms (394 modules)
+ GET /api/notifications 200 in 57ms
+ ✓ Compiled in 207ms (394 modules)
+ ✓ Compiled in 435ms (394 modules)
+ GET /api/notifications 200 in 19ms
+ GET /api/notifications 200 in 19ms
+ GET /api/notifications 200 in 24ms
+ ✓ Compiled /api/auth/[...nextauth] in 206ms (756 modules)
+ GET /api/auth/session 200 in 277ms
+ GET /api/auth/session 200 in 25ms
+ GET /dashboard/messages 200 in 255ms
+ GET /api/notifications 200 in 144ms
+ ○ Compiling /api/messages ...
+ ✓ Compiled /api/messages in 556ms (758 modules)
+ ✓ Compiled (1084 modules)
+ GET /api/auth/session 200 in 985ms
+ GET /api/announcements 200 in 1280ms
+ GET /api/notifications 200 in 1147ms
+ GET /api/messages?tab=inbox 200 in 1313ms
+ GET /api/auth/session 200 in 365ms
+ GET /api/announcements 200 in 203ms
+ GET /api/auth/session 200 in 127ms
+ GET /api/messages?tab=inbox 200 in 186ms
+ GET /api/auth/session 200 in 20ms
+ GET /api/auth/session 200 in 17ms
+ GET /admin 200 in 122ms
+ GET /api/auth/session 200 in 25ms
+ GET /api/auth/session 200 in 28ms
+ GET /api/auth/session 200 in 20ms
+ ✓ Compiled /admin/livechat in 414ms (1466 modules)
+ GET /admin/livechat?_rsc=1hbhx 200 in 46ms
+ ○ Compiling /admin/messages ...
+ ✓ Compiled /admin/messages in 877ms (1089 modules)

@@ -1,0 +1,92 @@
+{
+  "nav": {
+    "browse": "Ver anuncios",
+    "trust": "Confianza y seguridad",
+    "security": "Seguridad",
+    "apps": "Directorio de apps",
+    "signIn": "Iniciar sesión",
+    "signUp": "Comenzar",
+    "dashboard": "Panel",
+    "signOut": "Cerrar sesión"
+  },
+  "common": {
+    "loading": "Cargando…",
+    "notFound": "No encontrado",
+    "forbidden": "No tienes permiso para acceder a esta página.",
+    "error": "Algo salió mal. Inténtalo de nuevo.",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "submit": "Enviar",
+    "back": "Volver",
+    "continue": "Continuar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "or": "o"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes cuenta?",
+    "haveAccount": "¿Ya tienes una cuenta?",
+    "verifyEmail": "Verifica tu correo",
+    "verifyEmailDesc": "Enviamos un enlace de verificación a {email}. Revisa tu bandeja de entrada."
+  },
+  "listings": {
+    "browse": "Ver anuncios",
+    "active": "activos",
+    "noResults": "No hay anuncios que coincidan con tus filtros.",
+    "wanted": "Se busca",
+    "wantedEmpty": "No hay solicitudes aún.",
+    "postWanted": "Publicar solicitud",
+    "followers": "{count} seguidores",
+    "auction": "Subasta",
+    "private": "Privado",
+    "monetized": "Monetizado",
+    "verified": "✓ Verificado",
+    "auctionEnds": "Termina {date}"
+  },
+  "escrow": {
+    "funded": "Financiado",
+    "awaitingManagerAdd": "Esperando agregar manager",
+    "pendingVerification": "Verificación pendiente",
+    "submitted": "Enviado",
+    "verified": "Verificado",
+    "inTransfer": "En transferencia",
+    "completed": "Completado",
+    "cancelled": "Cancelado",
+    "disputed": "En disputa",
+    "cancelButton": "Cancelar escrow (reembolso total)",
+    "cancelConfirm": "¿Estás seguro? El escrow será cancelado y los fondos devueltos.",
+    "confirmHandover": "Confirmar traspaso completo — liberar fondos",
+    "handoverConfirmed": "Traspaso confirmado ✓"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "listings": "Anuncios",
+    "escrows": "Escrows",
+    "wallet": "Billetera",
+    "messages": "Mensajes",
+    "settings": "Configuración",
+    "referrals": "Referidos",
+    "developer": "Desarrollador",
+    "support": "Soporte",
+    "organization": "Organización",
+    "activityFeed": "Actividad"
+  },
+  "trust": {
+    "title": "Confianza y seguridad",
+    "subtitle": "Publicamos métricas en tiempo real para que compradores y vendedores puedan tomar decisiones informadas.",
+    "totalUsers": "Usuarios registrados",
+    "verifiedUsers": "Usuarios verificados",
+    "totalEscrows": "Escrows totales",
+    "completedEscrows": "Transacciones completadas",
+    "escrowSuccessRate": "Tasa de éxito de escrows",
+    "activeListings": "Anuncios activos",
+    "avgTrustScore": "Puntuación media de confianza"
+  }
+}

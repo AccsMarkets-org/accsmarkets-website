@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<meta name="x-apple-disable-message-reformatting">
+<title>Escrow Funded — You May Begin the Transfer</title>
+<style>
+html,body{margin:0!important;padding:0!important;background:#f5f4f2!important}
+table{border-spacing:0!important;border-collapse:collapse!important}
+img{border:0;display:block;outline:none;text-decoration:none}
+a{text-decoration:none}
+.wrapper{width:100%;background:#f5f4f2}
+.container{width:100%;max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(28,25,23,.06),0 12px 32px rgba(28,25,23,.07)}
+.hero{background:#ffffff;border-top:4px solid #f97316}
+.float{animation:float 3.2s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media(prefers-reduced-motion:reduce){.float{animation:none!important}}
+@media(max-width:640px){
+  .pad{padding-left:20px!important;padding-right:20px!important}
+  .headline{font-size:25px!important;line-height:1.2!important}
+  .btn{display:block!important;text-align:center!important}
+  .mobile-stack{display:block!important;width:100%!important}
+  .mobile-gap{height:12px!important}
+  .otp-code{font-size:34px!important;letter-spacing:8px!important}
+}
+@media(prefers-color-scheme:dark){
+  body,.wrapper{background:#0c0a09!important}
+  .container,.hero{background:#1c1917!important}
+  .logo-text{color:#f5f5f4!important}
+  .headline{color:#f5f5f4!important}
+  .content-text,.fact-value{color:#e7e5e4!important}
+  .muted,.fact-label{color:#a8a29e!important}
+  .panel{background:#26211e!important;border-color:#332e2a!important}
+  .panel td{color:#e7e5e4!important;border-color:#332e2a!important}
+  .footer{background:#171412!important;border-color:#292524!important}
+  .otp-box{background:#26211e!important;border-color:#7c2d12!important}
+  .otp-code{color:#fb923c!important}
+}</style>
+</head>
+<body>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">Escrow Funded — You May Begin the Transfer</div>
+<table role="presentation" class="wrapper" width="100%">
+<tr><td align="center" style="padding:34px 12px">
+<table role="presentation" class="container" width="660">
+<tr><td class="hero pad" style="padding:30px 44px 38px">
+<table role="presentation" width="100%">
+<tr>
+<td valign="middle"><a href="{{site_url}}" aria-label="AccsMarkets" style="display:inline-block"><table role="presentation"><tr><td valign="middle"><img src="{{logo_url}}" width="34" height="34" alt="" style="width:34px;height:34px;border-radius:8px"></td><td class="logo-text" valign="middle" style="padding-left:10px;font:800 17px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1917;letter-spacing:-.02em">AccsMarkets</td></tr></table></a></td>
+<td align="right" valign="middle"><span style="display:inline-block;padding:6px 12px;border-radius:999px;background:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font:700 11px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.08em">SECURE MARKETPLACE</span></td>
+</tr></table>
+<div style="height:30px"></div>
+<div style="color:#ea580c;font:700 12px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.14em">FUNDS SECURED</div>
+<h1 class="headline" style="margin:10px 0 0;color:#1c1917;font:800 30px/1.12 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:-.035em">The escrow has been funded</h1>
+</td></tr>
+
+<tr><td class="pad" style="padding:34px 44px 8px">
+<span class="float" style="display:inline-block;padding:9px 14px;border-radius:999px;background:#eafbf1;border:1px solid #b7ecc8;color:#16803a;font:700 13px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">● &nbsp;Transfer may begin</span>
+<p class="content-text" style="margin:24px 0 0;color:#303846;font:400 16px/1.75 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">Hi {{user_name}}, the buyer’s funds for “{{listing_title}}” are now secured in escrow.</p>
+</td></tr>
+
+<tr><td class="pad" style="padding:18px 44px 4px">
+<table role="presentation" class="panel" width="100%" style="background:#f8f9fb;border:1px solid #e8ebef;border-radius:16px">
+<tr><td style="padding:8px 18px">
+        <tr>
+          <td style="padding:10px 0;color:#667085;font:600 13px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;border-bottom:1px solid #eef0f3">Secured amount</td>
+          <td align="right" style="padding:10px 0;color:#111827;font:700 13px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;border-bottom:1px solid #eef0f3">{{amount}}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;color:#667085;font:600 13px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;border-bottom:1px solid #eef0f3">Transfer deadline</td>
+          <td align="right" style="padding:10px 0;color:#111827;font:700 13px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;border-bottom:1px solid #eef0f3">{{transfer_deadline}}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;color:#667085;font:600 13px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;border-bottom:1px solid #eef0f3">Escrow ID</td>
+          <td align="right" style="padding:10px 0;color:#111827;font:700 13px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;border-bottom:1px solid #eef0f3">{{escrow_id}}</td>
+        </tr></td></tr>
+</table>
+</td></tr>
+
+<tr><td class="pad" style="padding:26px 44px 12px">
+<table role="presentation"><tr>
+<td class="mobile-stack" bgcolor="#f97316" style="border-radius:12px">
+<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="{{escrow_url}}" style="height:48px;v-text-anchor:middle;width:210px;" arcsize="25%" fillcolor="#f97316" strokecolor="#f97316"><w:anchorlock/><center style="color:#ffffff;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:bold;"><![endif]-->
+<a class="btn" href="{{escrow_url}}" style="display:inline-block;padding:15px 24px;color:#fff;font:700 15px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;border-radius:12px">Continue transaction &nbsp;→</a>
+<!--[if mso]></center></v:roundrect><![endif]-->
+</td>
+<td class="mobile-stack mobile-gap" style="width:12px"></td>
+<td class="mobile-stack" style="border:1px solid #d9dde5;border-radius:12px">
+<a class="btn" href="{{conversation_url}}" style="display:inline-block;padding:14px 20px;color:#344054;font:700 14px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;border-radius:12px">Open secure chat</a>
+</td>
+</tr></table>
+</td></tr>
+
+<tr><td class="pad" style="padding:18px 44px 36px">
+<div class="panel muted" style="padding:17px 18px;border-radius:16px;background:#f8f9fb;border:1px solid #e8ebef;color:#667085;font:400 13px/1.65 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<strong style="color:#344054">Security notice:</strong> Follow the staged handover instructions. Never share sensitive credentials outside the secure transaction area.
+</div>
+</td></tr>
+
+<tr><td class="footer" style="background:#fafaf9;border-top:1px solid #f0eeec;padding:26px 32px;text-align:center">
+<p style="margin:0;font:800 13px -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#57534e;letter-spacing:-.01em">AccsMarkets</p>
+<p style="margin:8px 0 0;font:400 12px/1.9 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#a8a29e">
+<a href="{{help_url}}" style="color:#78716c">Help Center</a> &nbsp;·&nbsp; <a href="{{privacy_url}}" style="color:#78716c">Privacy</a> &nbsp;·&nbsp; <a href="{{terms_url}}" style="color:#78716c">Terms</a> &nbsp;·&nbsp; <a href="{{support_url}}" style="color:#78716c">Support</a><br>
+<a href="tel:+17737156402" style="color:#a8a29e">+1 (773) 715-6402</a> &nbsp;·&nbsp; <a href="mailto:support@accsmarkets.org" style="color:#a8a29e">support@accsmarkets.org</a>
+</p>
+<p style="margin:10px 0 0;font:400 11px/1.6 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#c2bcb6">© {{current_year}} AccsMarkets — escrow-protected account marketplace</p>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>

@@ -1,0 +1,5 @@
+﻿2026-09-16 17:04:03 FAILED: The remote server returned an error: (401) Unauthorized.
+2026-09-16 17:06:16 FAILED: The remote server returned an error: (500) Internal Server Error.
+2026-09-16 17:10:46 OK: {"ok":true,"postId":"cmu4cx4z40002g88utyr6qvoa","autoPublished":true}
+2026-09-17 09:00:09 OK: {"ok":true,"postId":"cmu5au25w00037eygwr8ih1h6","autoPublished":true}
+2026-09-17 15:00:07 OK: {"ok":true,"postId":"cmu5nozax0000lvpr9tn2aanj","autoPublished":true}

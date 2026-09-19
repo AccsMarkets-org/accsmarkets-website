@@ -1,0 +1,140 @@
+[backup] dumping accsmarkets@localhost[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T12-50-19-280Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1UmEW34JBz_s2-MESuThZfjkH9FGsyOlj
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T08-42-03-287Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T13-48-02-318Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1OQ61XziP9qQKDdhdvwVvvIHQ2CIUyHIS
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T09-42-03-339Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T14-48-01-641Z.sql (4.49 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1w2SynctD3FycLTObpTNG6SY-xaontI-k
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T10-42-03-904Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T15-48-01-659Z.sql (4.46 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/10m7AbfEaEOF_pRHUUt452-1GwGOdPP1V
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T11-42-04-041Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T16-48-01-702Z.sql (4.46 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1NTAzoz-7LS4bmkyO9APTE2aDZX5-qFJw
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T12-42-06-655Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T17-48-01-668Z.sql (4.47 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1hq1Hb97TtuLRZTfQRlkODRBwb_QajMrR
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T13-42-03-594Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T18-48-01-666Z.sql (4.47 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1zRL5dle81UOUj5sCgNMotMoVN9AiUUxK
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T14-42-03-628Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T19-48-01-625Z.sql (4.47 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/14oiK9P-uQzpP6KUZKJtOhvo9srNX76P7
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T15-42-03-590Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T20-48-01-643Z.sql (4.47 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1qBhpQEeohpHigG83UpmmZcy56xz2utZC
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T16-42-03-537Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T21-48-01-643Z.sql (4.47 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/13bmahCrQGufOKufzI-Rw1425lRVTNwlu
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T17-42-03-611Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T22-48-01-856Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1FgDJ1CeKfCe5aEoj8iEUIBMsv2J_3PI9
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T18-42-03-066Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-16T23-48-01-686Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/13GdI5D6umWWOG0wQZoppG-BnHLHy18Oc
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T19-42-03-112Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T00-48-01-708Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/18OPTwsUJJb7nRwvmlAax9yw8AG1uODcG
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T20-42-02-842Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T01-48-01-703Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1_l-RQ3Y6ntY5NW1ceRth4exrr3THuHKw
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T21-42-03-140Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T02-48-01-921Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1oXS5r_DnbLivSb9r9asolGOfLlgMQWNh
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T22-42-03-395Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T03-48-01-738Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1sfBD6sfFtjBNLqStA6byU--6VSfZwTBu
+[backup] pruned old local copy: accsmarkets-backup-2026-09-13T23-42-03-222Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T04-48-01-746Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1iCfy2xftJ6ll9O87q8A9Lt1IufjfPTRB
+[backup] pruned old local copy: accsmarkets-backup-2026-09-14T00-42-03-306Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T05-48-01-767Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1yNW2T41mbR8tEkI66sO4e26gp3tIyXvZ
+[backup] pruned old local copy: accsmarkets-backup-2026-09-14T01-42-03-257Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T06-48-02-011Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1PtAN7MKJPE4xYpiju08ptkh8tJzDDv8t
+[backup] pruned old local copy: accsmarkets-backup-2026-09-14T02-42-03-225Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T07-48-01-779Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1LfcvPC5hGE6JGdDNfp03BdGfseVsBiW3
+[backup] pruned old local copy: accsmarkets-backup-2026-09-14T03-42-03-243Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T08-48-01-792Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1aDPpYbMg7sHUfzbPcJyh1f9syGPPLvpk
+[backup] pruned old local copy: accsmarkets-backup-2026-09-14T04-42-07-667Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T09-48-01-806Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1bnc2-ramBHLk1xhT0s767QXr2G7LyiBh
+[backup] pruned old local copy: accsmarkets-backup-2026-09-14T04-59-12-380Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T10-48-01-808Z.sql (4.48 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1AjN7d4vS3320lWeAHDdup3u4SH_SfWIH
+[backup] pruned old local copy: accsmarkets-backup-2026-09-16T12-47-54-816Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T11-48-01-818Z.sql (4.49 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1PqkHi2NgNRG8XG0KDmfQUh8lL6cvFELS
+[backup] pruned old local copy: accsmarkets-backup-2026-09-16T12-48-09-848Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T12-48-01-838Z.sql (4.49 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1HlPLz5h6VJvUzf_gNcyoXEPWugyhdcS6
+[backup] pruned old local copy: accsmarkets-backup-2026-09-16T12-50-19-280Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T13-48-01-864Z.sql (4.49 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1FsdRb58pUKqEEapJq4KeK9maWyBV-qO7
+[backup] pruned old local copy: accsmarkets-backup-2026-09-16T13-48-02-318Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T14-48-01-863Z.sql (4.49 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1XggBzJFSCI2UXiCniHlh7P2SD5DrOa-j
+[backup] pruned old local copy: accsmarkets-backup-2026-09-16T14-48-01-641Z.sql
+[backup] done.
+[backup] dumping accsmarkets@localhost:3306 ...
+[backup] dump written locally: accsmarkets-backup-2026-09-17T15-48-02-114Z.sql (4.50 MB)
+[backup] uploaded to Drive: https://lh3.googleusercontent.com/d/1yKNtN0KCsEHQhwlZKuVPqaU68PIaanfI
+[backup] pruned old local copy: accsmarkets-backup-2026-09-16T15-48-01-659Z.sql
+[backup] done.

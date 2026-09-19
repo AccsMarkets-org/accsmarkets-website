@@ -1,0 +1,3 @@
+> AccsMarkets ready on http://localhost:3000
+{"level":"info","msg":"sweep.completed","ts":"2026-09-16T18:27:02.071Z","results":{"offersExpired":0,"transfersOverdueFlagged":0,"rateLimitRowsDeleted":0,"savedSearchAlertsSent":0,"referralsRewarded":0,"webhooksRetried":0,"disputeEvidenceDeadlinesFlagged":0,"subscriptionsExpired":0},"stepErrors":{},"durationMs":12,"hasErrors":false}
+{"level":"info","msg":"whatsapp_inbound","ts":"2026-09-16T18:32:23.917Z","from":"16465894168","messageId":"wamid.HBgLMTY0NjU4OTQxNjgVAgASGBJEQzc5RTg3MTBBQzVGNkY4MzMA","type":"text"}

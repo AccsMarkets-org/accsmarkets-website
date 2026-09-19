@@ -1,0 +1,2 @@
+> AccsMarkets ready on http://localhost:3000
+{"level":"info","msg":"sweep.completed","ts":"2026-09-17T14:57:01.682Z","results":{"offersExpired":0,"transfersOverdueFlagged":0,"rateLimitRowsDeleted":0,"savedSearchAlertsSent":0,"referralsRewarded":0,"webhooksRetried":0,"disputeEvidenceDeadlinesFlagged":0,"subscriptionsExpired":0},"stepErrors":{},"durationMs":13,"hasErrors":false}

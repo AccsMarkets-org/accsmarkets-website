@@ -1,0 +1,92 @@
+{
+  "nav": {
+    "browse": "Browse Listings",
+    "trust": "Trust & Safety",
+    "security": "Security",
+    "apps": "App Directory",
+    "signIn": "Sign in",
+    "signUp": "Get started",
+    "dashboard": "Dashboard",
+    "signOut": "Sign out"
+  },
+  "common": {
+    "loading": "Loading…",
+    "notFound": "Not found",
+    "forbidden": "You don't have permission to access this page.",
+    "error": "Something went wrong. Please try again.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit",
+    "back": "Back",
+    "continue": "Continue",
+    "close": "Close",
+    "confirm": "Confirm",
+    "or": "or"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "email": "Email address",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "verifyEmail": "Verify your email",
+    "verifyEmailDesc": "We sent a verification link to {email}. Please check your inbox."
+  },
+  "listings": {
+    "browse": "Browse listings",
+    "active": "active",
+    "noResults": "No listings match your filters yet.",
+    "wanted": "Wanted",
+    "wantedEmpty": "No wanted requests yet.",
+    "postWanted": "Post a wanted request",
+    "followers": "{count} followers",
+    "auction": "Auction",
+    "private": "Private",
+    "monetized": "Monetized",
+    "verified": "✓ Verified",
+    "auctionEnds": "Ends {date}"
+  },
+  "escrow": {
+    "funded": "Funded",
+    "awaitingManagerAdd": "Awaiting Manager Add",
+    "pendingVerification": "Pending Verification",
+    "submitted": "Submitted",
+    "verified": "Verified",
+    "inTransfer": "In Transfer",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "disputed": "Disputed",
+    "cancelButton": "Cancel escrow (full refund)",
+    "cancelConfirm": "Are you sure? The escrow will be cancelled and funds returned.",
+    "confirmHandover": "Confirm handover complete — release funds",
+    "handoverConfirmed": "Handover confirmed ✓"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "listings": "Listings",
+    "escrows": "Escrows",
+    "wallet": "Wallet",
+    "messages": "Messages",
+    "settings": "Settings",
+    "referrals": "Referrals",
+    "developer": "Developer",
+    "support": "Support",
+    "organization": "Organization",
+    "activityFeed": "Activity Feed"
+  },
+  "trust": {
+    "title": "Trust & Safety",
+    "subtitle": "We publish live platform metrics so buyers and sellers can make informed decisions.",
+    "totalUsers": "Registered users",
+    "verifiedUsers": "Verified users",
+    "totalEscrows": "Total escrows",
+    "completedEscrows": "Completed transactions",
+    "escrowSuccessRate": "Escrow success rate",
+    "activeListings": "Active listings",
+    "avgTrustScore": "Avg. seller trust score"
+  }
+}

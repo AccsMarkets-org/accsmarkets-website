@@ -1,0 +1,23 @@
+ ⨯ uncaughtException: Error: listen EADDRINUSE: address already in use :::3099
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\server.js:16:14 {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 3099
+}
+ ⨯ uncaughtException: Error: listen EADDRINUSE: address already in use :::3099
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at C:\Users\teamn\OneDrive\Desktop\accsmarkets.org\server.js:16:14 {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 3099
+}
+   Reload env: .env

@@ -1,0 +1,421 @@
+=== AccsMarkets Database Backup ===
+Time: 2026-07-25T03:00:02.398Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  SQL size: 0.13 MB
+Compressing…
+  Compressed: 25.0 KB
+Local backup saved: C:\Users\americanhistory921\Desktop\accsmarkets.org\backups\accsmarkets-accsmarkets-2026-07-25T03-00-04.sql.gz
+Uploading to Google Drive as "accsmarkets-accsmarkets-2026-07-25T03-00-04.sql.gz"…
+  Auth: OAuth (personal Drive)
+  Drive upload OK — File ID: 1woj0kobM7m4MeTPO6ViGuv8XNe4Odn8F  Size: 25593 bytes
+=== Backup complete ===
+
+Backup finished at Sat 07/25/2026  3:00:06.24 
+=== AccsMarkets Database Backup ===
+Time: 2026-07-26T03:00:02.608Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  SQL size: 0.15 MB
+Compressing…
+  Compressed: 31.4 KB
+Local backup saved: C:\Users\americanhistory921\Desktop\accsmarkets.org\backups\accsmarkets-accsmarkets-2026-07-26T03-00-05.sql.gz
+Uploading to Google Drive as "accsmarkets-accsmarkets-2026-07-26T03-00-05.sql.gz"…
+  Auth: OAuth (personal Drive)
+  Drive upload OK — File ID: 1CpE5QC3vE92T-B491lLL4Hm0S_SXv4Q8  Size: 32172 bytes
+=== Backup complete ===
+
+Backup finished at Sun 07/26/2026  3:00:07.55 
+=== AccsMarkets Database Backup ===
+Time: 2026-07-27T03:00:02.152Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  SQL size: 0.18 MB
+Compressing…
+  Compressed: 38.8 KB
+Local backup saved: C:\Users\americanhistory921\Desktop\accsmarkets.org\backups\accsmarkets-accsmarkets-2026-07-27T03-00-03.sql.gz
+  Deleted old local backup: accsmarkets-accsmarkets-2026-07-24T21-36-17.sql.gz
+Uploading to Google Drive as "accsmarkets-accsmarkets-2026-07-27T03-00-03.sql.gz"…
+  Auth: OAuth (personal Drive)
+  Drive upload OK — File ID: 1ZbhXrFQitx9Wf0AtA8-6Q7J1j7K_ClSi  Size: 39764 bytes
+=== Backup complete ===
+
+Backup finished at Mon 07/27/2026  3:00:06.20 
+=== AccsMarkets Database Backup ===
+Time: 2026-07-28T03:00:02.211Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  SQL size: 0.55 MB
+Compressing…
+  Compressed: 98.8 KB
+Local backup saved: C:\Users\americanhistory921\Desktop\accsmarkets.org\backups\accsmarkets-accsmarkets-2026-07-28T03-00-04.sql.gz
+  Deleted old local backup: accsmarkets-accsmarkets-2026-07-24T22-28-30.sql.gz
+Uploading to Google Drive as "accsmarkets-accsmarkets-2026-07-28T03-00-04.sql.gz"…
+  Auth: OAuth (personal Drive)
+  Drive upload OK — File ID: 1XcEEYUHgvBuAOKHej2gILgbIxTwyAmfh  Size: 101122 bytes
+=== Backup complete ===
+
+Backup finished at Tue 07/28/2026  3:00:06.25 
+=== AccsMarkets Database Backup ===
+Time: 2026-07-29T03:00:02.213Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  SQL size: 0.56 MB
+Compressing…
+  Compressed: 101.2 KB
+Local backup saved: C:\Users\americanhistory921\Desktop\accsmarkets.org\backups\accsmarkets-accsmarkets-2026-07-29T03-00-04.sql.gz
+  Deleted old local backup: accsmarkets-accsmarkets-2026-07-24T22-28-42.sql.gz
+Uploading to Google Drive as "accsmarkets-accsmarkets-2026-07-29T03-00-04.sql.gz"…
+  Auth: OAuth (personal Drive)
+  Drive upload OK — File ID: 1Whw1c6gm-ZvbrOVlj0iOknnRuOC_ul46  Size: 103666 bytes
+=== Backup complete ===
+
+Backup finished at Wed 07/29/2026  3:00:06.26 
+=== AccsMarkets Database Backup ===
+Time: 2026-07-30T03:00:02.349Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  SQL size: 0.57 MB
+Compressing…
+  Compressed: 104.4 KB
+Local backup saved: C:\Users\americanhistory921\Desktop\accsmarkets.org\backups\accsmarkets-accsmarkets-2026-07-30T03-00-04.sql.gz
+  Deleted old local backup: accsmarkets-accsmarkets-2026-07-24T22-33-09.sql.gz
+Uploading to Google Drive as "accsmarkets-accsmarkets-2026-07-30T03-00-04.sql.gz"…
+  Auth: OAuth (personal Drive)
+  Drive upload OK — File ID: 1m486ZQv4YZdbEiT--GsNoJ3hWD7Bw0Vl  Size: 106857 bytes
+=== Backup complete ===
+
+Backup finished at Thu 07/30/2026  3:00:06.49 
+=== AccsMarkets Database Backup ===
+Time: 2026-07-31T03:00:02.340Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  SQL size: 0.94 MB
+Compressing…
+  Compressed: 162.3 KB
+Local backup saved: C:\Users\americanhistory921\Desktop\accsmarkets.org\backups\accsmarkets-accsmarkets-2026-07-31T03-00-04.sql.gz
+  Deleted old local backup: accsmarkets-accsmarkets-2026-07-24T22-38-46.sql.gz
+Uploading to Google Drive as "accsmarkets-accsmarkets-2026-07-31T03-00-04.sql.gz"…
+  Auth: OAuth (personal Drive)
+  Drive upload OK — File ID: 1lYK_UALvpoYAdl3yh0YfBuAVlOfSLFgU  Size: 166199 bytes
+  Deleted old Drive backup: accsmarkets-accsmarkets-2026-07-24T22-38-46.sql.gz
+=== Backup complete ===
+
+Backup finished at Fri 07/31/2026  3:00:08.10 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-01T03:00:04.565Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  SQL size: 0.97 MB
+Compressing…
+  Compressed: 168.2 KB
+Local backup saved: C:\Users\americanhistory921\Desktop\accsmarkets.org\backups\accsmarkets-accsmarkets-2026-08-01T03-00-06.sql.gz
+  Deleted old local backup: accsmarkets-accsmarkets-2026-07-25T03-00-04.sql.gz
+Uploading to Google Drive as "accsmarkets-accsmarkets-2026-08-01T03-00-06.sql.gz"…
+  Drive upload FAILED (local backup still saved): OAuth token refresh failed: {"error":"invalid_grant","error_description":"Token has been expired or revoked."}
+  To enable Drive uploads, use a Google Shared Drive (Team Drive) folder.
+=== Backup complete ===
+
+Backup finished at Sat 08/01/2026  3:00:07.22 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-02T03:00:02.326Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  SQL size: 1.09 MB
+Compressing…
+  Compressed: 186.9 KB
+Local backup saved: C:\Users\americanhistory921\Desktop\accsmarkets.org\backups\accsmarkets-accsmarkets-2026-08-02T03-00-05.sql.gz
+  Deleted old local backup: accsmarkets-accsmarkets-2026-07-26T03-00-05.sql.gz
+Uploading to Google Drive as "accsmarkets-accsmarkets-2026-08-02T03-00-05.sql.gz"…
+  Drive upload FAILED (local backup still saved): OAuth token refresh failed: {"error":"invalid_grant","error_description":"Token has been expired or revoked."}
+  To enable Drive uploads, use a Google Shared Drive (Team Drive) folder.
+=== Backup complete ===
+
+Backup finished at Sun 08/02/2026  3:00:05.40 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-03T03:00:03.859Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Mon 08/03/2026  3:00:04.04 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-04T03:00:04.032Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Tue 08/04/2026  3:00:04.22 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-05T03:00:03.717Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Wed 08/05/2026  3:00:03.89 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-06T03:00:03.802Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Thu 08/06/2026  3:00:03.98 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-07T03:00:03.473Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Fri 08/07/2026  3:00:03.67 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-08T03:00:02.280Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sat 08/08/2026  3:00:02.46 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-09T03:00:02.259Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sun 08/09/2026  3:00:02.42 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-10T03:00:02.605Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Mon 08/10/2026  3:00:02.87 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-11T03:00:02.487Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Tue 08/11/2026  3:00:02.69 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-12T03:00:03.315Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Wed 08/12/2026  3:00:03.52 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-13T03:00:04.066Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Thu 08/13/2026  3:00:04.40 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-16T03:00:05.376Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sun 08/16/2026  3:00:05.67 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-17T03:00:03.753Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Mon 08/17/2026  3:00:04.25 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-18T03:00:02.936Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Tue 08/18/2026  3:00:03.18 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-19T03:00:03.123Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Wed 08/19/2026  3:00:03.37 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-20T03:00:03.160Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Thu 08/20/2026  3:00:03.53 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-21T03:00:03.626Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Fri 08/21/2026  3:00:03.97 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-22T03:00:03.115Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sat 08/22/2026  3:00:03.41 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-23T03:00:04.093Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sun 08/23/2026  3:00:04.35 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-24T03:00:03.946Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Mon 08/24/2026  3:00:04.23 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-25T03:00:03.865Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Tue 08/25/2026  3:00:04.11 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-26T03:00:04.945Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Wed 08/26/2026  3:00:05.29 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-27T03:00:04.097Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Thu 08/27/2026  3:00:04.46 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-28T03:00:03.647Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Fri 08/28/2026  3:00:03.96 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-29T03:00:03.417Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sat 08/29/2026  3:00:03.65 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-30T03:00:03.360Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sun 08/30/2026  3:00:03.57 
+=== AccsMarkets Database Backup ===
+Time: 2026-08-31T03:00:03.983Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Mon 08/31/2026  3:00:04.21 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-01T03:00:03.926Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Tue 09/01/2026  3:00:04.17 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-02T03:00:03.795Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Wed 09/02/2026  3:00:04.03 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-03T03:00:03.764Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Thu 09/03/2026  3:00:04.12 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-04T03:00:03.499Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Fri 09/04/2026  3:00:03.73 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-05T03:00:04.228Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sat 09/05/2026  3:00:04.46 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-06T03:00:05.062Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sun 09/06/2026  3:00:05.32 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-07T03:00:04.319Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Mon 09/07/2026  3:00:04.60 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-08T03:00:04.430Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Tue 09/08/2026  3:00:04.73 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-09T03:00:07.149Z
+Database: accsmarkets @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Wed 09/09/2026  3:00:07.66 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-10T03:00:05.993Z
+Database: accsmarkets?connection_limit=10&pool_timeout=20 @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Thu 09/10/2026  3:00:07.34 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-11T03:00:02.467Z
+Database: accsmarkets?connection_limit=10&pool_timeout=20 @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Fri 09/11/2026  3:00:03.70 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-12T03:00:02.584Z
+Database: accsmarkets?connection_limit=10&pool_timeout=20 @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sat 09/12/2026  3:00:03.77 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-13T03:00:02.429Z
+Database: accsmarkets?connection_limit=10&pool_timeout=20 @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Sun 09/13/2026  3:00:02.84 
+=== AccsMarkets Database Backup ===
+Time: 2026-09-14T03:00:02.454Z
+Database: accsmarkets?connection_limit=10&pool_timeout=20 @ localhost:3306
+Running mysqldump…
+  mysqldump stderr: mysqldump.exe: Got error: 1045: "Plugin caching_sha2_password could not be loaded: The specified module could not be found. Library path is 'caching_sha2_password.dll'" when trying to connect
+BACKUP FAILED: mysqldump exited with code 2
+Backup finished at Mon 09/14/2026  3:00:02.94 

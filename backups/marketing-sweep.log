@@ -1,0 +1,12 @@
+﻿
+  ok newSignupNudgeSent inactiveWinbackSent offerAbandonedSent
+  -- ------------------ ------------------- ------------------
+True                  0                   0                  0
+
+
+
+  ok newSignupNudgeSent inactiveWinbackSent offerAbandonedSent
+  -- ------------------ ------------------- ------------------
+True                  1                   0                  0
+
+

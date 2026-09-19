@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<meta name="x-apple-disable-message-reformatting">
+<title>Identity Verification Needs Attention</title>
+<style>
+html,body{margin:0!important;padding:0!important;background:#f3f5f7!important}
+table{border-spacing:0!important;border-collapse:collapse!important}
+img{border:0;display:block;outline:none;text-decoration:none}
+a{text-decoration:none}
+.wrapper{width:100%;background:#f3f5f7}
+.container{width:100%;max-width:660px;background:#ffffff;border-radius:26px;overflow:hidden;box-shadow:0 18px 55px rgba(17,24,39,.12)}
+.hero{background:linear-gradient(135deg,#ff6a00 0%,#ff4d00 58%,#ff7a1a 100%)}
+.float{animation:float 3.2s ease-in-out infinite} .pulse{animation:pulse 2.4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@media(prefers-reduced-motion:reduce){.float,.pulse{animation:none!important}}
+@media(max-width:680px){
+  .pad{padding-left:22px!important;padding-right:22px!important}
+  .headline{font-size:31px!important;line-height:1.15!important}
+  .btn{display:block!important;text-align:center!important}
+  .mobile-stack{display:block!important;width:100%!important}
+  .mobile-gap{height:12px!important}
+}
+@media(prefers-color-scheme:dark){
+  body,.wrapper{background:#0f1115!important}
+  .container{background:#171a21!important}
+  .content-text,.fact-value{color:#f4f4f5!important}
+  .muted{color:#b6bbc5!important}
+  .panel{background:#20242d!important;border-color:#323744!important}
+  .fact-label{color:#aab0bb!important}
+}
+</style>
+</head>
+<body>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">Identity Verification Needs Attention</div>
+<table role="presentation" class="wrapper" width="100%">
+<tr><td align="center" style="padding:34px 12px">
+<table role="presentation" class="container" width="660">
+<tr><td class="hero pad" style="padding:30px 44px 38px">
+<table role="presentation" width="100%">
+<tr>
+<td valign="middle"><a href="{{site_url}}" aria-label="AccsMarkets"><img src="{{logo_url}}" width="174" alt="AccsMarkets" style="max-width:174px;height:auto"></a></td>
+<td align="right" valign="middle"><span class="pulse" style="display:inline-block;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.34);color:#fff;font:700 11px Arial,sans-serif;letter-spacing:.08em">SECURE MARKETPLACE</span></td>
+</tr></table>
+<div style="height:30px"></div>
+<div style="color:#fff4ec;font:700 12px Arial,sans-serif;letter-spacing:.14em">VERIFICATION UPDATE</div>
+<h1 class="headline" style="margin:10px 0 0;color:#fff;font:800 40px/1.12 Arial,sans-serif;letter-spacing:-.035em">We could not approve your submission</h1>
+</td></tr>
+
+<tr><td class="pad" style="padding:34px 44px 8px">
+<span class="float" style="display:inline-block;padding:9px 14px;border-radius:999px;background:#fff0f0;border:1px solid #ffc9c9;color:#b42318;font:700 13px Arial,sans-serif">● &nbsp;Resubmission required</span>
+<p class="content-text" style="margin:24px 0 0;color:#303846;font:400 16px/1.75 Arial,sans-serif">Hi {{user_name}}, your identity verification could not be approved. Review the reason below and submit corrected information.</p>
+</td></tr>
+
+<tr><td class="pad" style="padding:18px 44px 4px">
+<table role="presentation" class="panel" width="100%" style="background:#f8f9fb;border:1px solid #e8ebef;border-radius:16px">
+<tr><td style="padding:8px 18px">
+        <tr>
+          <td style="padding:10px 0;color:#667085;font:600 13px Arial,sans-serif;border-bottom:1px solid #eef0f3">Reason</td>
+          <td align="right" style="padding:10px 0;color:#111827;font:700 13px Arial,sans-serif;border-bottom:1px solid #eef0f3">{{rejection_reason}}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;color:#667085;font:600 13px Arial,sans-serif;border-bottom:1px solid #eef0f3">Case ID</td>
+          <td align="right" style="padding:10px 0;color:#111827;font:700 13px Arial,sans-serif;border-bottom:1px solid #eef0f3">{{case_id}}</td>
+        </tr></td></tr>
+</table>
+</td></tr>
+
+<tr><td class="pad" style="padding:26px 44px 12px">
+<table role="presentation"><tr>
+<td class="mobile-stack" bgcolor="#ff5a00" style="border-radius:12px">
+<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="{{kyc_url}}" style="height:48px;v-text-anchor:middle;width:210px;" arcsize="25%" fillcolor="#ff5a00" strokecolor="#ff5a00"><w:anchorlock/><center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;"><![endif]-->
+<a class="btn" href="{{kyc_url}}" style="display:inline-block;padding:15px 24px;color:#fff;font:700 15px Arial,sans-serif;border-radius:12px">Update verification &nbsp;→</a>
+<!--[if mso]></center></v:roundrect><![endif]-->
+</td>
+<td class="mobile-stack mobile-gap" style="width:12px"></td>
+<td class="mobile-stack" style="border:1px solid #d9dde5;border-radius:12px">
+<a class="btn" href="{{support_url}}" style="display:inline-block;padding:14px 20px;color:#344054;font:700 14px Arial,sans-serif;border-radius:12px">Contact support</a>
+</td>
+</tr></table>
+</td></tr>
+
+<tr><td class="pad" style="padding:18px 44px 36px">
+<div class="panel muted" style="padding:17px 18px;border-radius:16px;background:#f8f9fb;border:1px solid #e8ebef;color:#667085;font:400 13px/1.65 Arial,sans-serif">
+<strong style="color:#344054">Security notice:</strong> Use clear, valid and unedited documents. Submitted information must match your legal identity.
+</div>
+</td></tr>
+
+<tr><td style="background:#111827;padding:26px 32px;text-align:center">
+<p style="margin:0 0 8px;color:#fff;font:700 14px Arial,sans-serif">AccsMarkets.org</p>
+<p style="margin:0;color:#9ca3af;font:400 12px/1.7 Arial,sans-serif">
+<a href="{{help_url}}" style="color:#ff9a66">Help Center</a> ·
+<a href="{{privacy_url}}" style="color:#ff9a66">Privacy</a> ·
+<a href="{{terms_url}}" style="color:#ff9a66">Terms</a> ·
+<a href="{{support_url}}" style="color:#ff9a66">Support</a>
+</p>
+<p style="margin:10px 0 0;color:#9ca3af;font:400 12px/1.7 Arial,sans-serif"><a href="tel:+17737156402" style="color:#9ca3af">+1 (773) 715-6402</a> · <a href="mailto:support@accsmarkets.org" style="color:#9ca3af">support@accsmarkets.org</a></p>
+<p style="margin:12px 0 0;color:#6b7280;font:400 11px/1.6 Arial,sans-serif">
+© {{current_year}} AccsMarkets. This is an automated service email.<br>
+{{company_address}}
+</p>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>

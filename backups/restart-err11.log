@@ -1,0 +1,3 @@
+(node:8220) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ⚠ The requested resource "https://lh3.googleusercontent.com/a/ACg8ocINkmTqb5qNoJeORCq3N8ThZAD2tEF6ELag2wVL7gT5BF-7l58=s96-c" is an animated image so it will not be optimized. Consider adding the "unoptimized" property to the <Image>.
