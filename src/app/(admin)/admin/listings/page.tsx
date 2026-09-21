@@ -82,7 +82,7 @@ export default async function AdminListingsPage({
           name="q"
           defaultValue={q}
           placeholder="Title, seller email or username…"
-          className="h-9 w-64 rounded-xl border border-surface-border bg-surface px-3 text-sm focus:border-brand-400 focus:outline-none"
+          className="h-9 min-w-[10rem] flex-1 rounded-xl border border-surface-border bg-surface px-3 text-sm focus:border-brand-400 focus:outline-none"
         />
         <select
           name="platform"

@@ -23,6 +23,15 @@ export function emitToRoom(room: string, event: string, payload: unknown): void 
   getIO()?.to(room).emit(event, payload);
 }
 
+/**
+ * Broadcasts an event to all currently-connected admin users.
+ * Admins join "room:admins" in socket-server.js on connection.
+ * No-ops if no admins are online or the socket layer isn't running.
+ */
+export function emitToAdmins(event: string, payload: unknown): void {
+  getIO()?.to("room:admins").emit(event, payload);
+}
+
 export function conversationRoom(userIdA: string, userIdB: string): string {
   return `conv:${[userIdA, userIdB].sort().join("_")}`;
 }

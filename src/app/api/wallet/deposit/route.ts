@@ -6,6 +6,7 @@ import { cryptoDepositSchema } from "@/lib/validation/wallet";
 import { createNowPayment } from "@/lib/nowpayments";
 import { createNotification } from "@/lib/notifications";
 import { formatCurrency } from "@/lib/utils";
+import { emitToAdmins } from "@/lib/socket";
 
 export const dynamic = "force-dynamic";
 
@@ -113,6 +114,9 @@ export async function POST(req: Request) {
       body: `Send ${updated.amountCrypto} ${updated.currency} to complete your ${formatCurrency(amountUsd)} deposit.`,
       link: "/dashboard/wallet",
     });
+
+    // Notify online admins so their queue count badge updates without a page reload.
+    emitToAdmins("admin_queue_update", { type: "new_deposit" });
 
     return NextResponse.json({
       walletId: updated.id,

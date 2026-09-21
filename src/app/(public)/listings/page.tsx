@@ -97,6 +97,11 @@ export default async function BrowseListingsPage({
   let wantedItems: any[] = [];
   let wantedTotal = 0;
   let platformCounts: Record<string, number> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let soldListings: any[] = [];
+  let soldTotal = 0;
+
+  const soldWhere: Prisma.ListingWhereInput = { status: "SOLD", AND: andClauses };
 
   try {
     if (tab === "wanted") {
@@ -109,6 +114,15 @@ export default async function BrowseListingsPage({
           include: { buyer: { select: { username: true, verifiedBadge: true, trustScore: true, countryCode: true } } },
         }),
         prisma.wantedListing.count({ where: wantedWhere }),
+      ]);
+    } else if (tab === "sold") {
+      [soldListings, soldTotal] = await Promise.all([
+        prisma.listing.findMany({
+          where: soldWhere, orderBy: { updatedAt: "desc" },
+          skip: (filters.page - 1) * PAGE_SIZE, take: PAGE_SIZE,
+          include: { seller: { select: { username: true, name: true, verifiedBadge: true, trustScore: true, countryCode: true } } },
+        }),
+        prisma.listing.count({ where: soldWhere }),
       ]);
     } else {
       const countsByPlatform = await prisma.listing.groupBy({
@@ -128,7 +142,7 @@ export default async function BrowseListingsPage({
     /* DB unavailable */
   }
 
-  const activeCount = tab === "wanted" ? wantedTotal : total;
+  const activeCount = tab === "wanted" ? wantedTotal : tab === "sold" ? soldTotal : total;
   const totalPages = Math.max(1, Math.ceil(activeCount / PAGE_SIZE));
   const activePlatform = ("platform" in filters ? filters.platform : undefined) as Platform | undefined;
 
@@ -143,7 +157,7 @@ export default async function BrowseListingsPage({
             </h1>
             <p className="mt-1 text-sm text-muted">
               {activeCount > 0
-                ? `${activeCount.toLocaleString()} ${tab === "wanted" ? "requests" : "active listings"}`
+                ? `${activeCount.toLocaleString()} ${tab === "wanted" ? "requests" : tab === "sold" ? "sold listings" : "active listings"}`
                 : "No results found"}
               {activePlatform && ` · ${PLATFORM_LABEL[activePlatform]}`}
             </p>
@@ -153,7 +167,7 @@ export default async function BrowseListingsPage({
       </div>
 
       {/* ── Platform chips ── */}
-      {tab !== "wanted" && (
+      {tab !== "wanted" && tab !== "sold" && (
         <div className="fade-up mb-5 flex flex-wrap gap-2" style={{ animationDelay: "60ms" }}>
           {[{ key: "", label: "All", count: Object.values(platformCounts).reduce((a, b) => a + b, 0) },
             ...PLATFORMS.map((p) => ({ key: p, label: PLATFORM_LABEL[p], count: platformCounts[p] ?? 0, color: PLATFORM_COLOR[p], icon: PLATFORM_SVG[p] }))
@@ -191,7 +205,11 @@ export default async function BrowseListingsPage({
       {/* ── Tab bar ── */}
       <div className="fade-up mb-5 flex items-center justify-between gap-4" style={{ animationDelay: "80ms" }}>
         <div className="flex gap-1 rounded-xl border border-surface-border bg-surface p-1">
-          {[{ key: "listings", label: "Listings" }, { key: "wanted", label: "Wanted" }].map(({ key, label }) => {
+          {[
+            { key: "listings", label: "Listings" },
+            { key: "sold", label: `Sold${soldTotal > 0 ? ` (${soldTotal.toLocaleString()})` : ""}` },
+            { key: "wanted", label: "Wanted" },
+          ].map(({ key, label }) => {
             const params = new URLSearchParams();
             Object.entries(searchParams as Record<string, string>).forEach(([k, v]) => {
               if (v !== undefined && k !== "tab" && k !== "page") params.set(k, String(v));
@@ -214,7 +232,7 @@ export default async function BrowseListingsPage({
       </div>
 
       {/* ── Filters ── */}
-      {tab !== "wanted" && (
+      {tab !== "wanted" && tab !== "sold" && (
         <div className="fade-up mb-6" style={{ animationDelay: "100ms" }}>
           <Suspense>
             <ListingFilters isAuthenticated={isAuthenticated} />
@@ -223,7 +241,30 @@ export default async function BrowseListingsPage({
       )}
 
       {/* ── Listings grid ── */}
-      {tab === "wanted" ? (
+      {tab === "sold" ? (
+        soldListings.length === 0 ? (
+          <EmptyState
+            icon="🏷️"
+            title="No sold listings yet"
+            subtitle="Completed sales will appear here"
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {soldListings.map((listing) => (
+              <div key={listing.id} className="relative grayscale opacity-70">
+                <ListingCard
+                  listing={{ ...listing, price: listing.price.toString() }}
+                />
+                <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3">
+                  <span className="rounded-lg bg-danger px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+                    SOLD
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      ) : tab === "wanted" ? (
         wantedItems.length === 0 ? (
           <EmptyState
             icon="📋"

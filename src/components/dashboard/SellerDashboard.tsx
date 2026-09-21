@@ -580,8 +580,8 @@ export function SellerDashboard({
                   <ListingViewsChart points={viewSeries} days={dayKeys} />
                 </div>
 
-                {/* Country breakdown */}
-                <div className="w-56 shrink-0 border-l border-surface-border px-5 py-4">
+                {/* Country breakdown — hidden on mobile to avoid crushing the chart */}
+                <div className="hidden md:block w-56 shrink-0 border-l border-surface-border px-5 py-4">
                   <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted">
                     Visitors by Country
                   </p>

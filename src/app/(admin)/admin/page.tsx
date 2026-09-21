@@ -380,14 +380,14 @@ export default async function AdminDashboardPage() {
 
               {/* Stats row */}
               <div className="grid grid-cols-3 divide-x divide-surface-border border-b border-surface-border">
-                <div className="px-5 py-4">
+                <div className="px-3 py-3 sm:px-5 sm:py-4">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">Total Views</p>
-                  <p className="mt-1 text-3xl font-bold text-foreground">{totalListingViews30d.toLocaleString()}</p>
+                  <p className="mt-1 text-xl font-bold text-foreground sm:text-3xl">{totalListingViews30d.toLocaleString()}</p>
                   <p className="text-[11px] text-muted">all time unique</p>
                 </div>
-                <div className="px-5 py-4">
+                <div className="px-3 py-3 sm:px-5 sm:py-4">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">Last 7 Days</p>
-                  <p className="mt-1 text-3xl font-bold text-foreground">
+                  <p className="mt-1 text-xl font-bold text-foreground sm:text-3xl">
                     {viewPoints.slice(-7).reduce((s, v) => s + v, 0).toLocaleString()}
                   </p>
                   {viewTrend !== null && (
@@ -396,13 +396,13 @@ export default async function AdminDashboardPage() {
                     </p>
                   )}
                 </div>
-                <div className="px-5 py-4">
+                <div className="px-3 py-3 sm:px-5 sm:py-4">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">Top Country</p>
                   {topViewCountry?.code ? (
                     <>
-                      <div className="mt-1 flex items-center gap-2">
-                        <CountryFlag code={topViewCountry.code} className="h-5 w-auto shrink-0" />
-                        <p className="truncate text-base font-bold text-foreground">{topViewCountry.code === "US" ? "United States" : topViewCountry.code}</p>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <CountryFlag code={topViewCountry.code} className="h-4 w-auto shrink-0 sm:h-5" />
+                        <p className="truncate text-sm font-bold text-foreground sm:text-base">{topViewCountry.code === "US" ? "United States" : topViewCountry.code}</p>
                       </div>
                       <p className="text-[11px] text-muted">{topViewCountry.count} views</p>
                     </>
@@ -413,13 +413,13 @@ export default async function AdminDashboardPage() {
               {/* Chart + Country sidebar */}
               <div className="flex min-h-[160px]">
                 {/* Area chart */}
-                <div className="flex-1 px-3 py-3">
+                <div className="flex-1 px-3 py-3 min-w-0">
                   <ListingViewsChart points={viewPoints} days={viewDayKeys} />
                 </div>
 
-                {/* Country breakdown */}
+                {/* Country breakdown — hidden on small screens to avoid crushing the chart */}
                 {viewCountryRows.length > 0 && (
-                  <div className="w-56 shrink-0 border-l border-surface-border px-4 py-4">
+                  <div className="hidden md:block w-56 shrink-0 border-l border-surface-border px-4 py-4">
                     <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted">Visitors by Country</p>
                     <div className="space-y-2.5">
                       {viewCountryRows.map((row) => {

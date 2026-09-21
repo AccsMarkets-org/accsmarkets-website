@@ -2,8 +2,10 @@ export function cn(...classes: Array<string | false | null | undefined>): string
   return classes.filter(Boolean).join(" ");
 }
 
-export function formatCurrency(amount: number | string): string {
-  const value = typeof amount === "string" ? parseFloat(amount) : amount;
+export function formatCurrency(amount: number | string | { toString(): string }): string {
+  // Accept Prisma Decimal objects (which are not string/number but have toString()).
+  const raw = typeof amount === "number" || typeof amount === "string" ? amount : amount.toString();
+  const value = typeof raw === "string" ? parseFloat(raw) : raw;
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 }
 

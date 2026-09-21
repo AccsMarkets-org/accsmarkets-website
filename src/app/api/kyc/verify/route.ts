@@ -2,7 +2,9 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { emitToAdmins } from "@/lib/socket";
 import { z } from "zod";
+import { encryptKycField } from "@/lib/kyc-encrypt";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +27,25 @@ export async function POST(req: Request) {
   if (!parsed.success)
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid" }, { status: 400 });
 
+  // Encrypt document URLs at rest so raw Cloudinary URLs are never stored
+  // in plaintext in the database (defence-in-depth alongside Cloudinary access controls).
+  const { idFrontUrl, idBackUrl, selfieUrl } = parsed.data;
+  const encryptedData = {
+    idFrontUrl: encryptKycField(idFrontUrl),
+    idBackUrl: encryptKycField(idBackUrl),
+    selfieUrl: encryptKycField(selfieUrl),
+  };
+
   // Create submission. Auto-approve if OPENKYC_SERVER_URL is not configured.
   const hasAutoKyc = Boolean(process.env.OPENKYC_SERVER_URL);
   const status = hasAutoKyc ? "PENDING" : "UNDER_REVIEW";
 
   const submission = await prisma.kycSubmission.create({
-    data: { userId: session.user.id, ...parsed.data, status },
+    data: { userId: session.user.id, ...encryptedData, status },
   });
+
+  // Notify online admins of the new KYC submission in the review queue.
+  emitToAdmins("admin_queue_update", { type: "new_kyc" });
 
   return NextResponse.json({ id: submission.id, status });
 }

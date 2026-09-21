@@ -1,142 +1,89 @@
-import { unstable_cache } from "next/cache";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getRoutes, RESOURCES_BASE } from "@/lib/opinly";
 import { PLATFORM_SEO } from "@/lib/seo-platforms";
 
-// Same source-of-truth pattern used everywhere else in the app (blog pages,
-// robots.ts, email templates) — was hardcoded as a literal here, which would
-// silently drift from the rest of the site if the domain/env ever changed.
-const BASE_URL = process.env.NEXTAUTH_URL ?? "https://accsmarkets.org";
+const BASE_URL = "https://accsmarkets.org";
 
-function url(
-  loc: string,
-  lastmod: Date | string | null | undefined,
-  changefreq: string,
-  priority: number
-): string {
-  // lastmod is spec-optional — omit it rather than fabricate "now" for pages
-  // with no real tracked modification date (static marketing pages below).
-  // Google explicitly discounts a lastmod that never varies, and re-stamping
-  // every page "now" on every crawl is exactly the fake-freshness signal
-  // that practice produces.
-  if (!lastmod) {
-    return `<url><loc>${loc}</loc><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
-  }
-  const mod = typeof lastmod === "string" ? lastmod : lastmod.toISOString();
-  return `<url><loc>${loc}</loc><lastmod>${mod}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
+const STATIC_ROUTES: { path: string; priority: number; changeFrequency: string }[] = [
+  { path: "", priority: 1.0, changeFrequency: "daily" },
+  { path: "/listings", priority: 0.9, changeFrequency: "hourly" },
+  { path: "/sellers", priority: 0.7, changeFrequency: "daily" },
+  { path: "/pricing", priority: 0.7, changeFrequency: "weekly" },
+  { path: "/blog", priority: 0.7, changeFrequency: "daily" },
+  { path: "/resources", priority: 0.6, changeFrequency: "daily" },
+  { path: "/escrow-guide", priority: 0.6, changeFrequency: "monthly" },
+  { path: "/trust", priority: 0.6, changeFrequency: "monthly" },
+  { path: "/security", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/faq", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/help", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/fees", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/about", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/contact", priority: 0.4, changeFrequency: "yearly" },
+  { path: "/apps", priority: 0.4, changeFrequency: "weekly" },
+  { path: "/docs", priority: 0.4, changeFrequency: "monthly" },
+  { path: "/career", priority: 0.3, changeFrequency: "monthly" },
+  { path: "/sitemap", priority: 0.3, changeFrequency: "monthly" },
+  { path: "/status", priority: 0.3, changeFrequency: "daily" },
+  { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/refunds", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/aml", priority: 0.2, changeFrequency: "yearly" },
+  { path: "/cookies", priority: 0.2, changeFrequency: "yearly" },
+];
+
+const MAX_LISTINGS = 1000;
+const MAX_BLOG_POSTS = 500;
+const MAX_SELLERS = 500;
+
+function escapeXml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
 
-const getDynamicSitemapUrls = unstable_cache(
-  async () => {
-    const dynamicUrls: string[] = [];
-
-    try {
-      const listings = await prisma.listing.findMany({
-        where: { status: "ACTIVE" },
-        select: { id: true, updatedAt: true },
-        orderBy: { updatedAt: "desc" },
-        take: 5000,
-      });
-      for (const l of listings) {
-        dynamicUrls.push(url(`${BASE_URL}/listings/${l.id}`, l.updatedAt, "weekly", 0.8));
-      }
-    } catch {}
-
-    try {
-      const sellers = await prisma.user.findMany({
-        where: { username: { not: null } },
-        select: { username: true, updatedAt: true },
-        orderBy: { updatedAt: "desc" },
-        take: 5000,
-      });
-      for (const s of sellers) {
-        if (s.username) {
-          dynamicUrls.push(url(`${BASE_URL}/seller/${s.username}`, s.updatedAt, "weekly", 0.6));
-        }
-      }
-    } catch {}
-
-    try {
-      const posts = await prisma.blogPost.findMany({
-        where: { status: "PUBLISHED" },
-        select: { slug: true, updatedAt: true },
-        orderBy: { updatedAt: "desc" },
-        take: 2000,
-      });
-      for (const p of posts) {
-        dynamicUrls.push(url(`${BASE_URL}/blog/${p.slug}`, p.updatedAt, "monthly", 0.55));
-      }
-    } catch {}
-
-    try {
-      const wanted = await prisma.wantedListing.findMany({
-        where: { status: "OPEN" },
-        select: { id: true, updatedAt: true },
-        orderBy: { updatedAt: "desc" },
-        take: 2000,
-      });
-      for (const w of wanted) {
-        dynamicUrls.push(url(`${BASE_URL}/wanted/${w.id}`, w.updatedAt, "weekly", 0.5));
-      }
-    } catch {}
-
-    return dynamicUrls;
-  },
-  ["sitemap-dynamic-urls"],
-  { revalidate: 1800, tags: ["sitemap"] }
-);
-
-export const dynamic = "force-dynamic";
+function urlEntry(url: string, lastmod: Date, changefreq: string, priority: number): string {
+  return `  <url>\n    <loc>${escapeXml(url)}</loc>\n    <lastmod>${lastmod.toISOString().split("T")[0]}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority.toFixed(1)}</priority>\n  </url>`;
+}
 
 export async function GET() {
-  // No real per-page modification tracking exists for these static routes
-  // (no CMS/DB field) — lastmod is omitted for them rather than stamped with
-  // the current request time (see the `url()` helper above).
-  const staticUrls = [
-    url(BASE_URL,                       null, "daily",   1.0),
-    url(`${BASE_URL}/listings`,         null, "hourly",  0.95),
-    ...PLATFORM_SEO.map((p) => url(`${BASE_URL}/buy/${p.slug}`, null, "daily", 0.9)),
-    url(`${BASE_URL}/sellers`,          null, "daily",   0.7),
-    url(`${BASE_URL}/help`,             null, "weekly",  0.6),
-    url(`${BASE_URL}/docs`,             null, "monthly", 0.5),
-    url(`${BASE_URL}/status`,           null, "daily",   0.3),
-    url(`${BASE_URL}/sitemap`,          null, "monthly", 0.2),
-    url(`${BASE_URL}/blog`,             null, "daily",   0.85),
-    url(`${BASE_URL}/pricing`,          null, "weekly",  0.8),
-    url(`${BASE_URL}/escrow-guide`,      null, "monthly", 0.75),
-    url(`${BASE_URL}/about`,            null, "monthly", 0.6),
-    url(`${BASE_URL}/faq`,              null, "weekly",  0.65),
-    url(`${BASE_URL}/contact`,          null, "monthly", 0.5),
-    url(`${BASE_URL}/fees`,             null, "monthly", 0.5),
-    url(`${BASE_URL}/trust`,            null, "monthly", 0.5),
-    url(`${BASE_URL}/terms`,            null, "monthly", 0.25),
-    url(`${BASE_URL}/privacy`,          null, "monthly", 0.25),
-    url(`${BASE_URL}/aml`,              null, "monthly", 0.2),
-    url(`${BASE_URL}/cookies`,          null, "monthly", 0.2),
-    url(`${BASE_URL}${RESOURCES_BASE}`, null, "daily",   0.85),
+  const now = new Date();
+
+  const [listings, blogPosts, sellers] = await Promise.all([
+    prisma.listing
+      .findMany({
+        where: { status: "ACTIVE", isPrivate: false },
+        orderBy: { updatedAt: "desc" },
+        take: MAX_LISTINGS,
+        select: { id: true, updatedAt: true },
+      })
+      .catch(() => []),
+    prisma.blogPost
+      .findMany({
+        where: { status: "PUBLISHED" },
+        orderBy: { updatedAt: "desc" },
+        take: MAX_BLOG_POSTS,
+        select: { slug: true, updatedAt: true },
+      })
+      .catch(() => []),
+    prisma.user
+      .findMany({
+        where: { isBanned: false, listings: { some: { status: "ACTIVE" } } },
+        orderBy: { trustScore: "desc" },
+        take: MAX_SELLERS,
+        select: { username: true, updatedAt: true },
+      })
+      .catch(() => []),
+  ]);
+
+  const entries: string[] = [
+    ...STATIC_ROUTES.map((r) => urlEntry(`${BASE_URL}${r.path}`, now, r.changeFrequency, r.priority)),
+    ...PLATFORM_SEO.map((p) => urlEntry(`${BASE_URL}/buy/${p.slug}`, now, "daily", 0.6)),
+    ...listings.map((l) => urlEntry(`${BASE_URL}/listings/${l.id}`, l.updatedAt, "daily", 0.5)),
+    ...blogPosts.map((b) => urlEntry(`${BASE_URL}/blog/${b.slug}`, b.updatedAt, "monthly", 0.5)),
+    ...sellers.filter((s) => s.username).map((s) => urlEntry(`${BASE_URL}/seller/${s.username}`, s.updatedAt, "weekly", 0.4)),
   ];
 
-  const dynamicUrls = await getDynamicSitemapUrls();
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>`;
 
-  // Opinly content routes (/resources/*) — merged in; failure never breaks the
-  // rest of the sitemap (listings/sellers/blog/wanted stay indexed).
-  const opinlyUrls: string[] = [];
-  try {
-    const routes = await getRoutes();
-    for (const r of routes) {
-      // Real per-article date from Opinly's own CMS when it has one; omitted
-      // (not faked) otherwise, same rule as the static pages above.
-      const lm = r.lastModified || null;
-      if (r.type === "home") continue; // already added as the /resources static URL
-      if (r.type === "post") opinlyUrls.push(url(`${BASE_URL}${RESOURCES_BASE}/${r.slug}`, lm, "weekly", 0.7));
-      else if (r.type === "category") opinlyUrls.push(url(`${BASE_URL}${RESOURCES_BASE}/category/${r.slug}`, lm, "weekly", 0.5));
-      else if (r.type === "author") opinlyUrls.push(url(`${BASE_URL}${RESOURCES_BASE}/author/${r.slug}`, lm, "monthly", 0.4));
-    }
-  } catch {}
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...staticUrls, ...dynamicUrls, ...opinlyUrls].join("\n")}\n</urlset>`;
-
-  return new Response(xml, {
+  return new NextResponse(xml, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
       "Cache-Control": "public, max-age=3600, s-maxage=3600",

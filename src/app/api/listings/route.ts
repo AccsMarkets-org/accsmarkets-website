@@ -11,6 +11,7 @@ import { verifyOwnershipToken } from "@/lib/ownership-token";
 import { platformRequiresToken } from "@/lib/ownership-platforms";
 import { requiresPhoneVerification, phoneVerificationRequiredResponse } from "@/lib/phone-gate";
 import type { Prisma } from "@prisma/client";
+import { emitToAdmins } from "@/lib/socket";
 
 export const dynamic = "force-dynamic";
 
@@ -221,6 +222,9 @@ export async function POST(req: Request) {
   }
 
   if (!moderation.blocked) {
+    // Notify online admins that a new listing is awaiting review.
+    emitToAdmins("admin_queue_update", { type: "new_listing", listingId: listing.id });
+
     prisma.activityEvent.create({
       data: {
         userId: user.id,

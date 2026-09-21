@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { getAdminSidebarCounts } from "@/lib/admin-cache";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminUserMenu } from "@/components/admin/AdminUserMenu";
+import { AdminRealtimeUpdates } from "@/components/admin/AdminRealtimeUpdates";
+import { ConnectionStatus } from "@/components/ui/ConnectionStatus";
 import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -45,7 +47,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
-    return <>{children}</>;
+    redirect("/login?callbackUrl=/admin");
   }
 
   if (session.user.role !== "ADMIN") redirect("/dashboard");
@@ -80,17 +82,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <span className="rounded-full bg-brand-950 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-100">
             Admin
           </span>
-          <AdminUserMenu
-            name={session.user.name ?? session.user.email ?? "Admin"}
-            image={session.user.image ?? null}
-            email={session.user.email ?? undefined}
-          />
+          <div className="flex items-center gap-2">
+            <ConnectionStatus />
+            <AdminUserMenu
+              name={session.user.name ?? session.user.email ?? "Admin"}
+              image={session.user.image ?? null}
+              email={session.user.email ?? undefined}
+            />
+          </div>
         </header>
         <main
           className="flex-1 overflow-auto bg-background p-4 md:p-6"
           style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
         >
           {children}
+          {/* Invisible socket listener — shows a toast when admin queue events
+              arrive so the admin can refresh without a manual page reload. */}
+          <AdminRealtimeUpdates />
         </main>
       </div>
     </div>

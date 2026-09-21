@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { assertTransition, EscrowTransitionError } from "@/lib/escrow-state-machine";
 import { createNotification } from "@/lib/notifications";
-import { emitToUser } from "@/lib/socket";
+import { emitToUser, emitToAdmins } from "@/lib/socket";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +67,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     link: `/dashboard/escrows/${escrow.id}`,
   });
   emitToUser(counterpartyId, "dispute_opened", { escrowId: escrow.id, disputeId: dispute.id });
+  emitToAdmins("admin_queue_update", { type: "new_dispute", escrowId: escrow.id });
 
   return NextResponse.json({ dispute }, { status: 201 });
 }

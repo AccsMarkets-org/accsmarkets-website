@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 
-// Pings /api/presence every 60s to keep lastSeenAt current while the user is active.
+// Pings /api/presence every 30s to keep lastSeenAt current while the user is active.
 export function usePresence() {
   const { status } = useSession();
 
@@ -15,7 +15,7 @@ export function usePresence() {
     }
 
     ping(); // immediate on mount
-    const id = setInterval(ping, 60_000);
+    const id = setInterval(ping, 30_000);
 
     // Also ping when tab regains focus
     const onVisible = () => { if (document.visibilityState === "visible") ping(); };

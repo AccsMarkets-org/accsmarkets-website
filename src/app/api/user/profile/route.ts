@@ -10,6 +10,7 @@ const schema = z.object({
   name: z.string().min(1).max(60).optional(),
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/).optional(),
   imageUrl: z.string().url().optional(),
+  bio: z.string().max(300).optional(),
 });
 
 export async function PATCH(req: NextRequest) {
@@ -22,7 +23,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid input' }, { status: 400 });
   }
 
-  const { name, username, imageUrl } = parsed.data;
+  const { name, username, imageUrl, bio } = parsed.data;
 
   if (username) {
     const existing = await prisma.user.findFirst({
@@ -39,6 +40,7 @@ export async function PATCH(req: NextRequest) {
       ...(name && { name }),
       ...(username && { username }),
       ...(imageUrl && { image: imageUrl }),
+      ...(bio !== undefined && { bio }),
     },
     select: {
       id: true, name: true, username: true, email: true,

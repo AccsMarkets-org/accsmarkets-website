@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
-import { PERMISSION_GROUPS, PERMISSION_LABELS, ALL_PERMISSIONS, type Permission } from "@/lib/permissions";
+import { PERMISSION_GROUPS, PERMISSION_LABELS, STAFF_ROLE_PRESETS, ALL_PERMISSIONS, type Permission } from "@/lib/permissions";
 
 interface StaffRole {
   id: string;
@@ -693,6 +693,24 @@ export function StaffManagementClient() {
                   placeholder="e.g. Handles customer support tickets and disputes"
                   className="w-full rounded-xl border border-surface-border bg-surface px-3.5 py-2.5 text-base focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 sm:text-sm"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Role Preset</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {STAFF_ROLE_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => setRolePerms(new Set(preset.permissions))}
+                      title={preset.description}
+                      className="rounded-lg border border-surface-border bg-surface px-3 py-2 text-left hover:border-brand-300 hover:bg-brand-50/50 dark:hover:bg-brand-950/30 transition"
+                    >
+                      <p className="text-xs font-semibold text-foreground">{preset.label}</p>
+                      <p className="text-[10px] text-muted mt-0.5 line-clamp-1">{preset.description}</p>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-[10px] text-muted">Selecting a preset will replace current permission selection.</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">

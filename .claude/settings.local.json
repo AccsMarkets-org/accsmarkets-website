@@ -221,7 +221,20 @@
       "Bash(node scripts/google-drive-auth.mjs)",
       "Bash(echo \"---current token in .env \\(compare prefix to old one: 1//03JMPDl4x2V_ICgYIARAAGAMSNwF-\\):\")",
       "Bash(npx tsx *)",
-      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=1712\")"
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=1712\")",
+      "PowerShell(winget --version 2>$null)",
+      "PowerShell(choco --version 2>$null)",
+      "PowerShell(scoop --version 2>$null)",
+      "PowerShell(winget install OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements 2>&1)",
+      "PowerShell(winget install Oracle.MySQL --silent --accept-package-agreements --accept-source-agreements 2>&1)",
+      "PowerShell(winget install Microsoft.VCRedist.2015+.x64 --silent --accept-package-agreements --accept-source-agreements 2>&1)",
+      "PowerShell(net start MySQL84 2>&1)",
+      "PowerShell(Stop-Process -Force)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\PC\\\\Downloads\\\\accsmarkets\\\\src\\\\app\\\\sitemap.ts\" -Force)",
+      "PowerShell(cd \"C:\\\\Users\\\\PC\\\\Downloads\\\\accsmarkets\"; $env:NEXTAUTH_URL=\"http://localhost:3000\"; node server.js 2>&1 | Select-Object -First 40)",
+      "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\nodejs\"; node --version)",
+      "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\nodejs\"; $env:NEXTAUTH_URL=\"http://localhost:3000\"; cd \"C:\\\\Users\\\\PC\\\\Downloads\\\\accsmarkets\"; node server.js 2>&1 | Select-Object -First 50)",
+      "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\nodejs\"; Invoke-WebRequest -Uri \"http://localhost:3000/sitemap.xml\" -UseBasicParsing -TimeoutSec 15 | Select-Object StatusCode, @{N=\"ContentType\";E={$_.Headers[\"Content-Type\"]}}, @{N=\"Preview\";E={$_.Content.Substring\\(0,[Math]::Min\\(200,$_.Content.Length\\)\\)}})"
     ]
   }
 }

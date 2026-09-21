@@ -6,7 +6,10 @@ import { io, Socket } from "socket.io-client";
 
 let sharedSocket: Socket | null = null;
 
-function getOrCreateSocket(): Socket {
+function getOrCreateSocket(): Socket | null {
+  // SSR guard: socket.io-client must only run in the browser.
+  if (typeof window === "undefined") return null;
+
   // Reuse if already connected or reconnecting, create fresh otherwise.
   if (sharedSocket && !sharedSocket.disconnected) {
     return sharedSocket;
@@ -21,7 +24,10 @@ function getOrCreateSocket(): Socket {
     path: "/socket.io",
     withCredentials: true,
     reconnection: true,
-    reconnectionAttempts: Infinity,
+    // After 5 failed attempts the client stops retrying automatically; the
+    // ConnectionStatus component exposes a manual "Reconnect" button at that
+    // point so the user can trigger a fresh attempt without a page reload.
+    reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 10_000,
   });
@@ -47,6 +53,7 @@ export function useSocket(): Socket | null {
   useEffect(() => {
     if (status !== "authenticated") return;
     const s = getOrCreateSocket();
+    if (!s) return; // SSR or socket.io-client unavailable
     setSocket(s);
 
     // If this component mounts after a server-forced disconnect, the socket

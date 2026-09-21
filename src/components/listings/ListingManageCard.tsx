@@ -71,6 +71,7 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [markingSold, setMarkingSold] = useState(false);
   const [promoteOpen, setPromoteOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { confirm, ConfirmDialog } = useConfirm();
@@ -120,6 +121,30 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleMarkSold() {
+    const ok = await confirm({
+      title: "Mark as sold?",
+      description: "The listing will be moved to Sold status.",
+      confirmLabel: "Mark Sold",
+      destructive: false,
+    });
+    if (!ok) return;
+    setMarkingSold(true);
+    try {
+      const res = await fetch(`/api/listings/${listing.id}/mark-sold`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Failed to mark as sold");
+      }
+      toast.success("Listing marked as sold");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setMarkingSold(false);
     }
   }
 
@@ -348,6 +373,18 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
                 className="border-brand-300 text-brand-600 hover:bg-brand-500/8"
               >
                 ⚡ Boost
+              </Button>
+            )}
+
+            {listing.status === "ACTIVE" && (
+              <Button
+                variant="outline"
+                size="sm"
+                isLoading={markingSold}
+                onClick={handleMarkSold}
+                className="border-success/40 text-success hover:bg-success/8"
+              >
+                ✓ Mark Sold
               </Button>
             )}
 

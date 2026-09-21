@@ -11,6 +11,17 @@ import { emailVerifyTemplate } from "@/lib/email-templates";
 import { upsertRiskScore } from "@/lib/risk";
 
 export async function POST(req: Request) {
+  // Basic CSRF protection: reject cross-origin POSTs. Browsers always send the
+  // Origin header for cross-origin requests; same-origin requests and server-
+  // side calls may omit it, which we allow through (rate-limiting handles abuse).
+  const origin = req.headers.get("origin");
+  if (origin) {
+    const expectedOrigin = (process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "");
+    if (origin !== expectedOrigin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
   const ip = getClientIp(req.headers);
   const { allowed } = await checkRateLimit(
     `register:${ip}`,

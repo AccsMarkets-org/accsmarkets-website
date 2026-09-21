@@ -142,8 +142,8 @@ export default async function DeveloperPage() {
               <p className="text-xs text-muted">Public v1 API endpoints you can access</p>
             </div>
           </div>
-          <div className="overflow-hidden rounded-xl border border-surface-border">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-xl border border-surface-border">
+            <table className="w-full min-w-[480px] text-sm">
               <thead>
                 <tr className="border-b border-surface-border bg-surface">
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-muted">Method</th>

@@ -10,9 +10,12 @@ import { PresencePing } from "@/components/ui/PresencePing";
 import { NavbarUserMenu } from "@/components/ui/NavbarUserMenu";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AnnouncementBanner } from "@/components/ui/AnnouncementBanner";
+import { ProfileCompletionBanner } from "@/components/ui/ProfileCompletionBanner";
 import { TermsGate } from "@/components/ui/TermsGate";
 import { DashboardHeaderActions } from "@/components/ui/DashboardHeaderActions";
 import { CURRENT_TERMS_VERSION } from "@/lib/terms";
+import { getMissingProfileFields } from "@/lib/profile-complete";
+import { IntelligenceWidget } from "@/components/intelligence/IntelligenceWidget";
 
 const getMaintenanceSettings = unstable_cache(
   async () =>
@@ -47,10 +50,27 @@ export default async function DashboardLayout({ children }: { children: React.Re
     }),
     prisma.user.findUnique({
       where: { id: userId },
-      select: { walletBalance: true, onboardingCompletedAt: true, primaryIntent: true },
+      select: {
+        walletBalance: true,
+        onboardingCompletedAt: true,
+        primaryIntent: true,
+        name: true,
+        username: true,
+        email: true,
+        emailVerified: true,
+      },
     }),
     getUserDashboardCounts(userId),
   ]);
+
+  const missingProfileFields = walletUser
+    ? getMissingProfileFields({
+        name: walletUser.name ?? null,
+        username: walletUser.username ?? null,
+        email: walletUser.email ?? "",
+        emailVerified: walletUser.emailVerified ?? null,
+      })
+    : [];
 
   const { unreadMessages, unreadNotifications, pendingOffers, activeEscrows } = dashCounts;
   const walletBalance = Number(walletUser?.walletBalance ?? 0);
@@ -84,6 +104,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </header>
         <AnnouncementBanner />
+        {missingProfileFields.length > 0 && (
+          <ProfileCompletionBanner missingFields={missingProfileFields} />
+        )}
         {/* overflow-y-auto here (not just min-h-screen on the page as a whole)
             makes this the one true scroll region for dashboard content, with
             the sidebar/header staying fixed — required for the Messages page's
@@ -97,6 +120,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <BottomTabBar isAuthenticated unreadMessages={Number(unreadMessages)} />
       {!accepted && <TermsGate userId={userId} />}
       <PresencePing />
+      <IntelligenceWidget />
     </div>
   );
 }

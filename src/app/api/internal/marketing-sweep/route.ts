@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { isBrevoConfigured, sendBrevoEmail } from "@/lib/brevo";
+import { sendDailyPromotionalEmail } from "@/lib/brevo-campaigns";
 import { logger } from "@/lib/logger";
 import {
   newSignupNudgeTemplate,
@@ -67,6 +68,9 @@ export async function POST(req: Request) {
     inactiveWinbackSent: 0,
     offerAbandonedSent: 0,
     generalPromoSent: 0,
+    dailyPromoSent: 0,
+    dailyPromoSkipped: 0,
+    dailyPromoErrors: 0,
   };
 
   // ── 1. New signups, 3+ days old, zero listings and zero offers made ──────
@@ -170,6 +174,22 @@ export async function POST(req: Request) {
       } catch (err) {
         logger.error("general_promo_send_failed", { userId: u.id, error: String(err) });
       }
+    }
+  }
+
+  // ── 5. Segmented daily promotional send via Brevo ──────────────────────────
+  // Sends activity-segmented emails (active users / inactive 7-30d / inactive
+  // 30d+) through Brevo. Date-scoped campaign keys prevent re-sends if both
+  // this sweep AND the dedicated /api/internal/daily-email endpoint run on the
+  // same day — the second invocation will find all keys already logged and skip.
+  if (isBrevoConfigured()) {
+    try {
+      const dailyStats = await sendDailyPromotionalEmail();
+      results.dailyPromoSent    = dailyStats.sent;
+      results.dailyPromoSkipped = dailyStats.skipped;
+      results.dailyPromoErrors  = dailyStats.errors;
+    } catch (err) {
+      logger.error("daily_promo_sweep_failed", { error: String(err) });
     }
   }
 

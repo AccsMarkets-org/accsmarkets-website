@@ -22,6 +22,10 @@ interface Props {
   initialSocialLinks?: SocialLinks;
   initialImage?: string | null;
   initialCountryCode?: string | null;
+  /** Phone number on file from PhoneVerification (display-only). */
+  initialPhone?: string | null;
+  /** True when kycLevel is PHONE or ID_VERIFIED and verifiedAt is set. */
+  phoneVerified?: boolean;
 }
 
 function completeness(name: string, username: string, bio: string, links: SocialLinks, image: string | null, countryCode: string): number {
@@ -35,7 +39,7 @@ function completeness(name: string, username: string, bio: string, links: Social
   return Math.min(score, 100);
 }
 
-export function ProfileForm({ initialName, initialUsername, initialBio = "", initialSocialLinks = {}, initialImage = null, initialCountryCode = null }: Props) {
+export function ProfileForm({ initialName, initialUsername, initialBio = "", initialSocialLinks = {}, initialImage = null, initialCountryCode = null, initialPhone = null, phoneVerified = false }: Props) {
   const { update: updateSession } = useSession();
   const [name,        setName]        = useState(initialName);
   const [username,    setUsername]    = useState(initialUsername);
@@ -73,11 +77,15 @@ export function ProfileForm({ initialName, initialUsername, initialBio = "", ini
       if (!res.ok) throw new Error(data.error ?? "Upload failed");
       setImage(data.url);
       // Persist immediately so the avatar updates in the header
-      await fetch("/api/user/me", {
+      const saveRes = await fetch("/api/user/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, username, bio, socialLinks: links, image: data.url, countryCode: countryCode || null }),
       });
+      if (!saveRes.ok) {
+        const saveData = await saveRes.json().catch(() => null);
+        throw new Error(saveData?.error ?? "Failed to save profile photo");
+      }
       await updateSession();
       toast.success("Photo updated");
     } catch (err) {
@@ -186,6 +194,43 @@ export function ProfileForm({ initialName, initialUsername, initialBio = "", ini
         value={username}
         onChange={(e) => setUsername(e.target.value.toLowerCase())}
       />
+
+      {/* Phone number — display-only; links to verification flow */}
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-foreground">
+          Phone number <span className="text-muted font-normal">(optional)</span>
+        </label>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 rounded-xl border border-surface-border bg-surface px-3 py-2 text-sm text-foreground min-h-[40px] flex items-center">
+            {initialPhone ? (
+              <span>{initialPhone}</span>
+            ) : (
+              <span className="text-muted">Not set</span>
+            )}
+          </div>
+          {phoneVerified ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Verified
+            </span>
+          ) : (
+            <a
+              href="/dashboard/settings/verification"
+              className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-xs font-semibold text-warning hover:bg-warning/20 transition"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              Verify
+            </a>
+          )}
+        </div>
+        <p className="text-xs text-muted">
+          {phoneVerified ? "Your phone number is verified." : "Verify your phone number to increase your trust score."}
+        </p>
+      </div>
 
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-foreground">Bio <span className="text-muted font-normal">(optional, max 300 chars)</span></label>

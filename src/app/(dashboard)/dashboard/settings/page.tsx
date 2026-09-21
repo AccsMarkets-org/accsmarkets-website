@@ -20,6 +20,7 @@ export default async function SettingsPage() {
         subscriptionPlan: true,
         achievementBadges: true,
         twoFactorAuth: { select: { id: true } },
+        phoneVerification: { select: { phoneNumber: true, verifiedAt: true } },
       },
     }),
     prisma.activeSession.count({ where: { userId: session!.user.id } }),
@@ -38,8 +39,120 @@ export default async function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
 
-      {/* Profile banner */}
+      {/* Settings navigation grid */}
       <SettingsSection delay={0}>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {[
+            {
+              href: "/dashboard/settings",
+              label: "Profile",
+              sub: "Name, bio, avatar",
+              icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              ),
+              color: "bg-brand-100 dark:bg-brand-900/50 text-brand-600",
+            },
+            {
+              href: "/dashboard/settings/security",
+              label: "Security",
+              sub: "2FA, password, WebAuthn",
+              icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              ),
+              color: "bg-success/10 text-success",
+            },
+            {
+              href: "/dashboard/settings/verification",
+              label: "Verification",
+              sub: "KYC level & identity",
+              icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+              ),
+              color: "bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400",
+            },
+            {
+              href: "/dashboard/settings/sessions",
+              label: "Sessions",
+              sub: "Logged-in devices",
+              icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <rect x="2" y="3" width="20" height="14" rx="2"/>
+                  <path d="M8 21h8M12 17v4"/>
+                </svg>
+              ),
+              color: "bg-surface-border text-muted",
+            },
+            {
+              href: "/dashboard/settings/notifications",
+              label: "Notifications",
+              sub: "Email & push alerts",
+              icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                </svg>
+              ),
+              color: "bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400",
+            },
+            {
+              href: "/dashboard/settings/privacy",
+              label: "Privacy",
+              sub: "Visibility & data sharing",
+              icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              ),
+              color: "bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400",
+            },
+            {
+              href: "/dashboard/settings/connected-accounts",
+              label: "Connected",
+              sub: "Google & linked accounts",
+              icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                </svg>
+              ),
+              color: "bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400",
+            },
+            {
+              href: "/dashboard/settings/data",
+              label: "Data & Privacy",
+              sub: "Export or delete account",
+              icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                </svg>
+              ),
+              color: "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400",
+            },
+          ].map(({ href, label, sub, icon, color }) => (
+            <Link key={href} href={href}>
+              <div className="flex flex-col gap-2 rounded-xl border border-surface-border bg-background p-3.5 hover:border-brand-300 hover:shadow-sm transition cursor-pointer h-full">
+                <div className={cn("flex h-9 w-9 items-center justify-center rounded-xl", color)}>
+                  {icon}
+                </div>
+                <div className="mt-0.5">
+                  <p className="text-sm font-semibold text-foreground leading-tight">{label}</p>
+                  <p className="text-[11px] text-muted mt-0.5 leading-snug">{sub}</p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </SettingsSection>
+
+      {/* Profile banner */}
+      <SettingsSection delay={0.05}>
         <div className="relative overflow-hidden rounded-2xl border border-surface-border bg-gradient-to-r from-brand-500/10 via-brand-400/5 to-transparent">
           <div className="flex flex-wrap items-center gap-5 p-6">
             {/* Avatar */}
@@ -176,6 +289,8 @@ export default async function SettingsPage() {
           initialSocialLinks={(user.socialLinks as Record<string, string> | null) ?? {}}
           initialImage={user.image}
           initialCountryCode={user.countryCode ?? null}
+          initialPhone={user.phoneVerification?.phoneNumber ?? null}
+          phoneVerified={Boolean(user.phoneVerification?.verifiedAt) && (user.kycLevel === "PHONE" || user.kycLevel === "ID_VERIFIED")}
         />
       </Card>
       </SettingsSection>
