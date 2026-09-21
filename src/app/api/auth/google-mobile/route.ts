@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { encode } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { isPendingSecret } from "@/lib/totp";
 
 type GooglePayload = {
+  iss?: string;
+  aud?: string;
   sub: string;
   email: string;
   name?: string;
@@ -14,30 +18,38 @@ export async function POST(req: Request) {
   const isMobile = req.headers.get("x-mobile-client") === "1";
   if (!isMobile) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const body = await req.json().catch(() => null);
-  const idToken: string | undefined = body?.idToken;
-  const accessToken: string | undefined = body?.accessToken;
+  const ip = getClientIp(req.headers);
+  const { allowed } = await checkRateLimit(`google-mobile:${ip}`, 10, 15 * 60);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
+  }
 
-  if (!idToken && !accessToken) {
+  const body = await req.json().catch(() => null);
+  const idToken: unknown = body?.idToken;
+
+  // Only ID tokens are accepted. A bare access token can't be bound to our
+  // OAuth client — any third-party app's Google access token for the victim
+  // would otherwise log in as them here.
+  if (!idToken || typeof idToken !== "string") {
     return NextResponse.json({ error: "Missing token" }, { status: 400 });
+  }
+
+  const expectedAudience = process.env.GOOGLE_CLIENT_ID;
+  if (!expectedAudience) {
+    return NextResponse.json({ error: "Google sign-in is not configured" }, { status: 503 });
   }
 
   let googlePayload: GooglePayload;
   try {
-    if (idToken) {
-      // Verify Google ID token via tokeninfo endpoint
-      const r = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
-      if (!r.ok) throw new Error("Invalid ID token");
-      googlePayload = await r.json();
-    } else {
-      // Verify access token via userinfo endpoint
-      const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!r.ok) throw new Error("Invalid access token");
-      googlePayload = await r.json();
-      // userinfo only returns data for verified Google accounts
-      googlePayload.email_verified = true;
+    // Verify Google ID token via tokeninfo endpoint (checks signature + expiry)
+    const r = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+    if (!r.ok) throw new Error("Invalid ID token");
+    googlePayload = await r.json();
+
+    // The token must have been issued to OUR client, by Google.
+    if (googlePayload.aud !== expectedAudience) throw new Error("Invalid audience");
+    if (googlePayload.iss !== "accounts.google.com" && googlePayload.iss !== "https://accounts.google.com") {
+      throw new Error("Invalid issuer");
     }
 
     if (!googlePayload.email_verified || googlePayload.email_verified === "false") {
@@ -84,6 +96,15 @@ export async function POST(req: Request) {
 
   if ((user as any).isBanned) {
     return NextResponse.json({ error: "Your account has been suspended" }, { status: 403 });
+  }
+
+  // Social sign-in has no TOTP step, so it must not be a way around 2FA.
+  const tfa = await prisma.twoFactorAuth.findUnique({ where: { userId: user.id }, select: { secret: true } });
+  if (user.role === "ADMIN" || (tfa && !isPendingSecret(tfa.secret))) {
+    return NextResponse.json(
+      { error: "This account requires password sign-in with a 2FA code.", code: "PASSWORD_LOGIN_REQUIRED" },
+      { status: 403 },
+    );
   }
 
   const token = await encode({

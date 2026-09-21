@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { RefreshCw, Sparkles } from "lucide-react";
 
 interface QueueItem {
   id: string;
@@ -122,8 +123,9 @@ export function BlogTopicQueuePanel() {
 
       {/* AI Suggest section */}
       <div className="rounded-xl border border-brand-200 bg-brand-50/40 p-3">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-700">
-          ✨ AI Topic Suggestions
+        <p className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-brand-700">
+          <Sparkles className="h-3.5 w-3.5" aria-hidden />
+          AI Topic Suggestions
         </p>
         <div className="flex gap-2">
           <input
@@ -192,9 +194,10 @@ export function BlogTopicQueuePanel() {
               <button
                 onClick={suggestTopics}
                 disabled={suggesting}
-                className="mt-1 text-xs text-brand-600 hover:underline"
+                className="mt-1 inline-flex items-center gap-1 text-xs text-brand-600 hover:underline"
               >
-                ↻ Regenerate suggestions
+                <RefreshCw className={`h-3.5 w-3.5 ${suggesting ? "animate-spin" : ""}`} aria-hidden />
+                Regenerate suggestions
               </button>
             )}
           </div>

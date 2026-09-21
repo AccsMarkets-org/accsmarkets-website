@@ -11,7 +11,7 @@ const BASE_URL = "https://accsmarkets.org";
 const PAGE_SIZE = 24;
 
 export const metadata = {
-  title: "Sellers — AccsMarkets",
+  title: "Sellers",
   description: "Browse verified sellers on AccsMarkets. Check trust scores, completed sales, and reviews before buying a social media account.",
   alternates: { canonical: `${BASE_URL}/sellers` },
   openGraph: {

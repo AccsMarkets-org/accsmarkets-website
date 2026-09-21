@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { ArrowRight, BadgeCheck, ShieldCheck, Zap } from "lucide-react";
 
 const PLATFORM_SVG_PATHS: Record<string, string> = {
   YouTube:
@@ -130,10 +131,10 @@ export function LandingHero() {
         <motion.div variants={fadeUp} className="flex flex-wrap justify-center gap-3">
           <Link
             href="/listings"
-            className="group rounded-xl bg-brand-500 px-7 py-3.5 font-semibold text-white shadow-lg shadow-brand-500/25 transition hover:bg-brand-600 hover:shadow-brand-600/30"
+            className="group inline-flex items-center gap-2 rounded-xl bg-brand-500 px-7 py-3.5 font-semibold text-white shadow-lg shadow-brand-500/25 transition hover:bg-brand-600 hover:shadow-brand-600/30"
           >
             Browse listings
-            <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
           </Link>
           <Link
             href="/register"
@@ -143,10 +144,10 @@ export function LandingHero() {
           </Link>
         </motion.div>
 
-        <motion.div variants={fadeUp} className="mt-4 flex items-center gap-6 text-sm text-muted">
-          <span className="flex items-center gap-1.5">🛡️ Funds held in escrow</span>
-          <span className="flex items-center gap-1.5">⚡ Crypto deposits</span>
-          <span className="flex items-center gap-1.5">✅ Verified sellers</span>
+        <motion.div variants={fadeUp} className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted">
+          <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-brand-500" aria-hidden />Funds held in escrow</span>
+          <span className="flex items-center gap-1.5"><Zap className="h-4 w-4 text-brand-500" aria-hidden />Crypto deposits</span>
+          <span className="flex items-center gap-1.5"><BadgeCheck className="h-4 w-4 text-brand-500" aria-hidden />Verified sellers</span>
         </motion.div>
       </motion.div>
     </section>

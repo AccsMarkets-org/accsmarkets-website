@@ -12,12 +12,13 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
     where: { id: params.id },
     select: { title: true },
   });
-  if (!item) return { title: "Wanted Request — AccsMarkets" };
+  if (!item) return { title: "Wanted Request", robots: { index: false, follow: false } };
   const title = `${item.title} — Wanted · AccsMarkets`;
   const description = "A buyer is looking for this account on AccsMarkets. Submit an offer if you have a matching account for sale.";
   const url = `${BASE_URL}/wanted/${params.id}`;
   return {
-    title,
+    // absolute: `title` already carries the brand; skip the root "%s — AccsMarkets" template.
+    title: { absolute: title },
     description,
     alternates: { canonical: url },
     openGraph: { title, description, url, images: [{ url: "/og-default.png" }] },

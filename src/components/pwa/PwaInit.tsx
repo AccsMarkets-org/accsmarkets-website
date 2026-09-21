@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { IosInstallModal } from "./IosInstallModal";
+import { BellRing, Smartphone, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -169,7 +170,9 @@ export function PwaInit() {
           style={bannerStyle}
         >
           <div className="flex items-center gap-3">
-            <span className="text-2xl">📲</span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
+              <Smartphone className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+            </span>
             <div>
               <p className="text-sm font-semibold text-foreground">Add to home screen</p>
               <p className="text-xs text-muted">
@@ -177,7 +180,7 @@ export function PwaInit() {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={androidInstall}
               className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700"
@@ -187,9 +190,9 @@ export function PwaInit() {
             <button
               onClick={dismissInstall}
               aria-label="Dismiss"
-              className="rounded-lg px-2 py-1.5 text-xs text-muted hover:bg-brand-500/8"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-brand-500/8 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
-              ✕
+              <X className="h-4 w-4" aria-hidden />
             </button>
           </div>
         </div>
@@ -202,13 +205,15 @@ export function PwaInit() {
           style={bannerStyle}
         >
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🔔</span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
+              <BellRing className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+            </span>
             <div>
               <p className="text-sm font-semibold text-foreground">Enable notifications</p>
               <p className="text-xs text-muted">Get alerts for offers and messages.</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={enablePush}
               className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700"
@@ -218,9 +223,9 @@ export function PwaInit() {
             <button
               onClick={dismissPush}
               aria-label="Dismiss"
-              className="rounded-lg px-2 py-1.5 text-xs text-muted hover:bg-brand-500/8"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-brand-500/8 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
-              ✕
+              <X className="h-4 w-4" aria-hidden />
             </button>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { StarRating } from "@/components/ui/StarRating";
+import { ArrowRight } from "lucide-react";
 
 export interface Testimonial {
   id: string;
@@ -62,8 +63,9 @@ export function TestimonialsSection({ testimonials }: { testimonials: Testimonia
       </div>
 
       <div className="mt-8 text-center">
-        <Link href="/sellers" className="text-sm font-semibold text-brand-500 hover:text-brand-600">
-          Browse verified sellers →
+        <Link href="/sellers" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-500 hover:text-brand-600">
+          Browse verified sellers
+          <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </div>
     </section>

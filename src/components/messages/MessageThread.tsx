@@ -10,6 +10,7 @@ import { useSocket } from "@/hooks/useSocket";
 import { cn } from "@/lib/utils";
 import { playChime } from "@/components/notifications/NotificationBell";
 import type { EscrowStatus, TransferModel } from "@prisma/client";
+import { ArrowRight, Check, ClipboardList, ShieldCheck, TriangleAlert, X } from "lucide-react";
 
 interface ChatOfferData {
   _type: "chat_offer";
@@ -235,9 +236,10 @@ function ListingContextBanner({ listingId }: { listingId: string }) {
           href={`/listings/${listingId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 rounded-lg border border-brand-300 bg-brand-500/10 px-2.5 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100 transition dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-900/50"
+          className="inline-flex items-center gap-1 shrink-0 rounded-lg border border-brand-300 bg-brand-500/10 px-2.5 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100 transition dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-900/50"
         >
-          View →
+          View
+          <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </Link>
       </div>
     </div>
@@ -335,8 +337,8 @@ function ChatOfferCard({
 
       {/* Status badge */}
       {effectiveStatus !== "PENDING" && (
-        <div className={cn("mb-2 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold", statusColor[effectiveStatus] ?? statusColor.EXPIRED)}>
-          {effectiveStatus === "ACCEPTED" ? "✓ Accepted" : effectiveStatus === "DECLINED" ? "✗ Declined" : "Expired"}
+        <div className={cn("mb-2 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold", statusColor[effectiveStatus] ?? statusColor.EXPIRED)}>
+          {effectiveStatus === "ACCEPTED" ? <><Check className="h-3 w-3" aria-hidden />Accepted</> : effectiveStatus === "DECLINED" ? <><X className="h-3 w-3" aria-hidden />Declined</> : "Expired"}
         </div>
       )}
 
@@ -368,7 +370,8 @@ function ChatOfferCard({
           href={`/checkout/${offerData.listingId}?offerId=${offerData.offerId}`}
           className="mt-1 flex w-full items-center justify-center gap-1 rounded-xl bg-brand-500 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-600 transition"
         >
-          Go to Checkout →
+          Go to Checkout
+          <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </Link>
       )}
 
@@ -839,7 +842,7 @@ export function MessageThread({
       setInput("");
       setPendingFile(null);
       if (data.linkStripped) {
-        toast("Links are not allowed in chats and were removed.", { icon: "⚠️" });
+        toast("Links are not allowed in chats and were removed.", { icon: <TriangleAlert className="h-4 w-4 text-warning" aria-hidden /> });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -958,7 +961,7 @@ export function MessageThread({
             <span className="hidden text-[10px] font-semibold text-brand-600 uppercase tracking-wide sm:inline">
               {activeEscrow.status === "IN_TRANSFER" ? "TRANSFERRING" : activeEscrow.status.replace(/_/g, " ")}
             </span>
-            <span className="hidden text-xs font-medium text-brand-600 sm:inline">→</span>
+            <ArrowRight className="hidden h-3.5 w-3.5 text-brand-600 sm:inline" aria-hidden />
           </Link>
         )}
       </div>
@@ -1009,7 +1012,7 @@ export function MessageThread({
           </div>
           <div className="mx-4 mb-4 flex items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 shadow-sm">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-xl shrink-0">🛡️</span>
+              <ShieldCheck className="h-6 w-6 shrink-0 text-white" strokeWidth={1.75} aria-hidden />
               <div className="min-w-0">
                 <p className="text-sm font-bold text-white truncate">{activeEscrow.listing.title}</p>
                 <p className="text-xs text-blue-200 mt-0.5">
@@ -1066,9 +1069,10 @@ export function MessageThread({
               <div className="pt-2">
                 <Link
                   href={`/admin/escrows/${activeEscrow.id}`}
-                  className="text-xs font-medium text-brand-600 hover:underline"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline"
                 >
-                  Open full escrow chat →
+                  Open full escrow chat
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </Link>
               </div>
             </div>
@@ -1350,9 +1354,10 @@ export function MessageThread({
             <button
               type="button"
               onClick={() => setCannedOpen((v) => !v)}
-              className="rounded-lg border border-surface-border px-2.5 py-1 text-xs text-muted hover:text-foreground transition"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-2.5 py-1 text-xs text-muted hover:text-foreground transition"
             >
-              📋 Insert canned response
+              <ClipboardList className="h-3.5 w-3.5" aria-hidden />
+              Insert canned response
             </button>
             {cannedOpen && (
               <div className="absolute bottom-full left-0 mb-1 z-20 w-72 rounded-xl border border-surface-border bg-background shadow-lg overflow-hidden">

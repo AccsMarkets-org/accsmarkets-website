@@ -1,5 +1,10 @@
 ﻿import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  ArrowLeft, BadgeCheck, Check, CircleDollarSign, Crown, Flame, Gem, Medal,
+  ShieldCheck, Sparkles, Star, Trophy, X, Zap,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -14,23 +19,23 @@ import { AdminSendMessageButton } from "@/components/admin/AdminSendMessageButto
 const TABS = ["overview", "listings", "escrows", "transactions", "reviews", "audit"] as const;
 type Tab = (typeof TABS)[number];
 
-const BADGE_META: Record<string, { label: string; color: string; emoji: string }> = {
-  RISING_STAR:    { label: "Rising Star",      color: "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-800",         emoji: "🌟" },
-  POWER_SELLER:   { label: "Power Seller",     color: "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800", emoji: "⚡" },
-  TOP_SELLER:     { label: "Top Seller",       color: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",  emoji: "🏆" },
-  LEGEND:         { label: "Legend",           color: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-400 dark:border-orange-800", emoji: "👑" },
-  BIG_EARNER:     { label: "Big Earner",       color: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800", emoji: "💰" },
-  WHALE:          { label: "Whale",            color: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",    emoji: "🐋" },
-  FIVE_STAR_SELLER: { label: "5-Star Seller",  color: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-800", emoji: "⭐" },
-  FAST_RESPONDER: { label: "Fast Responder",   color: "bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-400 dark:border-teal-800",    emoji: "⚡" },
-  TRUSTED_SELLER: { label: "Trusted Seller",   color: "bg-green-100 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-800", emoji: "✅" },
+const BADGE_META: Record<string, { label: string; color: string; icon: LucideIcon }> = {
+  RISING_STAR:    { label: "Rising Star",      color: "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-800",         icon: Sparkles },
+  POWER_SELLER:   { label: "Power Seller",     color: "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800", icon: Flame },
+  TOP_SELLER:     { label: "Top Seller",       color: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",  icon: Trophy },
+  LEGEND:         { label: "Legend",           color: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-400 dark:border-orange-800", icon: Crown },
+  BIG_EARNER:     { label: "Big Earner",       color: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800", icon: CircleDollarSign },
+  WHALE:          { label: "Whale",            color: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",    icon: Gem },
+  FIVE_STAR_SELLER: { label: "5-Star Seller",  color: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-800", icon: Star },
+  FAST_RESPONDER: { label: "Fast Responder",   color: "bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-400 dark:border-teal-800",    icon: Zap },
+  TRUSTED_SELLER: { label: "Trusted Seller",   color: "bg-green-100 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-800", icon: ShieldCheck },
 };
 
-const VERIFIED_BADGE_META: Record<string, { label: string; color: string }> = {
+const VERIFIED_BADGE_META: Record<string, { label: string; color: string; check?: boolean }> = {
   NONE:     { label: "None",     color: "bg-surface text-muted border-surface-border" },
-  BLUE:     { label: "Blue ✓",   color: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-800" },
-  GOLD:     { label: "Gold ✓",   color: "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border-amber-200 dark:border-amber-800" },
-  GREY:     { label: "Grey ✓",   color: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700" },
+  BLUE:     { label: "Blue",     color: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-800", check: true },
+  GOLD:     { label: "Gold",     color: "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border-amber-200 dark:border-amber-800", check: true },
+  GREY:     { label: "Grey",     color: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700", check: true },
   OFFICIAL: { label: "Official", color: "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400 border-brand-200 dark:border-brand-800" },
 };
 
@@ -81,7 +86,7 @@ export default async function AdminUserDetailPage({
               ) : initials}
             </div>
             {user.isBanned && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[9px] text-white font-bold shadow">✕</span>
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[9px] text-white font-bold shadow" role="img" aria-label="Banned"><X className="h-3 w-3" strokeWidth={3} aria-hidden /></span>
             )}
           </div>
 
@@ -105,6 +110,7 @@ export default async function AdminUserDetailPage({
             {/* Badge row */}
             <div className="mt-1 flex flex-wrap gap-1.5">
               <span className={cn("flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold", badgeMeta.color)}>
+                {badgeMeta.check && <BadgeCheck className="h-3.5 w-3.5" aria-hidden />}
                 {badgeMeta.label} badge
               </span>
               <span className="flex items-center gap-1 rounded-full border border-surface-border bg-surface px-2 py-0.5 text-[10px] font-semibold text-muted">
@@ -122,7 +128,12 @@ export default async function AdminUserDetailPage({
               { label: "Balance",    value: formatCurrency(user.walletBalance.toString()), green: true },
               { label: "Listings",   value: user.listings.length },
               { label: "Reviews",    value: user.reviewsReceived.length },
-              { label: "Avg rating", value: avgRating ? `${avgRating}★` : "—" },
+              { label: "Avg rating", value: avgRating ? (
+                <span className="inline-flex items-center gap-1">
+                  {avgRating}
+                  <Star className="h-4 w-4 fill-current text-amber-500" aria-hidden />
+                </span>
+              ) : "—" },
             ].map((s) => (
               <div key={s.label} className="flex min-w-[72px] flex-col items-center rounded-xl border border-surface-border bg-white dark:bg-surface px-3 py-2 text-center shadow-sm">
                 <p className={cn("text-base font-black", s.green ? "text-success" : "text-foreground")}>{s.value}</p>
@@ -233,9 +244,10 @@ export default async function AdminUserDetailPage({
               <div className="flex flex-wrap gap-2">
                 {user.achievementBadges.map((b) => {
                   const meta = BADGE_META[b.badge];
+                  const BadgeIcon = meta?.icon ?? Medal;
                   return (
                     <span key={b.badge} className={cn("flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold", meta?.color ?? "bg-surface-border text-muted")}>
-                      <span>{meta?.emoji ?? "🎖"}</span>
+                      <BadgeIcon className="h-3.5 w-3.5" aria-hidden />
                       {meta?.label ?? b.badge}
                     </span>
                   );
@@ -253,8 +265,14 @@ export default async function AdminUserDetailPage({
                     "flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-semibold transition",
                     has ? cn(meta.color, "shadow-sm") : "border-surface-border bg-surface text-muted opacity-50",
                   )}>
-                    {meta.emoji} {meta.label}
-                    {has && <span className="ml-0.5 text-[8px] font-black">✓</span>}
+                    <meta.icon className="h-3.5 w-3.5" aria-hidden />
+                    {meta.label}
+                    {has && (
+                      <>
+                        <Check className="ml-0.5 h-3 w-3" strokeWidth={3} aria-hidden />
+                        <span className="sr-only">earned</span>
+                      </>
+                    )}
                   </span>
                 );
               })}
@@ -274,7 +292,13 @@ export default async function AdminUserDetailPage({
                   user.verifiedBadge === key ? cn(meta.color, "shadow-sm ring-1 ring-current ring-offset-1") : "border-surface-border bg-surface text-muted opacity-50",
                 )}>
                   {meta.label}
-                  {user.verifiedBadge === key && <span className="ml-0.5 text-[9px] font-black">← current</span>}
+                  {meta.check && <BadgeCheck className="h-3.5 w-3.5" aria-hidden />}
+                  {user.verifiedBadge === key && (
+                    <span className="ml-0.5 inline-flex items-center gap-1 text-[9px] font-black">
+                      <ArrowLeft className="h-3 w-3" aria-hidden />
+                      current
+                    </span>
+                  )}
                 </span>
               ))}
             </div>
@@ -371,7 +395,15 @@ export default async function AdminUserDetailPage({
           {user.reviewsReceived.map((r) => (
             <Card key={r.id}>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-amber-500">{"★".repeat(r.rating)}<span className="text-surface-border">{"★".repeat(5 - r.rating)}</span></span>
+                <span className="inline-flex items-center gap-0.5 text-amber-500" role="img" aria-label={`${r.rating} out of 5`}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      className={cn("h-3.5 w-3.5", n <= r.rating ? "fill-current" : "text-surface-border")}
+                      aria-hidden
+                    />
+                  ))}
+                </span>
                 <span className="text-sm text-muted">by {r.reviewer.username ?? "user"} · {formatDate(r.createdAt)}</span>
               </div>
               {r.comment && <p className="mt-1 text-sm">{r.comment}</p>}

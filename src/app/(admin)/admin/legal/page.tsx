@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { AdminErasureQueue } from "@/components/admin/AdminErasureQueue";
 
-export const metadata = { title: "Legal — Admin" };
+export const metadata = { title: "Legal" };
 
 export default async function AdminLegalPage() {
   const requests = await prisma.dataErasureRequest.findMany({

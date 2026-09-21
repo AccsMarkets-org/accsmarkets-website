@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/Input";
 import { useConfirm } from "@/hooks/useConfirm";
 import { cn } from "@/lib/utils";
 import type { EscrowStatus, TransferModel } from "@prisma/client";
+import { Check, TriangleAlert } from "lucide-react";
 
 interface EscrowActionsProps {
   escrowId: string;
@@ -165,7 +166,7 @@ export function EscrowActions({
           )}>
             <div className="flex items-center gap-2 mb-1">
               <div className={cn("flex h-6 w-6 items-center justify-center rounded-full text-xs", videoVerified ? "bg-success/15 text-success" : "bg-warning/15 text-warning")}>
-                {videoVerified ? "✓" : "!"}
+                {videoVerified ? <Check className="h-3.5 w-3.5" aria-hidden /> : <TriangleAlert className="h-3.5 w-3.5" aria-hidden />}
               </div>
               <p className={cn("text-sm font-bold", videoVerified ? "text-success" : "text-warning")}>
                 {videoVerified ? "Verification call completed" : "Verification call required"}
@@ -312,7 +313,7 @@ export function EscrowActions({
                     onClick={() => callAdmin("verify-manager", { approved: true }, "Manager add approved")}
                     className="flex flex-1 h-9 items-center justify-center gap-1.5 rounded-xl bg-success text-xs font-bold text-white hover:opacity-90 transition disabled:opacity-60"
                   >
-                    {loading === "verify-manager-approve" ? <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> : "Approve ✓"}
+                    {loading === "verify-manager-approve" ? <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> : <><Check className="h-3.5 w-3.5" aria-hidden />Approve</>}
                   </button>
                   <button
                     type="button"
@@ -385,7 +386,7 @@ export function EscrowActions({
               className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-sm font-bold text-white shadow-md shadow-brand-500/25 transition hover:from-brand-600 hover:to-brand-700 disabled:opacity-50"
             >
               {loading === "verify" ? <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> : <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
-              I&apos;ve verified access ✓{adminSuffix}
+              I&apos;ve verified access{adminSuffix}
             </button>
           </div>
         )}
@@ -500,7 +501,7 @@ export function EscrowActions({
                 </div>
                 <div>
                   <p className={cn("text-sm font-bold", countdownElapsed ? "text-success" : "text-brand-700 dark:text-brand-400")}>
-                    {countdownElapsed ? "Countdown complete ✓" : `Transfer countdown: ${countdownLabel}`}
+                    {countdownElapsed ? "Countdown complete" : `Transfer countdown: ${countdownLabel}`}
                   </p>
                   {!countdownElapsed && (
                     <p className="mt-0.5 text-xs text-muted">Funds release once the countdown elapses and transfer is confirmed.</p>
@@ -518,7 +519,7 @@ export function EscrowActions({
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-success to-emerald-600 text-sm font-bold text-white shadow-md shadow-success/25 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {loading === "confirm-handover" ? <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> : <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>}
-                {sellerConfirmedHandoverAt ? "Handover confirmed ✓" : "Confirm handover complete — release funds"}
+                {sellerConfirmedHandoverAt ? "Handover confirmed" : "Confirm handover complete — release funds"}
               </button>
             )}
 

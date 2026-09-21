@@ -44,9 +44,8 @@ export async function POST(req: Request) {
     selfieUrl: encryptKycField(selfieUrl),
   };
 
-  // Create submission. Auto-approve if OPENKYC_SERVER_URL is not configured.
-  const hasAutoKyc = Boolean(process.env.OPENKYC_SERVER_URL);
-  const status = hasAutoKyc ? "PENDING" : "UNDER_REVIEW";
+  // Submissions go straight to the admin review queue.
+  const status = "UNDER_REVIEW";
 
   const submission = await prisma.kycSubmission.create({
     data: { userId: session.user.id, ...encryptedData, status },

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // GET /api/admin/kyb — list pending KYB submissions
 export async function GET(_req: NextRequest) {
-  const session = await requireAdmin("MANAGE_USERS");
+  const session = await requireAdmin("MANAGE_KYC");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const submissions = await prisma.kybSubmission.findMany({

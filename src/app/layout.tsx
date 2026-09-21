@@ -22,7 +22,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://accsmarkets.org",
     siteName: "AccsMarkets",
     title: "AccsMarkets — Buy & Sell Social Media Accounts",
     description: "A secure peer-to-peer marketplace for buying and selling social media accounts, protected by escrow.",
@@ -36,7 +35,9 @@ export const metadata: Metadata = {
     description: "A secure peer-to-peer marketplace for buying and selling social media accounts, protected by escrow.",
     images: ["https://accsmarkets.org/og-default.png"],
   },
-  alternates: { canonical: "https://accsmarkets.org" },
+  // No root-level alternates.canonical / openGraph.url: nested pages inherit
+  // this object, so a canonical here made every page that didn't set its own
+  // declare the homepage as its canonical URL. Each page sets its own instead.
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

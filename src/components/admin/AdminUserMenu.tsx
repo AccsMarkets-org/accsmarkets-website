@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown, LogOut, User } from "lucide-react";
 
 interface Props {
   name: string;
@@ -29,8 +30,12 @@ export function AdminUserMenu({ name, image, email }: Props) {
   return (
     <div className="relative" ref={ref}>
       <button
+        type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-1.5 py-1 text-sm font-medium text-white transition-all hover:border-white/20 hover:bg-white/10 active:scale-[0.96]"
+        aria-label="Admin account menu"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-1.5 py-1 text-sm font-medium text-white transition-all hover:border-white/20 hover:bg-white/10 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
       >
         {image ? (
           <Image src={image} alt={name} width={28} height={28} className="rounded-full object-cover" />
@@ -39,12 +44,7 @@ export function AdminUserMenu({ name, image, email }: Props) {
             {initials}
           </span>
         )}
-        <svg
-          className={`h-3.5 w-3.5 text-white/50 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <ChevronDown className={`h-3.5 w-3.5 text-white/50 transition-transform duration-200 ${open ? "rotate-180" : ""}`} strokeWidth={2.25} aria-hidden />
       </button>
 
       <AnimatePresence>
@@ -81,10 +81,7 @@ export function AdminUserMenu({ name, image, email }: Props) {
                 className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-surface"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface text-muted">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                    <circle cx="12" cy="8" r="4"/>
-                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                  </svg>
+                  <User className="h-4 w-4" aria-hidden />
                 </span>
                 <span className="font-medium">Profile & Settings</span>
               </Link>
@@ -97,11 +94,7 @@ export function AdminUserMenu({ name, image, email }: Props) {
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-danger/5"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-danger/10 text-danger">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
-                  </svg>
+                  <LogOut className="h-4 w-4" aria-hidden />
                 </span>
                 <span className="font-medium text-danger">Sign out</span>
               </button>

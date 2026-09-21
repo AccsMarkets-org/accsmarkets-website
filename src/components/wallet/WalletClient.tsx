@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { formatCurrency } from "@/lib/utils";
 import { isCreditTransaction } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { ArrowRight } from "lucide-react";
 
 interface TxRow {
   id: string;
@@ -258,8 +259,9 @@ export function WalletClient({ totalBalance, available, reserved, totalDeposited
           <p className="text-sm text-foreground">
             <strong>{formatCurrency(reserved.toString())}</strong> is reserved in active escrows.
             {" "}
-            <Link href="/dashboard/escrows" className="font-medium text-brand-600 hover:underline">
-              View escrows →
+            <Link href="/dashboard/escrows" className="inline-flex items-center gap-1.5 font-medium text-brand-600 hover:underline">
+              View escrows
+              <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </p>
         </div>
@@ -343,9 +345,10 @@ export function WalletClient({ totalBalance, available, reserved, totalDeposited
             {transactions.length === 0 && (
               <Link
                 href="/dashboard/wallet/deposit"
-                className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 transition"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 transition"
               >
-                Add funds →
+                Add funds
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
             )}
           </div>

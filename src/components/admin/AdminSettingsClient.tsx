@@ -7,6 +7,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Card } from "@/components/ui/Card";
 import { Toggle } from "@/components/ui/Toggle";
 import { AdminWebAuthnSettings } from "@/components/admin/AdminWebAuthnSettings";
+import { ArrowRight } from "lucide-react";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ConnectedAccount { provider: string; providerAccountId: string }
@@ -556,9 +557,10 @@ function TwoFASection({ onToast }: { onToast: (ok: boolean, msg: string) => void
           </div>
           <button
             onClick={startSetup}
-            className="self-start rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition"
+            className="inline-flex items-center gap-1.5 self-start rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition"
           >
-            Set up 2FA →
+            Set up 2FA
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </button>
         </div>
       )}

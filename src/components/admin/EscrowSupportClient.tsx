@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { relativeTime } from "@/lib/utils";
+import { Pin } from "lucide-react";
 
 interface EscrowUser {
   id: string;
@@ -149,7 +150,8 @@ export function EscrowSupportClient() {
                       <div className="space-y-1 max-w-[200px]">
                         {e.messages.map((p) => (
                           <p key={p.id} className="text-xs text-amber-700 dark:text-amber-400 line-clamp-2">
-                            📌 {p.content}
+                            <Pin className="mr-1 inline h-3 w-3 align-[-1px]" aria-hidden />
+                            {p.content}
                           </p>
                         ))}
                       </div>

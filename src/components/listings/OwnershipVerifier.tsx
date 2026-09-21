@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { platformRequiresToken } from "@/lib/ownership-platforms";
+import { CircleCheck } from "lucide-react";
 
 export { platformRequiresToken };
 
@@ -84,7 +85,7 @@ export function OwnershipVerifier({
   if (verified) {
     return (
       <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/5 p-4 text-sm text-success">
-        <span className="text-lg">✓</span>
+        <CircleCheck className="h-5 w-5 shrink-0" aria-hidden />
         <span className="font-medium">Ownership verified automatically</span>
       </div>
     );

@@ -1,6 +1,6 @@
 import { SystemDashboard } from "@/components/admin/SystemDashboard";
 
-export const metadata = { title: "System Status — Admin" };
+export const metadata = { title: "System Status" };
 
 export default function SystemPage() {
   return (

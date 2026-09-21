@@ -33,8 +33,10 @@ interface SendEmailInput {
  * When Redis/BullMQ is available, the job is enqueued and returns immediately (non-blocking).
  * Without Redis, tries Brevo HTTP API first (preferred — no SMTP port issues), then
  * falls back to SMTP.
+ * Resolves true when the message was handed to a transport (or queued), false when every
+ * transport failed — callers that must tell the user the truth (OTP, etc.) check it.
  */
-export async function sendEmail({ to, subject, html, slug }: SendEmailInput): Promise<void> {
+export async function sendEmail({ to, subject, html, slug }: SendEmailInput): Promise<boolean> {
   // If a slug is provided, check if an admin-customized DB override exists and use it.
   let resolvedSubject = subject;
   let resolvedHtml = html;
@@ -54,14 +56,14 @@ export async function sendEmail({ to, subject, html, slug }: SendEmailInput): Pr
   const q = getEmailQueue();
   if (q) {
     await q.add("send", { to, subject: resolvedSubject, html: resolvedHtml }, { attempts: 3, backoff: { type: "exponential", delay: 2000 } });
-    return;
+    return true;
   }
 
   // Prefer Brevo HTTP API (reliable from VPS — no SMTP port dependency)
   if (isBrevoConfigured()) {
     try {
       await sendBrevoEmail({ to, subject: resolvedSubject, htmlContent: resolvedHtml });
-      return;
+      return true;
     } catch (err) {
       logger.warn("email.brevo_failed_fallback_smtp", { subject, to, err: String(err) });
       // Fall through to SMTP
@@ -72,7 +74,7 @@ export async function sendEmail({ to, subject, html, slug }: SendEmailInput): Pr
   const client = getTransporter();
   if (!client) {
     logger.warn("email.skipped", { reason: "no_transport_configured", subject, to });
-    return;
+    return false;
   }
 
   const attempt = () =>
@@ -85,13 +87,16 @@ export async function sendEmail({ to, subject, html, slug }: SendEmailInput): Pr
 
   try {
     await attempt();
+    return true;
   } catch (err) {
     logger.warn("email.attempt_failed", { subject, to, attempt: 1, err: String(err) });
     await new Promise((resolve) => setTimeout(resolve, 2000));
     try {
       await attempt();
+      return true;
     } catch (err2) {
       logger.error("email.failed", { subject, to, attempt: 2, err: String(err2) });
+      return false;
     }
   }
 }

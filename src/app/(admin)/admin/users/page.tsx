@@ -1,5 +1,6 @@
 ﻿import Link from "next/link";
 import Image from "next/image";
+import { ArrowRight, X } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -119,7 +120,7 @@ export default async function AdminUsersPage({
                       </div>
                     )}
                     {user.isBanned && (
-                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[8px] text-white font-bold">✕</span>
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[8px] text-white font-bold" role="img" aria-label="Banned"><X className="h-3 w-3" strokeWidth={3} aria-hidden /></span>
                     )}
                   </div>
 
@@ -189,7 +190,7 @@ export default async function AdminUsersPage({
 
               {/* Quick links */}
               <div className="mt-3 flex flex-wrap gap-3 border-t border-surface-border pt-2.5">
-                <Link href={`/admin/users/${user.id}`} className="text-xs text-brand-600 hover:underline">View profile →</Link>
+                <Link href={`/admin/users/${user.id}`} className="inline-flex items-center gap-1.5 text-xs text-brand-600 hover:underline">View profile<ArrowRight className="h-3.5 w-3.5" aria-hidden /></Link>
                 <Link href={`/admin/listings?q=${encodeURIComponent(user.email ?? "")}`} className="text-xs text-muted hover:text-brand-600">
                   Listings ({user._count.listings})
                 </Link>

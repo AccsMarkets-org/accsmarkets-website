@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
 import { PERMISSION_GROUPS, PERMISSION_LABELS, STAFF_ROLE_PRESETS, ALL_PERMISSIONS, type Permission } from "@/lib/permissions";
+import { ArrowRight } from "lucide-react";
 
 interface StaffRole {
   id: string;
@@ -261,9 +262,9 @@ function MemberRow({
           onChange={(e) => onAssignRole(e.target.value || null)}
           className="rounded-lg border border-surface-border bg-background px-2.5 py-1.5 text-base font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-[140px] sm:text-xs"
         >
-          <option value="">👑 Owner (Full Access)</option>
+          <option value="">Owner (Full Access)</option>
           {roles.map((r) => (
-            <option key={r.id} value={r.id}>🔐 {r.name}</option>
+            <option key={r.id} value={r.id}>{r.name}</option>
           ))}
         </select>
       </td>
@@ -600,8 +601,9 @@ export function StaffManagementClient() {
                         </svg>
                       </div>
                       <p className="text-sm text-muted">No staff members found.</p>
-                      <button onClick={() => setShowAddStaff(true)} className="text-sm font-medium text-brand-600 hover:underline">
-                        Add your first team member →
+                      <button onClick={() => setShowAddStaff(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline">
+                        Add your first team member
+                        <ArrowRight className="h-4 w-4" aria-hidden />
                       </button>
                     </div>
                   </td>
@@ -636,8 +638,9 @@ export function StaffManagementClient() {
                   <p className="text-sm font-medium text-foreground">No custom roles yet</p>
                   <p className="text-xs text-muted mt-1">Create roles to limit what team members can access</p>
                 </div>
-                <button onClick={openCreateRole} className="mt-2 text-sm font-medium text-brand-600 hover:underline">
-                  Create your first role →
+                <button onClick={openCreateRole} className="inline-flex items-center gap-1.5 mt-2 text-sm font-medium text-brand-600 hover:underline">
+                  Create your first role
+                  <ArrowRight className="h-4 w-4" aria-hidden />
                 </button>
               </div>
             </div>
@@ -845,9 +848,10 @@ export function StaffManagementClient() {
                           <p className="text-xs text-muted">No users found</p>
                           <button
                             onClick={() => { setAddMode("invite"); setInviteEmail(searchQuery); setSearchQuery(""); }}
-                            className="mt-1 text-xs font-medium text-brand-600 hover:underline"
+                            className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline"
                           >
-                            Invite {searchQuery} instead →
+                            Invite {searchQuery} instead
+                            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                           </button>
                         </div>
                       )}
@@ -905,9 +909,9 @@ export function StaffManagementClient() {
                   onChange={(e) => setNewMemberRoleId(e.target.value)}
                   className="w-full rounded-xl border border-surface-border bg-surface px-3.5 py-2.5 text-base focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 sm:text-sm"
                 >
-                  <option value="">👑 Owner (Full Access)</option>
+                  <option value="">Owner (Full Access)</option>
                   {roles.map((r) => (
-                    <option key={r.id} value={r.id}>🔐 {r.name}</option>
+                    <option key={r.id} value={r.id}>{r.name}</option>
                   ))}
                 </select>
                 <p className="mt-1.5 text-xs text-muted">You can change this later from the members table.</p>

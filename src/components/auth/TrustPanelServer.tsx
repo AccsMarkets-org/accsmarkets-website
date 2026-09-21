@@ -1,3 +1,5 @@
+import { Star } from "lucide-react";
+
 // Server Component — no "use client"
 // Accepts live stats fetched by the parent Server Component page.
 
@@ -73,8 +75,9 @@ export default function TrustPanelServer({ stats, variant = "login" }: Props) {
     {
       value:
         stats.avgRating > 0
-          ? `${stats.avgRating.toFixed(1)}★`
-          : "4.9★",
+          ? stats.avgRating.toFixed(1)
+          : "4.9",
+      star: true,
       label: "avg rating",
     },
   ];
@@ -109,7 +112,10 @@ export default function TrustPanelServer({ stats, variant = "login" }: Props) {
         <div className="mt-10 grid grid-cols-3 gap-4">
           {statsDisplay.map((s) => (
             <div key={s.label}>
-              <p className="text-2xl font-bold">{s.value}</p>
+              <p className="inline-flex items-center gap-1 text-2xl font-bold">
+                {s.value}
+                {"star" in s && s.star && <Star className="h-5 w-5 fill-current" aria-hidden />}
+              </p>
               <p className="text-xs text-white/60 mt-0.5">{s.label}</p>
             </div>
           ))}

@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import { Check, ExternalLink, X } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -140,8 +141,9 @@ export default async function AdminVerificationPage({
                     )}
                     <div>
                       <p className="text-xs text-muted mb-1">Liveness</p>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${s.isLive ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
-                        {s.isLive ? "✓ Live" : "✗ Not live"}
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${s.isLive ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+                        {s.isLive ? <Check className="h-3.5 w-3.5" aria-hidden /> : <X className="h-3.5 w-3.5" aria-hidden />}
+                        {s.isLive ? "Live" : "Not live"}
                       </span>
                     </div>
                   </div>
@@ -163,7 +165,7 @@ export default async function AdminVerificationPage({
                       <a key={label} href={url} target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-1">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={url} alt={label} className="h-20 w-28 rounded-xl object-cover border border-surface-border group-hover:border-brand-300 transition" />
-                        <span className="text-[10px] text-center text-muted">{label} ↗</span>
+                        <span className="inline-flex items-center justify-center gap-1 text-[10px] text-center text-muted">{label}<ExternalLink className="h-3 w-3" aria-hidden /></span>
                       </a>
                     )
                   ))}
@@ -221,14 +223,16 @@ export default async function AdminVerificationPage({
                 <div className="flex flex-wrap gap-2 mb-3">
                   {s.regDocUrl && (
                     <a href={s.regDocUrl} target="_blank" rel="noopener noreferrer"
-                      className="rounded-xl border border-surface-border px-3 py-1.5 text-xs hover:border-brand-300 transition">
-                      Registration doc ↗
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border px-3 py-1.5 text-xs hover:border-brand-300 transition">
+                      Registration doc
+                      <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                     </a>
                   )}
                   {s.utilityBillUrl && (
                     <a href={s.utilityBillUrl} target="_blank" rel="noopener noreferrer"
-                      className="rounded-xl border border-surface-border px-3 py-1.5 text-xs hover:border-brand-300 transition">
-                      Utility bill ↗
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border px-3 py-1.5 text-xs hover:border-brand-300 transition">
+                      Utility bill
+                      <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                     </a>
                   )}
                 </div>

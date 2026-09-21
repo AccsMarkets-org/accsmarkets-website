@@ -3,7 +3,7 @@ import Link from "next/link";
 const BASE_URL = "https://accsmarkets.org";
 
 export const metadata = {
-  title: "API Docs — AccsMarkets",
+  title: "API Docs",
   description: "REST API reference for AccsMarkets — read listings and profile data programmatically.",
   alternates: { canonical: `${BASE_URL}/docs` },
   openGraph: {

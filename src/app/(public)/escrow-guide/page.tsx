@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "How Escrow Works — AccsMarkets",
+  title: "How Escrow Works",
   description:
     "Every AccsMarkets sale moves through a five-stage escrow — funds locked before a seller shares anything, released only after a buyer confirms access.",
+  alternates: { canonical: "/escrow-guide" },
 };
 
 type Role = "Buyer" | "Seller" | "Both";

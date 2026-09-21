@@ -20,6 +20,15 @@ export function decryptSecret(encrypted: string): string {
   return decryptCredentials(encrypted);
 }
 
+/** True for a setup the user started but never confirmed. Undecryptable secrets count as active (fail closed). */
+export function isPendingSecret(encrypted: string): boolean {
+  try {
+    return decryptSecret(encrypted).startsWith("PENDING:");
+  } catch {
+    return false;
+  }
+}
+
 /** Verify a 6-digit code against the secret. Accepts ±1 window. */
 export function verifyCode(secret: string, token: string): boolean {
   const t = Math.floor(Date.now() / 1000 / STEP);

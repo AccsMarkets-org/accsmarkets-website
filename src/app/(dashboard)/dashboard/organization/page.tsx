@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import toast from "react-hot-toast";
+import { Check, X } from "lucide-react";
 
 interface OrgMember {
   userId: string;
@@ -158,7 +159,7 @@ export default function OrganizationPage() {
   const KYB_STATUS_LABEL: Record<string, string> = {
     NONE: "Not started",
     SUBMITTED: "Under review",
-    APPROVED: "Approved ✓",
+    APPROVED: "Approved",
     REJECTED: "Rejected",
   };
 
@@ -220,7 +221,7 @@ export default function OrganizationPage() {
                 <p className="text-sm text-muted">Your role: {activeOrg.myRole}</p>
               </div>
               <span
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
                   activeOrg.kybStatus === "APPROVED"
                     ? "bg-success/10 text-success"
                     : activeOrg.kybStatus === "REJECTED"
@@ -231,6 +232,7 @@ export default function OrganizationPage() {
                 }`}
               >
                 KYB: {KYB_STATUS_LABEL[activeOrg.kybStatus] ?? activeOrg.kybStatus}
+                {activeOrg.kybStatus === "APPROVED" && <Check className="h-3.5 w-3.5" aria-hidden />}
               </span>
             </div>
 
@@ -263,7 +265,15 @@ export default function OrganizationPage() {
                           <Input placeholder="Name" value={o.name} onChange={(e) => setOwners(owners.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} className="flex-1" />
                           <Input type="number" placeholder="%" value={o.ownershipPct} onChange={(e) => setOwners(owners.map((x, j) => j === i ? { ...x, ownershipPct: Number(e.target.value) } : x))} className="w-20" />
                           {owners.length > 1 && (
-                            <Button variant="outline" onClick={() => setOwners(owners.filter((_, j) => j !== i))}>✕</Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              aria-label={`Remove owner ${o.name || i + 1}`}
+                              onClick={() => setOwners(owners.filter((_, j) => j !== i))}
+                              className="shrink-0 focus:outline-none focus-visible:border-brand-400 focus-visible:ring-2 focus-visible:ring-brand-100"
+                            >
+                              <X className="h-4 w-4" aria-hidden />
+                            </Button>
                           )}
                         </div>
                       ))}

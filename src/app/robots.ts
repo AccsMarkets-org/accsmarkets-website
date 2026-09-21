@@ -3,7 +3,10 @@ import { MetadataRoute } from "next";
 const BASE_URL = process.env.NEXTAUTH_URL ?? "https://accsmarkets.org";
 
 const ALLOW = ["/", "/listings/", "/seller/", "/sellers", "/blog/", "/buy/", "/status", "/sitemap", "/help", "/docs"];
-const DISALLOW = ["/dashboard/", "/admin/", "/api/", "/checkout/", "/login", "/register"];
+const DISALLOW = [
+  "/dashboard/", "/admin/", "/api/", "/checkout/", "/onboarding",
+  "/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/maintenance",
+];
 
 // AI assistant / answer-engine crawlers. Explicitly allowed so the marketplace
 // can surface in Gemini, ChatGPT, Copilot, Perplexity and Apple Intelligence

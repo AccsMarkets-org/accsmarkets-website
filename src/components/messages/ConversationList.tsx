@@ -8,6 +8,7 @@ import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { useSocket } from "@/hooks/useSocket";
 import { relativeTime, cn } from "@/lib/utils";
 import type { VerifiedBadge as VerifiedBadgeEnum } from "@prisma/client";
+import { Archive, MessageSquare } from "lucide-react";
 
 interface ActiveEscrow {
   id: string;
@@ -134,8 +135,8 @@ export function ConversationList({ basePath = "/dashboard/messages", search = ""
       {/* Empty state */}
       {!loading && conversations.length === 0 && (
         <div className="py-12 text-center px-4">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-xl">
-            💬
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-muted">
+            <MessageSquare className="h-6 w-6" strokeWidth={1.5} aria-hidden />
           </div>
           <p className="text-sm font-medium text-foreground">
             {tab === "inbox" ? "No conversations yet" : "No archived conversations"}
@@ -251,11 +252,12 @@ export function ConversationList({ basePath = "/dashboard/messages", search = ""
                   <button
                     type="button"
                     title="Archive"
+                    aria-label="Archive conversation"
                     onClick={(e) => { e.preventDefault(); archive(conv.partner.id); }}
                     disabled={archiving === conv.partner.id}
-                    className="hidden h-5 w-5 items-center justify-center rounded text-[11px] text-muted hover:text-foreground group-hover:flex transition"
+                    className="hidden h-5 w-5 items-center justify-center rounded text-muted hover:text-foreground group-hover:flex focus-visible:flex transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                   >
-                    ↓
+                    <Archive className="h-3.5 w-3.5" aria-hidden />
                   </button>
                 )}
               </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
+import { ArrowDown, ArrowLeft, Briefcase, CheckCircle2, Clock, TriangleAlert, X } from "lucide-react";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -169,10 +170,7 @@ export default function WithdrawPage() {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-6 py-12 text-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success/10">
-          <svg className="h-10 w-10 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="9 12 11 14 15 10"/>
-          </svg>
+          <CheckCircle2 className="h-10 w-10 text-success" aria-hidden />
         </div>
         <div>
           <p className="text-2xl font-black text-foreground">Withdrawal requested!</p>
@@ -202,10 +200,8 @@ export default function WithdrawPage() {
     <div className="mx-auto flex max-w-lg flex-col gap-5 pb-8">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/wallet" className="flex h-9 w-9 items-center justify-center rounded-xl border border-surface-border bg-surface text-muted hover:text-foreground transition">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-          </svg>
+        <Link href="/dashboard/wallet" aria-label="Back to wallet" className="flex h-9 w-9 items-center justify-center rounded-xl border border-surface-border bg-surface text-muted hover:text-foreground transition">
+          <ArrowLeft className="h-4 w-4" aria-hidden />
         </Link>
         <div>
           <h1 className="text-xl font-black text-foreground">Withdraw Funds</h1>
@@ -236,9 +232,7 @@ export default function WithdrawPage() {
             tab === "bank" ? "bg-background text-brand-600 shadow-sm" : "text-muted hover:text-foreground",
           )}
         >
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
-            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
-          </svg>
+          <Briefcase className="h-4 w-4" aria-hidden />
           Bank Wire
         </button>
       </div>
@@ -253,9 +247,7 @@ export default function WithdrawPage() {
             </p>
           </div>
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20">
-            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path d="M12 5v14M5 12l7 7 7-7"/>
-            </svg>
+            <ArrowDown className="h-5 w-5 text-white" aria-hidden />
           </div>
         </div>
         {/* Quick-percent buttons */}
@@ -372,8 +364,8 @@ export default function WithdrawPage() {
                 className="flex-1 resize-none bg-transparent font-mono text-sm text-foreground placeholder:text-muted/60 focus:outline-none"
               />
               {address && (
-                <button type="button" onClick={() => setAddress("")} className="mt-0.5 text-muted hover:text-danger transition">
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M18 6 6 18M6 6l12 12"/></svg>
+                <button type="button" onClick={() => setAddress("")} aria-label="Clear address" className="mt-0.5 text-muted hover:text-danger transition">
+                  <X className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
                 </button>
               )}
             </div>
@@ -413,10 +405,7 @@ export default function WithdrawPage() {
 
           {/* Warning */}
           <div className="flex items-start gap-2.5 rounded-xl border border-danger/20 bg-danger/5 px-3 py-3 text-xs text-danger">
-            <svg className="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
+            <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
             <span>Double-check your wallet address and network. Sending to the wrong address or network results in permanent loss of funds.</span>
           </div>
 
@@ -441,9 +430,7 @@ export default function WithdrawPage() {
               </>
             ) : (
               <>
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path d="M12 5v14M5 12l7 7 7-7"/>
-                </svg>
+                <ArrowDown className="h-5 w-5" strokeWidth={2.5} aria-hidden />
                 Request Withdrawal
               </>
             )}
@@ -563,9 +550,7 @@ export default function WithdrawPage() {
 
           {/* Info */}
           <div className="flex items-center gap-2 rounded-xl border border-surface-border bg-surface px-3 py-2.5 text-xs text-muted">
-            <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
+            <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
             Bank wire processing: 1–3 business days after admin approval
           </div>
 
@@ -590,9 +575,7 @@ export default function WithdrawPage() {
               </>
             ) : (
               <>
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                  <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
-                </svg>
+                <Briefcase className="h-5 w-5" strokeWidth={2.5} aria-hidden />
                 Request Bank Withdrawal
               </>
             )}

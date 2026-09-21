@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { cn, relativeTime } from "@/lib/utils";
 import { useSocket } from "@/hooks/useSocket";
+import { Bell, Volume2, VolumeX } from "lucide-react";
 
 // Shared AudioContext — created once after first user gesture so it's never suspended.
 let sharedCtx: AudioContext | null = null;
@@ -173,10 +174,12 @@ export function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-surface-border bg-surface text-muted hover:text-foreground"
-        aria-label="Notifications"
+        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-surface-border bg-surface text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : "Notifications"}
+        aria-haspopup="true"
+        aria-expanded={open}
       >
-        🔔
+        <Bell className="h-5 w-5" strokeWidth={1.75} aria-hidden />
         {unreadCount > 0 && (
           <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -188,11 +191,11 @@ export function NotificationBell() {
           <div className="flex items-center justify-between border-b border-surface-border px-4 py-2">
             <span className="text-sm font-semibold">Notifications</span>
             <div className="flex items-center gap-2">
-              <button onClick={toggleMute} className="text-muted hover:text-foreground transition-colors" title={soundMuted ? "Unmute sounds" : "Mute sounds"}>
+              <button type="button" onClick={toggleMute} className="flex h-6 w-6 items-center justify-center rounded-md text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500" title={soundMuted ? "Unmute sounds" : "Mute sounds"} aria-label={soundMuted ? "Unmute sounds" : "Mute sounds"} aria-pressed={soundMuted}>
                 {soundMuted ? (
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+                  <VolumeX className="h-4 w-4" aria-hidden />
                 ) : (
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                  <Volume2 className="h-4 w-4" aria-hidden />
                 )}
               </button>
               {unreadCount > 0 && (

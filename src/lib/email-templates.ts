@@ -81,6 +81,15 @@ interface LayoutOptions {
   secondaryCtaText?: string;
   secondaryCtaUrl?: string;
   withSecurityFooter?: boolean;
+  // Marketing/re-engagement sends only: adds the unsubscribe line to the footer.
+  marketing?: boolean;
+}
+
+// Where the "Promotional emails" switch (User.marketingOptOut, via
+// /api/settings/marketing-emails) lives. There is no tokenized one-click
+// unsubscribe endpoint, so this is the working opt-out for marketing sends.
+function marketingUnsubscribeUrl(): string {
+  return `${appUrl()}/dashboard/settings/notifications`;
 }
 
 function baseLayout(opts: LayoutOptions): string {
@@ -164,6 +173,7 @@ ${process.env.SUPPORT_PHONE
   : ""}<a href="mailto:support@accsmarkets.org" style="color:#a8a29e">support@accsmarkets.org</a>
 </p>
 <p style="margin:10px 0 0;font:400 11px/1.6 ${EMAIL_FONT};color:#c2bcb6">© ${year} AccsMarkets — escrow-protected account marketplace</p>
+${opts.marketing ? `<p style="margin:10px 0 0;font:400 11px/1.6 ${EMAIL_FONT};color:#a8a29e">You're receiving this because you have an AccsMarkets account and promotional emails are turned on. <a href="${marketingUnsubscribeUrl()}" style="color:#78716c;text-decoration:underline">Unsubscribe</a> &nbsp;·&nbsp; <a href="${marketingUnsubscribeUrl()}" style="color:#78716c;text-decoration:underline">Manage email preferences</a></p>` : ""}
 </td></tr>
 
 </table>
@@ -197,14 +207,14 @@ export function emailVerifyTemplate(name: string, token: string): EmailContent {
   };
 }
 
-export function passwordResetTemplate(name: string, token: string): EmailContent {
+export function passwordResetTemplate(name: string, token: string, ipAddress = "Unknown"): EmailContent {
   return {
     subject: "Reset Your AccsMarkets Password",
     html: renderTemplate("password_reset", {
       user_name: name,
       reset_url: `${appUrl()}/reset-password?token=${token}`,
       expiry_minutes: "60",
-      ip_address: "Unknown",
+      ip_address: ipAddress,
     }),
   };
 }
@@ -297,7 +307,14 @@ export function escrowFundedTemplate(name: string, listingTitle: string, amount:
   };
 }
 
-export function escrowCreatedTemplate(name: string, listingTitle: string, amount: string, escrowId: string): EmailContent {
+export function escrowCreatedTemplate(
+  name: string,
+  listingTitle: string,
+  amount: string,
+  escrowId: string,
+  buyerName = "A buyer",
+  sellerName = "The seller",
+): EmailContent {
   return {
     subject: `Escrow Created — ${escrowId}`,
     html: renderTemplate("escrow_created", {
@@ -306,8 +323,8 @@ export function escrowCreatedTemplate(name: string, listingTitle: string, amount
       amount,
       escrow_id: escrowId,
       escrow_url: `${appUrl()}/dashboard/escrows/${escrowId}`,
-      buyer_name: "A buyer",
-      seller_name: "The seller",
+      buyer_name: buyerName,
+      seller_name: sellerName,
       escrow_rules_url: `${appUrl()}/faq`,
     }),
   };
@@ -692,6 +709,7 @@ export function newSignupNudgeTemplate(name: string): EmailContent {
   return {
     subject: "Ready to make your first move on AccsMarkets?",
     html: baseLayout({
+      marketing: true,
       preheaderText: "Browse listings or create your first one — it only takes a couple of minutes.",
       emoji: "🚀",
       tone: "brand",
@@ -711,13 +729,14 @@ export function inactiveWinbackTemplate(name: string): EmailContent {
   return {
     subject: "What's new on AccsMarkets since you've been away",
     html: baseLayout({
+      marketing: true,
       preheaderText: "New listings and features have been added since your last visit.",
       emoji: "👋",
       tone: "info",
       heading: "We haven't seen you in a while",
       body: `<p>Hi ${name},</p>
 <p>It's been a while since your last visit — the marketplace has kept moving. New listings are added regularly, and escrow protection now covers the full transaction from funding through transfer confirmation.</p>
-<p style="font-size:13px;color:#78716c;">If you'd rather not get these emails, you can turn them off anytime from your settings.</p>`,
+<p style="font-size:13px;color:#78716c;">If you'd rather not get these emails, you can <a href="${marketingUnsubscribeUrl()}" style="color:#78716c;text-decoration:underline;">turn them off anytime</a> from your notification settings.</p>`,
       ctaText: "See what's new",
       ctaUrl: `${appUrl()}/listings`,
     }),
@@ -733,6 +752,7 @@ export function generalPromoTemplate(name: string): EmailContent {
   return {
     subject: "Escrow-protected trading, live listings, and more on AccsMarkets",
     html: baseLayout({
+      marketing: true,
       preheaderText: "A quick look at what's on the marketplace right now.",
       emoji: "✨",
       tone: "brand",
@@ -740,7 +760,7 @@ export function generalPromoTemplate(name: string): EmailContent {
       subheading: "Escrow-protected, start to finish",
       body: `<p>Hi ${name},</p>
 <p>AccsMarkets keeps every deal escrow-protected — funds are only released once the transfer is confirmed on both sides, whether you're buying or selling. New listings go up regularly, and browsing is free.</p>
-<p style="font-size:13px;color:#78716c;">If you'd rather not get emails like this, you can turn them off anytime from your notification settings.</p>`,
+<p style="font-size:13px;color:#78716c;">If you'd rather not get emails like this, you can <a href="${marketingUnsubscribeUrl()}" style="color:#78716c;text-decoration:underline;">turn them off anytime</a> from your notification settings.</p>`,
       ctaText: "Browse listings",
       ctaUrl: `${appUrl()}/listings`,
       secondaryCtaText: "Or list something to sell",
@@ -756,6 +776,7 @@ export function sellerFeesPromoTemplate(name: string): EmailContent {
   return {
     subject: "Turn your accounts into cash — list free on AccsMarkets",
     html: baseLayout({
+      marketing: true,
       preheaderText: "Listing is free, and every sale is protected the same way every buy is.",
       emoji: "💼",
       tone: "brand",
@@ -763,7 +784,7 @@ export function sellerFeesPromoTemplate(name: string): EmailContent {
       subheading: "Free to list, escrow-protected to close",
       body: `<p>Hi ${name},</p>
 <p>If you've got a social media account sitting unused, you can list it on AccsMarkets for free. Buyers fund the deal into escrow up front, so you're paid as soon as the transfer is confirmed — no chasing payment, no chargebacks.</p>
-<p style="font-size:13px;color:#78716c;">If you'd rather not get emails like this, you can turn them off anytime from your notification settings.</p>`,
+<p style="font-size:13px;color:#78716c;">If you'd rather not get emails like this, you can <a href="${marketingUnsubscribeUrl()}" style="color:#78716c;text-decoration:underline;">turn them off anytime</a> from your notification settings.</p>`,
       ctaText: "List an account",
       ctaUrl: `${appUrl()}/dashboard/listings/new`,
       secondaryCtaText: "See current fees",
@@ -776,6 +797,7 @@ export function offerAbandonedTemplate(name: string, listingTitle: string, offer
   return {
     subject: "Your accepted offer is still waiting",
     html: baseLayout({
+      marketing: true,
       preheaderText: `Your offer on "${listingTitle}" was accepted — fund the escrow to continue.`,
       emoji: "⏳",
       tone: "warning",
@@ -785,7 +807,9 @@ export function offerAbandonedTemplate(name: string, listingTitle: string, offer
 <p>The seller accepted your offer on <strong>${listingTitle}</strong>, but the escrow hasn't been funded yet. Nothing has been charged — the deal just hasn't been completed.</p>
 <p>If you're still interested, you can pick up right where you left off. If your plans changed, no action is needed — the offer will expire on its own.</p>`,
       ctaText: "Complete the purchase",
-      ctaUrl: `${appUrl()}/dashboard/offers/${offerId}`,
+      // There is no /dashboard/offers/[id] page — the per-offer URL this used to
+      // build was a 404. The offers list is where the accepted offer is funded.
+      ctaUrl: `${appUrl()}/dashboard/offers?offer=${encodeURIComponent(offerId)}`,
     }),
   };
 }

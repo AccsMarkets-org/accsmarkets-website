@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Toggle as ToggleSwitch } from "@/components/ui/Toggle";
+import { Plus, Star, X } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -207,7 +208,7 @@ function PlanCard({
                 <span className="rounded-full bg-amber-100 dark:bg-amber-950/40 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">{form.badge}</span>
               )}
               {form.isPopular && (
-                <span className="rounded-full bg-brand-100 dark:bg-brand-900/50 px-2 py-0.5 text-[10px] font-bold text-brand-700">★ Popular</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-brand-100 dark:bg-brand-900/50 px-2 py-0.5 text-[10px] font-bold text-brand-700"><Star className="h-3 w-3 fill-current" aria-hidden />Popular</span>
               )}
               {!form.isActive && (
                 <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] font-bold text-muted border border-surface-border">Inactive</span>
@@ -672,9 +673,9 @@ export function PricingAdminClient({ initialPlans }: { initialPlans: PlanData[] 
         </div>
         <button
           onClick={() => setShowCreate((v) => !v)}
-          className="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition"
         >
-          {showCreate ? "✕ Cancel" : "+ New Plan"}
+          {showCreate ? <><X className="h-4 w-4" aria-hidden />Cancel</> : <><Plus className="h-4 w-4" aria-hidden />New Plan</>}
         </button>
       </div>
 

@@ -66,11 +66,11 @@ export async function enqueueSweep(task: SweepJobData["task"]): Promise<void> {
   } else {
     // Synchronous fallback — call the sweep endpoint directly
     const base = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-    await fetch(`${base}/api/sweep`, {
+    await fetch(`${base}/api/internal/sweep`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.SWEEP_SECRET ?? ""}`,
+        "x-sweep-secret": process.env.INTERNAL_SWEEP_SECRET ?? "",
       },
       body: JSON.stringify({ task }),
     }).catch(() => {});

@@ -5,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ConversationList } from "@/components/messages/ConversationList";
+import { ArrowLeft, Search, X } from "lucide-react";
 
 export default function MessagesLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -33,9 +34,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
             href="/dashboard"
             className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-muted hover:bg-surface hover:text-foreground transition"
           >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
             Dashboard
           </Link>
         </div>
@@ -43,9 +42,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
         {/* Functional search */}
         <div className="px-3 py-2.5 shrink-0">
           <div className="flex h-9 items-center gap-2 rounded-full border border-surface-border bg-surface px-3.5 focus-within:border-brand-400 transition">
-            <svg className="h-3.5 w-3.5 shrink-0 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-            </svg>
+            <Search className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
             <input
               type="text"
               value={search}
@@ -57,11 +54,10 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
               <button
                 type="button"
                 onClick={() => setSearch("")}
+                aria-label="Clear search"
                 className="text-muted hover:text-foreground transition"
               >
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
+                <X className="h-3 w-3" aria-hidden />
               </button>
             )}
           </div>

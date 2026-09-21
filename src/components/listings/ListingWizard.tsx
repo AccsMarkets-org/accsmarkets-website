@@ -10,6 +10,7 @@ import { PLATFORM_LABEL, PLATFORM_COLOR } from "@/lib/constants";
 import { PLATFORMS, containsContactInfo } from "@/lib/validation/listing";
 import { cn } from "@/lib/utils";
 import { OwnershipVerifier, platformRequiresToken } from "@/components/listings/OwnershipVerifier";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 
 // Derived from lib/moderation.ts rule groups — update both if moderation rules change.
 const DESCRIPTION_RULES = [
@@ -550,7 +551,7 @@ export function ListingWizard({ reviewHours = 48 }: { reviewHours?: number }) {
               </div>
             </div>
 
-            <Button disabled={!step1Valid} onClick={() => setStep(2)} className="w-fit self-end">Continue →</Button>
+            <Button disabled={!step1Valid} onClick={() => setStep(2)} className="w-fit self-end">Continue<ArrowRight className="h-4 w-4" aria-hidden /></Button>
           </div>
         )}
 
@@ -579,8 +580,8 @@ export function ListingWizard({ reviewHours = 48 }: { reviewHours?: number }) {
               manualConfirmed={ownershipConfirmed}
             />
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(1)}>← Back</Button>
-              <Button disabled={!step2Valid} onClick={() => setStep(3)}>Continue →</Button>
+              <Button variant="outline" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4" aria-hidden />Back</Button>
+              <Button disabled={!step2Valid} onClick={() => setStep(3)}>Continue<ArrowRight className="h-4 w-4" aria-hidden /></Button>
             </div>
           </div>
         )}
@@ -756,7 +757,7 @@ export function ListingWizard({ reviewHours = 48 }: { reviewHours?: number }) {
                     <div key={url} className="relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={url} alt={`Screenshot ${i + 1}`} className="h-20 w-28 rounded-xl object-cover border border-surface-border" />
-                      <button type="button" onClick={() => setForm((prev) => ({ ...prev, screenshots: prev.screenshots.filter((_, j) => j !== i) }))} className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-white text-xs leading-none shadow">×</button>
+                      <button type="button" onClick={() => setForm((prev) => ({ ...prev, screenshots: prev.screenshots.filter((_, j) => j !== i) }))} aria-label={`Remove screenshot ${i + 1}`} className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-white shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-1"><X className="h-3 w-3" aria-hidden /></button>
                     </div>
                   ))}
                 </div>
@@ -774,7 +775,7 @@ export function ListingWizard({ reviewHours = 48 }: { reviewHours?: number }) {
             </div>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(2)}>← Back</Button>
+              <Button variant="outline" onClick={() => setStep(2)}><ArrowLeft className="h-4 w-4" aria-hidden />Back</Button>
               <Button isLoading={loading} disabled={form.title.length < 5 || descLen < 20 || descOver || !form.price} onClick={handleSubmit}>Submit Listing</Button>
             </div>
           </div>

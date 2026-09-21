@@ -23,7 +23,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const description = cat?.description ?? `Articles in ${name}.`;
   const url = `${BASE_URL}${RESOURCES_BASE}/category/${params.slug}`;
   return {
-    title,
+    // absolute: `title` already ends in "— AccsMarkets"; skip the root template.
+    title: { absolute: title },
     description,
     alternates: { canonical: url },
     openGraph: { title, description, url, type: "website", siteName: "AccsMarkets" },

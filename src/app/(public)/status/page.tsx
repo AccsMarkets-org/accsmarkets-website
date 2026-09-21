@@ -1,8 +1,9 @@
 import { StatusClient } from "./StatusClient";
 
 export const metadata = {
-  title: "System Status — AccsMarkets",
-  description: "Live status of AccsMarkets services — API, database, and real-time messaging.",
+  title: "System Status",
+  description: "Live status of AccsMarkets services — API, database, escrow and real-time messaging — refreshed automatically so you can check for incidents.",
+  alternates: { canonical: "/status" },
   robots: { index: true, follow: true },
 };
 

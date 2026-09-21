@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PLATFORM_LABEL } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
+import { Bookmark } from "lucide-react";
 
 export default async function WatchlistPage() {
   const session = await getServerSession(authOptions);
@@ -30,7 +31,7 @@ export default async function WatchlistPage() {
 
       {items.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-16 text-center">
-          <span className="text-4xl">🔖</span>
+          <Bookmark className="h-10 w-10 text-muted" strokeWidth={1.5} aria-hidden />
           <p className="text-lg font-semibold">Nothing saved yet</p>
           <p className="text-sm text-muted">Tap the heart on any listing to save it here.</p>
           <Link href="/listings">

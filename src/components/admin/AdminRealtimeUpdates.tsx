@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSocket } from "@/hooks/useSocket";
+import { X } from "lucide-react";
 
 const ADMIN_EVENTS = [
   "admin_queue_update",
@@ -82,10 +83,10 @@ export function AdminRealtimeUpdates() {
       <button
         type="button"
         aria-label="Dismiss notification"
-        className="pointer-events-auto ml-1 shrink-0 text-lg leading-none text-muted transition-colors hover:text-foreground"
+        className="pointer-events-auto ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         onClick={() => setNotification(null)}
       >
-        ×
+        <X className="h-4 w-4" aria-hidden />
       </button>
     </div>
   );

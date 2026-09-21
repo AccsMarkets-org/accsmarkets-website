@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { useSocket } from "@/hooks/useSocket";
 import { cn, relativeTime } from "@/lib/utils";
+import { Pin, ShieldCheck } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -187,14 +188,14 @@ export function EscrowChat({ escrowId }: { escrowId: string }) {
                 )}
               >
                 {!mine && (
-                  <p className={cn("mb-0.5 text-[11px] font-semibold", isSenderAdmin ? "text-info" : "text-brand-600")}>
-                    {isSenderAdmin ? "⚡ Admin" : m.sender.username ?? m.sender.name}
+                  <p className={cn("mb-0.5 inline-flex items-center gap-1 text-[11px] font-semibold", isSenderAdmin ? "text-info" : "text-brand-600")}>
+                    {isSenderAdmin ? <><ShieldCheck className="h-3 w-3" aria-hidden />Admin</> : m.sender.username ?? m.sender.name}
                   </p>
                 )}
                 <p className="whitespace-pre-wrap break-words">{m.content}</p>
                 <p className={cn("mt-1 text-[10px]", mine ? "text-white/70" : "text-muted")}>
                   {relativeTime(m.createdAt)}
-                  {m.isPinned && <span className="ml-1 text-amber-500">📌</span>}
+                  {m.isPinned && <Pin className="ml-1 inline h-3 w-3 text-amber-500" aria-label="Pinned" />}
                 </p>
               </div>
               {/* Pin button for my own messages (admins) */}

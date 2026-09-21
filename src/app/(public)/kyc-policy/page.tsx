@@ -4,8 +4,9 @@ import { LegalPageLayout, LegalSection } from "@/components/ui/LegalPageLayout";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "KYC Policy — AccsMarkets",
-  description: "AccsMarkets identity verification (KYC) policy — what we collect, how we store it, and your rights.",
+  title: "KYC Policy",
+  description: "AccsMarkets identity verification (KYC) policy — who must verify, what we collect, how it is encrypted and stored, retention, and your rights.",
+  alternates: { canonical: "/kyc-policy" },
 };
 
 const SECTIONS = [

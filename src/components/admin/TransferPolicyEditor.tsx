@@ -4,6 +4,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Check } from "lucide-react";
 
 interface Policy {
   id: string;
@@ -104,7 +105,7 @@ export function TransferPolicyEditor({ platform, existing }: Props) {
         placeholder="e.g. https://support.google.com/youtube/... — YouTube 7-day manager tenure rule"
       />
       <Button type="submit" isLoading={saving} size="sm">
-        {saved ? "Saved ✓" : "Save policy"}
+        {saved ? <><Check className="h-4 w-4" aria-hidden />Saved</> : "Save policy"}
       </Button>
     </form>
   );

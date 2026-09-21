@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
+import type { DisputeStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,8 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get("status") ?? "OPEN";
   const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10));
 
-  const validStatuses = ["OPEN", "UNDER_REVIEW", "RESOLVED_BUYER", "RESOLVED_SELLER", "CLOSED"];
-  const statusFilter = validStatuses.includes(status) ? status : "OPEN";
+  const validStatuses: DisputeStatus[] = ["OPEN", "UNDER_REVIEW", "RESOLVED_BUYER", "RESOLVED_SELLER", "CLOSED"];
+  const statusFilter: DisputeStatus = (validStatuses as string[]).includes(status) ? (status as DisputeStatus) : "OPEN";
 
   const disputes = await prisma.dispute.findMany({
     where: { status: statusFilter },

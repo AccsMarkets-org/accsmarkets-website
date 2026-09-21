@@ -33,6 +33,8 @@
     "framer-motion": "^11.11.17",
     "ioredis": "^5.11.1",
     "isomorphic-dompurify": "^2.19.0",
+    "jose": "^4.15.9",
+    "lucide-react": "^0.460.0",
     "next": "^14.2.18",
     "next-auth": "^4.24.10",
     "next-intl": "^4.13.3",

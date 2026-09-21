@@ -19,7 +19,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const url = `${BASE_URL}${RESOURCES_BASE}/author/${author.slug}`;
   const img = opinlyImage(author.image);
   return {
-    title,
+    // absolute: `title` already ends in "— AccsMarkets"; skip the root template.
+    title: { absolute: title },
     description,
     alternates: { canonical: url },
     openGraph: { title, description, url, type: "profile", siteName: "AccsMarkets", images: img ? [{ url: img.src }] : undefined },

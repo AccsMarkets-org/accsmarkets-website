@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { BlogCard } from "@/components/blog/BlogCard";
+import { ArrowRight } from "lucide-react";
 
 // Real server-rendered links to the newest posts, directly from the
 // homepage — the site's highest-authority, most-frequently-crawled page.
@@ -30,8 +31,9 @@ export async function LatestBlogPosts() {
           </h2>
           <p className="mt-1.5 text-muted">Guides and tips for buying and selling social media accounts safely.</p>
         </div>
-        <Link href="/blog" className="shrink-0 text-sm font-semibold text-brand-600 hover:text-brand-700">
-          View all articles →
+        <Link href="/blog" className="inline-flex items-center gap-1.5 shrink-0 text-sm font-semibold text-brand-600 hover:text-brand-700">
+          View all articles
+          <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

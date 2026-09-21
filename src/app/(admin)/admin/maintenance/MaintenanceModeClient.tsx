@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Toggle } from "@/components/ui/Toggle";
 import toast from "react-hot-toast";
+import { ArrowRight } from "lucide-react";
 
 interface Props {
   initialMode: boolean;
@@ -353,9 +354,10 @@ export function MaintenanceModeClient({ initialMode, initialTitle, initialMessag
           href="/maintenance"
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 transition"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 transition"
         >
-          Preview →
+          Preview
+          <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </a>
       </div>
 

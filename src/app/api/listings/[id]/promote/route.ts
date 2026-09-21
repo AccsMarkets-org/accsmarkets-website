@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { createNotification } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,20 @@ const PROMOTION_PRICES: Record<string, { usd: number; days: number; label: strin
 
 const BUMP_PRICE_USD = 2.00;
 const BUMP_COOLDOWN_HOURS = 24;
+const LOW_BALANCE_THRESHOLD_USD = 5;
+
+// Heads-up after a successful debit leaves the wallet nearly empty, so the next
+// boost/purchase doesn't fail on "Insufficient wallet balance" by surprise.
+function warnIfLowBalance(userId: string, balanceAfter: number | null) {
+  if (balanceAfter === null || balanceAfter >= LOW_BALANCE_THRESHOLD_USD) return;
+  createNotification({
+    userId,
+    type: "PAYMENT",
+    title: "Your wallet balance is low",
+    body: `Your wallet balance is now $${balanceAfter.toFixed(2)}. Top up to keep promoting listings and funding escrows.`,
+    link: "/dashboard/wallet/deposit",
+  }).catch(() => null);
+}
 
 const schema = z.object({
   type: z.enum(["FEATURED_BOOST", "PREMIUM_FEATURED", "PINNED", "BUMP"]),
@@ -55,6 +70,7 @@ export async function POST(
     if (Number(userPre.walletBalance) < BUMP_PRICE_USD)
       return NextResponse.json({ error: "Insufficient wallet balance" }, { status: 400 });
 
+    let bumpBalanceAfter: number | null = null;
     try {
       await prisma.$transaction(async (tx) => {
         // Re-fetch inside tx and guard against concurrent depletion
@@ -62,6 +78,7 @@ export async function POST(
         if (Number(user.walletBalance) < BUMP_PRICE_USD)
           throw Object.assign(new Error("INSUFFICIENT"), { code: "INSUFFICIENT" });
         const newBalance = Number(user.walletBalance) - BUMP_PRICE_USD;
+        bumpBalanceAfter = newBalance;
         await tx.user.update({ where: { id: user.id }, data: { walletBalance: { decrement: BUMP_PRICE_USD } } });
         await tx.listing.update({
           where: { id: listing.id },
@@ -85,6 +102,7 @@ export async function POST(
       return NextResponse.json({ error: "Promotion failed" }, { status: 500 });
     }
 
+    warnIfLowBalance(session.user.id, bumpBalanceAfter);
     return NextResponse.json({ ok: true, type: "BUMP" });
   }
 
@@ -96,6 +114,7 @@ export async function POST(
 
   const expiresAt = new Date(Date.now() + promo.days * 24 * 60 * 60 * 1000);
 
+  let promoBalanceAfter: number | null = null;
   try {
     await prisma.$transaction(async (tx) => {
       // Re-fetch inside tx and guard against concurrent depletion
@@ -103,6 +122,7 @@ export async function POST(
       if (Number(user.walletBalance) < promo.usd)
         throw Object.assign(new Error("INSUFFICIENT"), { code: "INSUFFICIENT" });
       const newBalance = Number(user.walletBalance) - promo.usd;
+      promoBalanceAfter = newBalance;
       await tx.user.update({ where: { id: user.id }, data: { walletBalance: { decrement: promo.usd } } });
       await tx.listing.update({
         where: { id: listing.id },
@@ -132,5 +152,6 @@ export async function POST(
     return NextResponse.json({ error: "Promotion failed" }, { status: 500 });
   }
 
+  warnIfLowBalance(session.user.id, promoBalanceAfter);
   return NextResponse.json({ ok: true, type, expiresAt });
 }

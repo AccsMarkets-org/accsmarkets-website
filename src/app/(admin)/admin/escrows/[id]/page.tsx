@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { ArrowLeft } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -52,8 +53,9 @@ export default async function AdminEscrowDetailPage({ params }: { params: { id: 
       <EscrowLiveRefresh escrowId={escrow.id} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link href="/admin/escrows" className="mb-1 block text-sm text-muted hover:text-brand-600">
-            ← All escrows
+          <Link href="/admin/escrows" className="mb-1 flex items-center gap-1.5 text-sm text-muted hover:text-brand-600">
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            All escrows
           </Link>
           <h1 className="text-2xl font-bold">{escrow.listing.title}</h1>
           <p className="text-sm text-muted">

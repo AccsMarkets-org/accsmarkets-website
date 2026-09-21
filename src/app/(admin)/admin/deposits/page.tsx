@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -106,8 +107,9 @@ export default async function AdminDepositsPage({
                   )}
                   {dep.proofImageUrl && (
                     <a href={dep.proofImageUrl} target="_blank" rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline">
-                      View proof screenshot ↗
+                      className="inline-flex items-center gap-1.5 text-xs text-brand-600 hover:underline">
+                      View proof screenshot
+                      <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                     </a>
                   )}
                 </div>
@@ -162,8 +164,9 @@ export default async function AdminDepositsPage({
                   )}
                   {bt.proofImageUrl && (
                     <a href={bt.proofImageUrl} target="_blank" rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline">
-                      View proof ↗
+                      className="inline-flex items-center gap-1.5 text-xs text-brand-600 hover:underline">
+                      View proof
+                      <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                     </a>
                   )}
                 </div>

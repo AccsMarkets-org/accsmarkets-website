@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     default: "Admin — AccsMarkets",
     template: "%s — Admin",
   },
+  robots: { index: false, follow: false },
   // Its own manifest (name, start_url, theme) so "Add to Home Screen" on any
   // /admin page installs a distinctly-branded app that opens straight into
   // the admin console — not the consumer manifest.json/start_url="/" a

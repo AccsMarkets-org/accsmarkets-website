@@ -8,6 +8,7 @@ import { Logo } from "./Logo";
 import { NavbarUserMenu } from "./NavbarUserMenu";
 import { CurrencySwitcher } from "@/components/currency/CurrencySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
+import { Bell, Menu, X } from "lucide-react";
 
 interface NavbarClientProps {
   user: { name: string; image: string | null } | null;
@@ -125,12 +126,10 @@ export function NavbarClient({ user, unreadCount }: NavbarClientProps) {
             {user && (
               <Link
                 href="/dashboard/notifications"
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-foreground"
+                aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : "Notifications"}
+                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                </svg>
+                <Bell className="h-5 w-5" strokeWidth={1.75} aria-hidden />
                 {unreadCount > 0 && (
                   <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">
                     {unreadCount > 9 ? "9+" : unreadCount}
@@ -161,16 +160,15 @@ export function NavbarClient({ user, unreadCount }: NavbarClientProps) {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen((o) => !o)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-foreground md:hidden"
-              aria-label="Toggle menu"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 md:hidden"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                {mobileOpen ? (
-                  <path d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
+              {mobileOpen ? (
+                <X className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+              ) : (
+                <Menu className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+              )}
             </button>
           </div>
         </div>
@@ -198,11 +196,10 @@ export function NavbarClient({ user, unreadCount }: NavbarClientProps) {
                 <span className="text-sm font-bold text-foreground">Menu</span>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-surface"
+                  aria-label="Close menu"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="h-5 w-5" strokeWidth={1.75} aria-hidden />
                 </button>
               </div>
               <div className="flex flex-1 flex-col gap-1 p-4">

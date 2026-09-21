@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { CircleCheck, CircleX } from "lucide-react";
 
 interface QueueStat {
   name: string;
@@ -118,8 +119,8 @@ export function SystemDashboard() {
         )}
       >
         <div className="flex items-center gap-3">
-          <span className={cn("text-2xl", data.status === "ok" ? "text-success" : "text-danger")}>
-            {data.status === "ok" ? "✓" : "✗"}
+          <span className={cn("shrink-0", data.status === "ok" ? "text-success" : "text-danger")}>
+            {data.status === "ok" ? <CircleCheck className="h-7 w-7" strokeWidth={1.75} aria-hidden /> : <CircleX className="h-7 w-7" strokeWidth={1.75} aria-hidden />}
           </span>
           <div>
             <p className={cn("font-semibold", data.status === "ok" ? "text-success" : "text-danger")}>

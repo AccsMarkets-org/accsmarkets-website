@@ -36,18 +36,25 @@ const BASE_URL = process.env.NEXTAUTH_URL ?? "https://accsmarkets.org";
 export async function generateMetadata({ params }: { params: { id: string } }) {
   try {
     const listing = await prisma.listing.findUnique({
-      where: { id: params.id, status: "ACTIVE" },
-      select: { title: true, description: true, price: true, platform: true, screenshots: true },
+      // SOLD listings still render publicly (see the status check below), so
+      // they need real metadata too — not the root layout's homepage defaults.
+      where: { id: params.id, status: { in: ["ACTIVE", "SOLD"] } },
+      select: { title: true, description: true, price: true, platform: true, screenshots: true, isPrivate: true },
     });
-    if (!listing) return {};
+    // Anything else (draft/pending/removed) is owner/admin-only or a 404.
+    if (!listing) return { robots: { index: false, follow: false } };
+    // `pageTitle` is templated by the root layout ("%s — AccsMarkets");
+    // openGraph/twitter titles are not, so `title` keeps the brand suffix.
+    const pageTitle = listing.title;
     const title = `${listing.title} — AccsMarkets`;
     const description = listing.description?.slice(0, 160) ?? "Buy this account safely via escrow.";
     const images = Array.isArray(listing.screenshots) && listing.screenshots.length > 0
       ? [{ url: listing.screenshots[0] as string }] : [];
     const url = `${BASE_URL}/listings/${params.id}`;
     return {
-      title, description,
+      title: pageTitle, description,
       alternates: { canonical: url },
+      ...(listing.isPrivate ? { robots: { index: false, follow: false } } : {}),
       openGraph: { title, description, url, images, type: "website", siteName: "AccsMarkets" },
       twitter: { card: "summary_large_image", title, description, images },
     };

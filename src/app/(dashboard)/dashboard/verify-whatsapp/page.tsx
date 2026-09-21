@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { ArrowRight, Check } from "lucide-react";
 
 const RESEND_COOLDOWN = 60;
 
@@ -150,14 +151,13 @@ function VerifyWhatsAppInner() {
       {step === "done" && (
         <Card className="bg-success/5">
           <p className="flex items-center gap-2 font-semibold text-success">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <Check className="h-5 w-5" strokeWidth={2.5} aria-hidden />
             WhatsApp number verified
           </p>
           <p className="mt-1 text-sm text-muted">You can now list, buy, and message other users.</p>
           <Button size="sm" className="mt-4" onClick={() => router.push(next)}>
-            Continue →
+            Continue
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </Button>
         </Card>
       )}

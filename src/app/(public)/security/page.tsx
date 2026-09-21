@@ -3,8 +3,9 @@ import Link from "next/link";
 
 export const revalidate = 86400;
 export const metadata: Metadata = {
-  title: "Security — AccsMarkets",
-  description: "How AccsMarkets protects your account, credentials, and transactions.",
+  title: "Security",
+  description: "How AccsMarkets protects your account, credentials and transactions — 2FA, session management, encrypted credentials, KYC and rate limiting.",
+  alternates: { canonical: "/security" },
 };
 
 type Category = {

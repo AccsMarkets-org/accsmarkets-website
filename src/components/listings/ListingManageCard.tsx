@@ -18,6 +18,7 @@ import {
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { PromoteModal } from "@/components/listings/PromoteModal";
 import type { Listing } from "@prisma/client";
+import { Check, ChevronDown, RotateCcw, Timer, Zap } from "lucide-react";
 
 type ListingWithCounts = Listing & {
   _count?: { offers: number; bids: number };
@@ -322,8 +323,9 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
               </span>
             )}
             {isAuction && auctionLabel && (
-              <span className={`rounded-full px-2 py-0.5 font-medium text-[10px] ${auctionLabel === "Ended" ? "bg-muted/10 text-muted" : "bg-warning/10 text-warning"}`}>
-                ⏱ {auctionLabel}
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-[10px] ${auctionLabel === "Ended" ? "bg-muted/10 text-muted" : "bg-warning/10 text-warning"}`}>
+                <Timer className="h-3 w-3" aria-hidden />
+                {auctionLabel}
               </span>
             )}
           </div>
@@ -397,7 +399,8 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
                 onClick={() => setPromoteOpen(true)}
                 className="border-brand-300 text-brand-600 hover:bg-brand-500/8"
               >
-                ⚡ Boost
+                <Zap className="h-4 w-4" aria-hidden />
+                Boost
               </Button>
             )}
 
@@ -409,7 +412,8 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
                 onClick={handleMarkSold}
                 className="border-success/40 text-success hover:bg-success/8"
               >
-                ✓ Mark Sold
+                <Check className="h-4 w-4" aria-hidden />
+                Mark Sold
               </Button>
             )}
 
@@ -421,17 +425,21 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
                 onClick={handleRelist}
                 className="border-brand-300 text-brand-600 hover:bg-brand-500/8"
               >
-                ↩ Relist
+                <RotateCcw className="h-4 w-4" aria-hidden />
+                Relist
               </Button>
             )}
 
             {/* Expand toggle for screenshot preview */}
             {screenshots.length > 0 && (
               <button
+                type="button"
+                aria-expanded={expanded}
                 onClick={() => setExpanded((v) => !v)}
-                className="ml-auto text-xs text-muted hover:text-foreground transition"
+                className="ml-auto inline-flex items-center gap-1 rounded text-xs text-muted hover:text-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
-                {expanded ? "Hide photos ▲" : "Show photos ▼"}
+                {expanded ? "Hide photos" : "Show photos"}
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden />
               </button>
             )}
 

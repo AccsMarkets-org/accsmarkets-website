@@ -29,6 +29,19 @@ const nextConfig = {
   },
   async headers() {
     return [
+      // Baseline security headers for every response. No Content-Security-Policy
+      // here on purpose — AdSense/GA4/Meta Pixel/Cloudinary/Google Fonts need a
+      // dedicated CSP pass.
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=()" },
+        ],
+      },
       {
         source: "/_next/static/(.*)",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],

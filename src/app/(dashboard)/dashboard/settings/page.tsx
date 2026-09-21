@@ -8,8 +8,10 @@ import { VERIFIED_BADGE_STYLE, getTrustTier } from "@/lib/constants";
 import { AchievementBadgeShelf } from "@/components/ui/AchievementBadge";
 import { CurrencySelector } from "@/components/settings/CurrencySelector";
 import { cn } from "@/lib/utils";
+import { isPendingSecret } from "@/lib/totp";
 import { SettingsSection, AnimatedRing } from "./SettingsClient";
 import { SignOutSection } from "@/components/settings/SignOutSection";
+import { ArrowRight } from "lucide-react";
 
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
@@ -19,7 +21,7 @@ export default async function SettingsPage() {
       include: {
         subscriptionPlan: true,
         achievementBadges: true,
-        twoFactorAuth: { select: { id: true } },
+        twoFactorAuth: { select: { id: true, secret: true } },
         phoneVerification: { select: { phoneNumber: true, verifiedAt: true } },
       },
     }),
@@ -28,7 +30,9 @@ export default async function SettingsPage() {
 
   const badge = VERIFIED_BADGE_STYLE[user.verifiedBadge];
   const tier = getTrustTier(user.trustScore);
-  const twoFaEnabled = Boolean(user.twoFactorAuth);
+  // A TwoFactorAuth row can exist in an unconfirmed "pending" state (setup started,
+  // code never verified) — that must not count as enabled.
+  const twoFaEnabled = Boolean(user.twoFactorAuth) && !isPendingSecret(user.twoFactorAuth!.secret);
   const initial = (user.username ?? user.name ?? user.email ?? "?")[0].toUpperCase();
 
   const securityScore =
@@ -226,8 +230,9 @@ export default async function SettingsPage() {
             <p className={cn("text-lg font-bold", twoFaEnabled ? "text-success" : "text-warning")}>
               {twoFaEnabled ? "Enabled" : "Disabled"}
             </p>
-            <p className="text-xs text-muted">
-              {twoFaEnabled ? "Your account is protected →" : "Enable for extra security →"}
+            <p className="flex items-center gap-1.5 text-xs text-muted">
+              {twoFaEnabled ? "Your account is protected" : "Enable for extra security"}
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
             </p>
           </Card>
         </Link>
@@ -243,8 +248,9 @@ export default async function SettingsPage() {
               </div>
             </div>
             <p className="text-lg font-bold text-foreground">{user.kycLevel.replace("_", " ")}</p>
-            <p className="text-xs text-muted">
-              {user.kycLevel === "ID_VERIFIED" ? "Fully verified" : "Upgrade for higher limits →"}
+            <p className="flex items-center gap-1.5 text-xs text-muted">
+              {user.kycLevel === "ID_VERIFIED" ? "Fully verified" : "Upgrade for higher limits"}
+              {user.kycLevel !== "ID_VERIFIED" && <ArrowRight className="h-3.5 w-3.5" aria-hidden />}
             </p>
           </Card>
         </Link>
@@ -261,7 +267,10 @@ export default async function SettingsPage() {
               </div>
             </div>
             <p className="text-lg font-bold text-foreground">{sessionCount}</p>
-            <p className="text-xs text-muted">Manage logged-in devices →</p>
+            <p className="flex items-center gap-1.5 text-xs text-muted">
+              Manage logged-in devices
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            </p>
           </Card>
         </Link>
       </div>

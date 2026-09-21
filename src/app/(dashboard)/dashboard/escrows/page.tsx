@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { ESCROW_STATUS_STYLE, PLATFORM_COLOR, PLATFORM_LABEL } from "@/lib/constants";
 import { formatCurrency, relativeTime } from "@/lib/utils";
 import type { EscrowStatus } from "@prisma/client";
+import { ArrowRight, ChevronRight, Shield } from "lucide-react";
 
 const ACTIVE_STATUSES: EscrowStatus[] = ["FUNDED", "AWAITING_MANAGER_ADD", "PENDING_VERIFICATION", "SUBMITTED", "VERIFIED", "IN_TRANSFER"];
 
@@ -78,7 +79,7 @@ export default async function EscrowsPage({
           className="flex items-center gap-1.5 rounded-xl border border-surface-border bg-surface px-4 py-2 text-sm font-semibold text-foreground transition hover:border-brand-300 hover:bg-brand-500/8"
         >
           Browse listings
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
         </Link>
       </div>
 
@@ -143,9 +144,7 @@ export default async function EscrowsPage({
       {escrows.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-surface-border py-20 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface text-muted">
-            <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
+            <Shield className="h-8 w-8" strokeWidth={1.5} aria-hidden />
           </div>
           <div>
             <p className="text-sm font-bold text-foreground">
@@ -156,7 +155,7 @@ export default async function EscrowsPage({
           {tabKey === "ACTIVE" && (
             <Link href="/listings" className="flex items-center gap-1.5 rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white hover:bg-brand-600 transition">
               Browse listings
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
             </Link>
           )}
         </div>
@@ -224,9 +223,7 @@ export default async function EscrowsPage({
                         </span>
                       </div>
                       <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-surface-border bg-surface text-muted transition group-hover:border-brand-200 group-hover:text-brand-500">
-                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <path d="M9 18l6-6-6-6"/>
-                        </svg>
+                        <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
                       </div>
                     </div>
                   </div>

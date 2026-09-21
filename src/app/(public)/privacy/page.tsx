@@ -3,7 +3,11 @@ import { LegalPageLayout, LegalSection } from "@/components/ui/LegalPageLayout";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = { title: "Privacy Policy — AccsMarkets", description: "How we collect, use, and protect your personal data." };
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "How AccsMarkets collects, uses and protects your personal data — what we collect, third-party processors, security, retention and your rights.",
+  alternates: { canonical: "/privacy" },
+};
 
 const SECTIONS = [
   { id: "collect", title: "What We Collect" },

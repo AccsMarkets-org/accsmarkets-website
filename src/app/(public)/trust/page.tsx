@@ -2,7 +2,11 @@ import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
-export const metadata: Metadata = { title: "Trust & Safety — AccsMarkets" };
+export const metadata: Metadata = {
+  title: "Trust & Safety",
+  description: "How AccsMarkets keeps trades safe: escrow protection, KYC verification, human dispute resolution, AI content moderation, trust scores and compliance.",
+  alternates: { canonical: "/trust" },
+};
 
 async function getTrustReport() {
   const [

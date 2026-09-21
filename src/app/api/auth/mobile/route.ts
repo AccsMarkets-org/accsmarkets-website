@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { encode } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
 import { decryptSecret, verifyCode } from "@/lib/totp";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
@@ -20,6 +21,12 @@ export async function POST(req: Request) {
   const isMobile = req.headers.get("x-mobile-client") === "1";
   if (!isMobile) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const ip = getClientIp(req.headers);
+  const { allowed } = await checkRateLimit(`mobile-login:${ip}`, 10, 15 * 60);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
   }
 
   const body = await req.json().catch(() => null);
@@ -69,11 +76,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Please verify your email address before logging in." }, { status: 403 });
   }
 
-  // 2FA check — skip for ADMIN (admin 2FA is handled separately)
-  const tfa = user.role !== "ADMIN"
-    ? await prisma.twoFactorAuth.findUnique({ where: { userId: user.id } })
-    : null;
+  // 2FA check — enforced for every role, including ADMIN (same as src/lib/auth.ts).
+  // A row whose secret still carries the PENDING: marker is an unconfirmed setup
+  // and does not count as 2FA being on.
+  const tfa = await prisma.twoFactorAuth.findUnique({ where: { userId: user.id } });
+  let tfaSecret = "";
   if (tfa) {
+    try {
+      tfaSecret = decryptSecret(tfa.secret);
+    } catch {
+      // Undecryptable secret — fail closed rather than skipping the 2FA check.
+      return NextResponse.json({ error: "2FA could not be verified. Please contact support." }, { status: 401 });
+    }
+  }
+  if (tfa && !tfaSecret.startsWith("PENDING:")) {
     if (!totpCode) {
       return NextResponse.json({ error: "2FA code required", code: "TOTP_REQUIRED" }, { status: 401 });
     }
@@ -87,7 +103,7 @@ export async function POST(req: Request) {
         break;
       }
     }
-    if (!usedBackup && !verifyCode(decryptSecret(tfa.secret), totpCode)) {
+    if (!usedBackup && !verifyCode(tfaSecret, totpCode)) {
       await prisma.loginAttempt.create({ data: { email, ip: "mobile", success: false } });
       return NextResponse.json({ error: "Invalid 2FA code", code: "INVALID_TOTP" }, { status: 401 });
     }

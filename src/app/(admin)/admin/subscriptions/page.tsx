@@ -1,4 +1,6 @@
-﻿import { prisma } from "@/lib/db";
+﻿import { ArrowRight, Infinity as InfinityIcon, TriangleAlert, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
 import { formatDate } from "@/lib/utils";
@@ -15,12 +17,12 @@ function getPlanStyle(planName: string | null | undefined) {
   return PLAN_TIER[key] ?? { label: planName ?? "Unknown", className: "bg-muted/10 text-muted", order: -1 };
 }
 
-function expiryLabel(expiresAt: Date | null | undefined): { text: string; className: string } {
-  if (!expiresAt) return { text: "∞ Lifetime", className: "text-brand-600 font-medium" };
+function expiryLabel(expiresAt: Date | null | undefined): { text: string; className: string; icon?: LucideIcon } {
+  if (!expiresAt) return { text: "Lifetime", className: "text-brand-600 font-medium", icon: InfinityIcon };
   const diff = expiresAt.getTime() - Date.now();
   const days = Math.floor(diff / 86_400_000);
-  if (diff < 0) return { text: "✗ Expired", className: "text-danger font-medium" };
-  if (days <= 3) return { text: `⚠ Expires in ${days}d`, className: "text-warning font-medium" };
+  if (diff < 0) return { text: "Expired", className: "text-danger font-medium", icon: X };
+  if (days <= 3) return { text: `Expires in ${days}d`, className: "text-warning font-medium", icon: TriangleAlert };
   return { text: `Expires ${formatDate(expiresAt)}`, className: "text-muted" };
 }
 
@@ -96,7 +98,8 @@ export default async function AdminSubscriptionsPage({
           <p className="mt-1 text-sm text-muted">Create plans in Pricing, then assign them to users here.</p>
           <a href="/admin/pricing" className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 5v14M5 12h14"/></svg>
-            Go to Pricing →
+            Go to Pricing
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </a>
         </div>
       )}
@@ -130,7 +133,10 @@ export default async function AdminSubscriptionsPage({
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${planStyle.className}`}>
                           {planStyle.label}
                         </span>
-                        <span className={`text-xs ${expiry.className}`}>{expiry.text}</span>
+                        <span className={`inline-flex items-center gap-1.5 text-xs ${expiry.className}`}>
+                          {expiry.icon && <expiry.icon className="h-3.5 w-3.5" aria-hidden />}
+                          {expiry.text}
+                        </span>
                       </div>
                     </div>
                   </div>

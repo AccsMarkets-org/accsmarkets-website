@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { decryptAdminTotpSecret as decrypt } from "@/lib/admin-totp";
+import { decryptSecret } from "@/lib/totp";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,14 @@ export async function GET() {
 
   if (!record) return NextResponse.json({ enabled: false });
 
-  const decrypted = decrypt(record.secret);
+  // An unreadable secret (legacy admin-only cipher) was never usable at login —
+  // report it as not enabled so the admin can re-run setup.
+  let decrypted = "";
+  try {
+    decrypted = decryptSecret(record.secret);
+  } catch {
+    decrypted = "";
+  }
   const enabled = decrypted.length > 0 && !decrypted.startsWith("PENDING:");
 
   return NextResponse.json({ enabled, enabledAt: record.enabledAt });

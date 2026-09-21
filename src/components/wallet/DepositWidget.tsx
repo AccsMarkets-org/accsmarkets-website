@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/hooks/useConfirm";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -370,7 +371,8 @@ export function DepositWidget() {
                 No platform fee · Full amount credited after network confirmation
               </div>
               <Button type="submit" isLoading={loading} disabled={amountNum < 1} className="h-12 w-full text-base font-bold">
-                Generate Deposit Address →
+                Generate Deposit Address
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
             </form>
           )
@@ -485,7 +487,8 @@ export function DepositWidget() {
               )}
 
               <Button type="submit" isLoading={loading} disabled={amountNum < 1 || !txHash.trim()} className="h-12 w-full text-base font-bold">
-                Submit for Review →
+                Submit for Review
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
             </form>
           )
@@ -519,7 +522,8 @@ export function DepositWidget() {
               Processing time: 1–3 business days after payment received
             </div>
             <Button type="submit" isLoading={bankLoading} disabled={amountNum < 10 || (bankAccountsLoaded && bankAccounts.length === 0) || (bankAccounts.length > 0 && !selectedBankId)} className="h-12 w-full text-base font-bold">
-              Get Bank Details →
+              Get Bank Details
+              <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
           </form>
         )}
@@ -558,7 +562,8 @@ export function DepositWidget() {
               onClick={() => { setMethod("crypto"); setResult(null); }}
               className="h-12 w-full text-base font-bold"
             >
-              Continue with Crypto Deposit →
+              Continue with Crypto Deposit
+              <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
           </div>
         )}
@@ -582,7 +587,8 @@ export function DepositWidget() {
                 Funds credited instantly after successful payment
               </div>
               <Button type="submit" isLoading={cardLoading} disabled={amountNum < 1} className="h-12 w-full text-base font-bold">
-                Pay with Card →
+                Pay with Card
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
             </form>
           )
@@ -843,8 +849,9 @@ function CryptoDepositResult({
       </div>
 
       <div className="flex flex-col gap-2">
-        <button type="button" onClick={onReset} className="text-center text-sm font-medium text-muted hover:text-foreground transition">
-          ← Use a different amount or network
+        <button type="button" onClick={onReset} className="inline-flex items-center justify-center gap-1.5 text-sm font-medium text-muted hover:text-foreground transition">
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Use a different amount or network
         </button>
         {onCancel && (
           <button
@@ -929,7 +936,8 @@ function StripeCardForm({ clientSecret, publishableKey, onSuccess }: { clientSec
       {!mounted && <p className="text-xs text-muted">Loading payment form…</p>}
       {error && <p className="rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
       <Button type="submit" isLoading={paying} disabled={!mounted} className="h-12 w-full text-base font-bold">
-        Confirm payment →
+        Confirm payment
+        <ArrowRight className="h-4 w-4" aria-hidden />
       </Button>
     </form>
   );

@@ -58,11 +58,11 @@ const sweepWorker = new Worker(
   async (job) => {
     const { task } = job.data;
     const base = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-    const res = await fetch(`${base}/api/sweep`, {
+    const res = await fetch(`${base}/api/internal/sweep`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.SWEEP_SECRET ?? ""}`,
+        "x-sweep-secret": process.env.INTERNAL_SWEEP_SECRET ?? "",
       },
       body: JSON.stringify({ task }),
     });

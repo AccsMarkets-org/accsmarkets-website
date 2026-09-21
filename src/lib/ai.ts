@@ -174,20 +174,20 @@ export async function generateWithAI(prompt: string, opts: AIOptions = {}): Prom
   }
 
   // Build ordered list of providers to try
-  type ProviderEntry = [string, () => Promise<AIResult> | null];
+  type ProviderEntry = [string, (() => Promise<AIResult>) | null];
   const order: ProviderEntry[] = [];
 
-  if (provider === "groq")   order.push(["groq",   groqKey   ? () => withGroq(prompt, opts)   : null as unknown as () => Promise<AIResult>]);
-  if (provider === "grok")   order.push(["grok",   grokKey   ? () => withGrok(prompt, opts)   : null as unknown as () => Promise<AIResult>]);
-  if (provider === "openai") order.push(["openai", openaiKey ? () => withOpenAI(prompt, opts) : null as unknown as () => Promise<AIResult>]);
-  if (provider === "gemini") order.push(["gemini", geminiKey ? () => withGemini(prompt, opts) : null as unknown as () => Promise<AIResult>]);
+  if (provider === "groq")   order.push(["groq",   groqKey   ? () => withGroq(prompt, opts)   : null]);
+  if (provider === "grok")   order.push(["grok",   grokKey   ? () => withGrok(prompt, opts)   : null]);
+  if (provider === "openai") order.push(["openai", openaiKey ? () => withOpenAI(prompt, opts) : null]);
+  if (provider === "gemini") order.push(["gemini", geminiKey ? () => withGemini(prompt, opts) : null]);
 
   // Always append all providers as fallback (skipping already-added primary)
   const fallbacks: ProviderEntry[] = [
-    ["groq",   groqKey   ? () => withGroq(prompt, opts)   : null as unknown as () => Promise<AIResult>],
-    ["grok",   grokKey   ? () => withGrok(prompt, opts)   : null as unknown as () => Promise<AIResult>],
-    ["openai", openaiKey ? () => withOpenAI(prompt, opts) : null as unknown as () => Promise<AIResult>],
-    ["gemini", geminiKey ? () => withGemini(prompt, opts) : null as unknown as () => Promise<AIResult>],
+    ["groq",   groqKey   ? () => withGroq(prompt, opts)   : null],
+    ["grok",   grokKey   ? () => withGrok(prompt, opts)   : null],
+    ["openai", openaiKey ? () => withOpenAI(prompt, opts) : null],
+    ["gemini", geminiKey ? () => withGemini(prompt, opts) : null],
   ];
   for (const fb of fallbacks) {
     if (!order.find(([n]) => n === fb[0])) order.push(fb);

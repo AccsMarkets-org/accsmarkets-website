@@ -13,6 +13,7 @@ import {
   DateRangePicker,
 } from "@/app/(dashboard)/dashboard/DashboardClient";
 import { ListingViewsChart } from "@/components/ui/ListingViewsChart";
+import { ArrowRight, Eye, Globe, Handshake, KeyRound, ShieldCheck, TrendingDown, TrendingUp } from "lucide-react";
 
 // ── Local helpers ─────────────────────────────────────────────────────────────
 
@@ -204,8 +205,8 @@ export function SellerDashboard({
       {needsKyc && (
         <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-amber-800 dark:bg-amber-950/30">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-xl dark:bg-amber-900/50">
-              🔐
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+              <KeyRound className="h-5 w-5" aria-hidden />
             </div>
             <div>
               <p className="text-sm font-bold text-amber-900 dark:text-amber-300">Complete KYC verification to start selling</p>
@@ -242,9 +243,10 @@ export function SellerDashboard({
           </div>
           <a
             href="/dashboard/settings/verification"
-            className="shrink-0 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 transition text-center"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 transition"
           >
-            Verify now →
+            Verify now
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </a>
         </div>
       )}
@@ -356,7 +358,7 @@ export function SellerDashboard({
             prefix="$"
             sub={
               earnTrend !== null
-                ? `${earnTrend >= 0 ? "▲" : "▼"} ${Math.abs(earnTrend)}% vs last 30d`
+                ? `${earnTrend >= 0 ? "+" : "-"}${Math.abs(earnTrend)}% vs last 30d`
                 : "All-time escrow releases"
             }
             icon={
@@ -435,21 +437,21 @@ export function SellerDashboard({
               value: pendingOffers,
               href: "/dashboard/offers",
               urgent: Number(pendingOffers) > 0,
-              icon: "🤝",
+              icon: Handshake,
             },
             {
               label: "Active escrows",
               value: activeEscrows,
               href: "/dashboard/escrows",
               urgent: Number(activeEscrows) > 0,
-              icon: "🛡️",
+              icon: ShieldCheck,
             },
             {
               label: "Listing views (30d)",
               value: totalViews,
               href: "/dashboard/listings",
               urgent: false,
-              icon: "👁️",
+              icon: Eye,
               trend: viewTrend,
             },
           ].map((item) => (
@@ -459,17 +461,19 @@ export function SellerDashboard({
                   item.urgent ? "border-warning/40 bg-warning/5" : "border-surface-border bg-surface"
                 }`}
               >
-                <span className="text-xl">{item.icon}</span>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${item.urgent ? "bg-warning/15 text-warning" : "bg-brand-500/10 text-brand-600 dark:text-brand-400"}`}>
+                  <item.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+                </span>
                 <div className="min-w-0">
                   <p className="text-lg font-bold leading-none text-foreground">
                     {Number(item.value).toLocaleString()}
                     {"trend" in item && item.trend !== null && item.trend !== undefined && (
                       <span
-                        className={`ml-1.5 text-xs font-medium ${
+                        className={`ml-1.5 inline-flex items-center gap-0.5 text-xs font-medium ${
                           item.trend >= 0 ? "text-success" : "text-danger"
                         }`}
                       >
-                        {item.trend >= 0 ? "▲" : "▼"}
+                        {item.trend >= 0 ? <TrendingUp className="h-3 w-3" aria-hidden /> : <TrendingDown className="h-3 w-3" aria-hidden />}
                         {Math.abs(item.trend)}%
                       </span>
                     )}
@@ -545,8 +549,9 @@ export function SellerDashboard({
                         viewTrend >= 0 ? "text-success" : "text-danger"
                       }`}
                     >
-                      <span>
-                        {viewTrend >= 0 ? "▲" : "▼"} {Math.abs(viewTrend)}%
+                      <span className="inline-flex items-center gap-0.5">
+                        {viewTrend >= 0 ? <TrendingUp className="h-3 w-3" aria-hidden /> : <TrendingDown className="h-3 w-3" aria-hidden />}
+                        {Math.abs(viewTrend)}%
                       </span>
                       <span className="font-normal text-muted">vs prev 7d</span>
                     </p>
@@ -615,7 +620,7 @@ export function SellerDashboard({
                     <div className="flex flex-col gap-2.5">
                       {[90, 65, 42, 25, 14].map((w, i) => (
                         <div key={i} className="flex items-center gap-2 opacity-40">
-                          <span className="w-6 text-center text-lg leading-none">🌐</span>
+                          <Globe className="h-5 w-6 shrink-0 text-muted" strokeWidth={1.5} aria-hidden />
                           <div className="flex-1 min-w-0">
                             <div className="mb-1 h-2 rounded bg-surface-border" style={{ width: `${w}%` }} />
                             <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-border" />
@@ -642,11 +647,12 @@ export function SellerDashboard({
                   </div>
                   {earnTrend !== null && (
                     <span
-                      className={`text-xs font-semibold ${
+                      className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
                         earnTrend >= 0 ? "text-success" : "text-danger"
                       }`}
                     >
-                      {earnTrend >= 0 ? "▲" : "▼"} {Math.abs(earnTrend)}%
+                      {earnTrend >= 0 ? <TrendingUp className="h-3 w-3" aria-hidden /> : <TrendingDown className="h-3 w-3" aria-hidden />}
+                      {Math.abs(earnTrend)}%
                     </span>
                   )}
                 </div>
@@ -687,9 +693,10 @@ export function SellerDashboard({
                 </div>
                 <Link
                   href="/dashboard/listings"
-                  className="rounded-lg border border-surface-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-brand-300 hover:text-brand-600 transition"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-brand-300 hover:text-brand-600 transition"
                 >
-                  View all →
+                  View all
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </Link>
               </div>
 
@@ -698,9 +705,10 @@ export function SellerDashboard({
                   <p className="text-sm text-muted">No listings yet.</p>
                   <Link
                     href="/dashboard/listings/new"
-                    className="mt-2 inline-block text-sm font-medium text-brand-600 hover:underline"
+                    className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline"
                   >
-                    Create your first listing →
+                    Create your first listing
+                    <ArrowRight className="h-4 w-4" aria-hidden />
                   </Link>
                 </div>
               ) : (
@@ -755,9 +763,10 @@ export function SellerDashboard({
                   <h2 className="font-semibold text-foreground">Recent escrows</h2>
                   <Link
                     href="/dashboard/escrows"
-                    className="rounded-lg border border-surface-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-brand-300 hover:text-brand-600 transition"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-brand-300 hover:text-brand-600 transition"
                   >
-                    View all →
+                    View all
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                   </Link>
                 </div>
                 <div className="flex flex-col divide-y divide-surface-border">
@@ -809,8 +818,9 @@ export function SellerDashboard({
             <Card>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-semibold text-foreground">Notifications</h2>
-                <Link href="/dashboard/notifications" className="text-xs text-brand-600 hover:underline">
-                  View all →
+                <Link href="/dashboard/notifications" className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline">
+                  View all
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </Link>
               </div>
               <NotificationFeed
@@ -1076,8 +1086,9 @@ export function SellerDashboard({
             <Card>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-semibold text-foreground">Transactions</h2>
-                <Link href="/dashboard/wallet" className="text-xs text-brand-600 hover:underline">
-                  Wallet →
+                <Link href="/dashboard/wallet" className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline">
+                  Wallet
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </Link>
               </div>
               {recentTransactions.length === 0 ? (

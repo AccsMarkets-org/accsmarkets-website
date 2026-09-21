@@ -1,4 +1,5 @@
-﻿import { formatDistanceToNowStrict } from "date-fns";
+﻿import { CircleCheck, ClipboardList, Pin, ShoppingBag, Star, Zap, type LucideIcon } from "lucide-react";
+
 
 interface ActivityUser {
   username: string | null;
@@ -14,30 +15,26 @@ interface ActivityEvent {
   user: ActivityUser;
 }
 
-const EVENT_CONFIG: Record<string, { label: string; emoji: string; color: string }> = {
-  "listing.created":   { label: "listed an account for sale",  emoji: "📋", color: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300" },
-  "escrow.sold":       { label: "completed a sale",            emoji: "✅", color: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" },
-  "escrow.purchased":  { label: "purchased an account",        emoji: "🛍️", color: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300" },
-  "review.received":   { label: "received a 5-star review",   emoji: "⭐", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300" },
-  "listing.bumped":    { label: "bumped a listing",            emoji: "⚡", color: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" },
+const EVENT_CONFIG: Record<string, { label: string; icon: LucideIcon; color: string }> = {
+  "listing.created":   { label: "listed an account for sale",  icon: ClipboardList, color: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300" },
+  "escrow.sold":       { label: "completed a sale",            icon: CircleCheck, color: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" },
+  "escrow.purchased":  { label: "purchased an account",        icon: ShoppingBag, color: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300" },
+  "review.received":   { label: "received a 5-star review",   icon: Star, color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300" },
+  "listing.bumped":    { label: "bumped a listing",            icon: Zap, color: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" },
 };
 
 function relativeTime(date: Date): string {
-  return formatDistanceToNowStrict(new Date(date), { addSuffix: false })
-    .replace(" seconds", "s")
-    .replace(" second", "s")
-    .replace(" minutes", "m")
-    .replace(" minute", "m")
-    .replace(" hours", "h")
-    .replace(" hour", "h")
-    .replace(" days", "d")
-    .replace(" day", "d");
+  const s = Math.max(0, Math.round((Date.now() - new Date(date).getTime()) / 1000));
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.round(s / 60)}m`;
+  if (s < 86400) return `${Math.round(s / 3600)}h`;
+  return `${Math.round(s / 86400)}d`;
 }
 
 export function ActivityFeedCard({ event }: { event: ActivityEvent }) {
   const config = EVENT_CONFIG[event.eventType] ?? {
     label: event.eventType,
-    emoji: "📌",
+    icon: Pin,
     color: "bg-surface text-muted",
   };
 
@@ -73,7 +70,8 @@ export function ActivityFeedCard({ event }: { event: ActivityEvent }) {
         )}
         <div className="mt-2 flex items-center gap-2">
           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${config.color}`}>
-            {config.emoji} {config.label.split(" ")[0]}
+            <config.icon className="h-3 w-3" aria-hidden />
+            {config.label.split(" ")[0]}
           </span>
           <span className="text-[11px] text-muted">{relativeTime(event.createdAt)}</span>
         </div>

@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import { ArrowRight, TriangleAlert } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminPagination } from "@/components/ui/AdminPagination";
@@ -160,7 +161,7 @@ export default async function AdminEscrowsPage({
                         {escrow.buyer.username ?? escrow.buyer.email}
                       </Link>
                     </span>
-                    <span>→</span>
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                     <span>
                       Seller:{" "}
                       <Link href={`/admin/users/${escrow.seller.id}`} className="text-brand-500 hover:underline">
@@ -172,10 +173,14 @@ export default async function AdminEscrowsPage({
 
                   {escrow.dispute && (
                     <div className="flex items-center gap-1.5 text-xs text-danger">
-                      <span>⚠ Disputed</span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <TriangleAlert className="h-3.5 w-3.5" aria-hidden />
+                        Disputed
+                      </span>
                       <span className="rounded-full bg-danger/10 px-2 py-0.5 font-medium">{escrow.dispute.status}</span>
-                      <Link href={`/admin/disputes/${escrow.dispute.id}`} className="text-brand-500 hover:underline">
-                        View dispute →
+                      <Link href={`/admin/disputes/${escrow.dispute.id}`} className="inline-flex items-center gap-1.5 text-brand-500 hover:underline">
+                        View dispute
+                        <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                       </Link>
                     </div>
                   )}
@@ -183,9 +188,10 @@ export default async function AdminEscrowsPage({
 
                 <Link
                   href={`/admin/escrows/${escrow.id}`}
-                  className="rounded-xl border border-surface-border px-4 py-1.5 text-sm font-medium hover:bg-brand-500/8 hover:border-brand-300 transition shrink-0"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border px-4 py-1.5 text-sm font-medium hover:bg-brand-500/8 hover:border-brand-300 transition shrink-0"
                 >
-                  Open →
+                  Open
+                  <ArrowRight className="h-4 w-4" aria-hidden />
                 </Link>
               </div>
             </div>

@@ -1,7 +1,11 @@
 import { ProsePage } from "@/components/ui/ProsePage";
 import { prisma } from "@/lib/db";
 
-export const metadata = { title: "Fees — AccsMarkets" };
+export const metadata = {
+  title: "Fees",
+  description: "A transparent breakdown of AccsMarkets fees — escrow fee rates and minimums on each plan, plus what buyers and sellers pay on deposits and withdrawals.",
+  alternates: { canonical: "/fees" },
+};
 export const revalidate = 300;
 
 export default async function FeesPage() {

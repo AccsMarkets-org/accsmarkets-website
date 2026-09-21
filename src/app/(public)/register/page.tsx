@@ -4,7 +4,9 @@ import TrustPanelServer from "@/components/auth/TrustPanelServer";
 import { RegisterFormClient } from "@/components/auth/RegisterFormClient";
 
 export const metadata = {
-  title: "Create Account — AccsMarkets",
+  title: "Create Account",
+  description: "Create a free AccsMarkets account to buy and sell social media accounts safely, with every transaction protected by escrow and dispute resolution.",
+  alternates: { canonical: "/register" },
 };
 
 async function getStats() {

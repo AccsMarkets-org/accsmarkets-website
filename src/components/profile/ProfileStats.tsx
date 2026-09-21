@@ -1,3 +1,5 @@
+import { Star } from "lucide-react";
+
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
@@ -19,7 +21,12 @@ export function ProfileStats({ followers, sales, listings, avgRating, reviewCoun
     { label: "Listings", value: fmt(listings) },
     {
       label: "Rating",
-      value: avgRating !== null ? `${avgRating.toFixed(1)} ★` : "—",
+      value: avgRating !== null ? (
+        <span className="inline-flex items-center gap-1">
+          {avgRating.toFixed(1)}
+          <Star className="h-3.5 w-3.5 fill-current text-amber-500" aria-hidden />
+        </span>
+      ) : "—",
       sub: reviewCount > 0 ? `${reviewCount} review${reviewCount !== 1 ? "s" : ""}` : undefined,
     },
   ];

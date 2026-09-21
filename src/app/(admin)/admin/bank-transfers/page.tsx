@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -146,17 +147,19 @@ export default async function AdminBankTransfersPage({
             {page > 1 && (
               <Link
                 href={`/admin/bank-transfers?page=${page - 1}${statusFilter ? `&status=${statusFilter}` : ""}`}
-                className="rounded-xl border border-surface-border px-3 py-1.5 hover:bg-surface transition"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border px-3 py-1.5 hover:bg-surface transition"
               >
-                ← Prev
+                <ArrowLeft className="h-4 w-4" aria-hidden />
+                Prev
               </Link>
             )}
             {page < totalPages && (
               <Link
                 href={`/admin/bank-transfers?page=${page + 1}${statusFilter ? `&status=${statusFilter}` : ""}`}
-                className="rounded-xl border border-surface-border px-3 py-1.5 hover:bg-surface transition"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border px-3 py-1.5 hover:bg-surface transition"
               >
-                Next →
+                Next
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
             )}
           </div>

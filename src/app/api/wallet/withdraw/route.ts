@@ -30,6 +30,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Too many withdrawal requests. Try again later." }, { status: 429 });
   }
 
+  // Gate at PHONE level — same requirement as creating a listing. Read from the
+  // DB rather than the session JWT, which can carry a stale kycLevel.
+  const kycUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { kycLevel: true },
+  });
+  if (!kycUser || kycUser.kycLevel === "NONE" || kycUser.kycLevel === "EMAIL") {
+    return NextResponse.json(
+      {
+        error: "Verify your phone number before withdrawing. Go to Settings → Verification.",
+        link: "/dashboard/settings/verification",
+      },
+      { status: 403 },
+    );
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = withdrawSchema.safeParse(body);
   if (!parsed.success) {

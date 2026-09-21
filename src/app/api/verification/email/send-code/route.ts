@@ -34,14 +34,17 @@ export async function POST() {
   await prisma.emailOtpVerification.upsert({
     where: { userId: session.user.id },
     create: { userId: session.user.id, codeHash, expiresAt },
-    update: { codeHash, expiresAt, verifiedAt: null },
+    // createdAt drives the resend cooldown above, so it must move with each new code.
+    update: { codeHash, expiresAt, verifiedAt: null, createdAt: new Date() },
   });
 
-  try {
-    const tpl = otpCodeTemplate(code);
-    await sendEmail({ to: userEmail, subject: tpl.subject, html: tpl.html });
-  } catch {
-    return NextResponse.json({ error: "Failed to send verification email. Please try again." }, { status: 500 });
+  const tpl = otpCodeTemplate(code);
+  const delivered = await sendEmail({ to: userEmail, subject: tpl.subject, html: tpl.html });
+  if (!delivered) {
+    return NextResponse.json(
+      { error: "We couldn't send the verification email right now. Please try again in a few minutes." },
+      { status: 502 },
+    );
   }
 
   return NextResponse.json({ sent: true });

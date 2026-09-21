@@ -1,9 +1,10 @@
 export async function verifyCaptcha(token: string): Promise<boolean> {
   const secret = process.env.HCAPTCHA_SECRET_KEY;
   if (!secret) {
-    // No secret configured (e.g. local dev) — fail open only in that specific
-    // case so environments without hCaptcha set up aren't blocked entirely.
-    return true;
+    // No secret configured — fail open ONLY outside production (local dev
+    // without hCaptcha set up). In production a missing secret fails closed, so
+    // a dropped env var can't silently turn captcha protection off.
+    return process.env.NODE_ENV !== "production";
   }
   if (!token) return false;
 

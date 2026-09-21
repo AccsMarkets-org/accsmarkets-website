@@ -1,3 +1,4 @@
+import { ExternalLink } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { formatDate } from "@/lib/utils";
@@ -54,7 +55,7 @@ export default async function AdminAppsPage() {
                   <p className="mt-1 text-sm text-muted line-clamp-2">{app.description}</p>
                   <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted">
                     <span>Developer: <strong>{app.developer.username ?? app.developer.email}</strong></span>
-                    {app.websiteUrl && <a href={app.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">Website ↗</a>}
+                    {app.websiteUrl && <a href={app.websiteUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-brand-600 hover:underline">Website<ExternalLink className="h-3.5 w-3.5" aria-hidden /></a>}
                     <span>Submitted: {formatDate(app.createdAt)}</span>
                   </div>
                   <div className="mt-2">

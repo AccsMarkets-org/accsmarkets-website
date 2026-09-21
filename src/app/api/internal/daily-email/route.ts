@@ -7,6 +7,8 @@ import { logger } from "@/lib/logger";
 // Actions, Windows Task Scheduler, or a third-party cron service) via:
 //   POST /api/internal/daily-email
 //   Authorization: Bearer <CRON_SECRET>
+// On the Linux server that caller is scripts/run-daily-email.sh (reads
+// CRON_SECRET from .env; schedule it once a day from crontab).
 //
 // Returns { sent, skipped, errors } so the caller can log/alert on anomalies.
 
@@ -28,7 +30,7 @@ export async function POST(req: Request) {
 
   try {
     const stats = await sendDailyPromotionalEmail();
-    logger.info("daily_email_sweep_complete", stats);
+    logger.info("daily_email_sweep_complete", { ...stats });
     return NextResponse.json({ ok: true, ...stats });
   } catch (err) {
     logger.error("daily_email_sweep_error", { error: String(err) });

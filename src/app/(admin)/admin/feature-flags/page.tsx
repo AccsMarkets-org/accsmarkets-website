@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { FeatureFlagManager } from "@/components/admin/FeatureFlagManager";
 
-export const metadata = { title: "Feature Flags — Admin" };
+export const metadata = { title: "Feature Flags" };
 
 export default async function FeatureFlagsPage() {
   const flags = await prisma.featureFlag.findMany({ orderBy: { key: "asc" } });

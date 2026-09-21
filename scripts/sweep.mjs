@@ -40,7 +40,7 @@ loadEnv();
 const SECRET = process.env.INTERNAL_SWEEP_SECRET;
 // The app listens on PORT (see ecosystem.config.js) — hit it directly on localhost
 // rather than through the public domain/tunnel, since this always runs on the same box.
-const PORT = process.env.PORT || "3001";
+const PORT = process.env.PORT || "3000";
 const URL = `http://localhost:${PORT}/api/internal/sweep`;
 
 if (!SECRET) {

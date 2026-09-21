@@ -18,6 +18,10 @@ import { getMissingProfileFields } from "@/lib/profile-complete";
 import { IntelligenceWidget } from "@/components/intelligence/IntelligenceWidget";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
+export const metadata = {
+  robots: { index: false, follow: false },
+};
+
 const getMaintenanceSettings = unstable_cache(
   async () =>
     prisma.platformSettings.findUnique({

@@ -4,8 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { PricingClient } from "./PricingClient";
 
 export const metadata = {
-  title: "Pricing — AccsMarkets",
-  description: "Simple, transparent pricing for buying and selling social media accounts.",
+  title: "Pricing",
+  description: "Simple, transparent pricing for buying and selling social media accounts — compare AccsMarkets plans, listing limits and escrow fee rates.",
+  alternates: { canonical: "/pricing" },
 };
 
 export default async function PricingPage() {

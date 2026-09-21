@@ -7,6 +7,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
+import {
+  ArrowLeft,
+  ArrowLeftRight,
+  ArrowRight,
+  ArrowUpDown,
+  Check,
+  CircleAlert,
+  Mail,
+  MessageSquare,
+  ShieldCheck,
+  ShoppingCart,
+  Upload,
+  User,
+} from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -15,31 +29,19 @@ const INTENTS = [
     value: "BUYER" as const,
     label: "Buy Accounts",
     desc: "I want to purchase social media accounts",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-      </svg>
-    ),
+    icon: <ShoppingCart className="h-6 w-6" strokeWidth={1.8} aria-hidden />,
   },
   {
     value: "SELLER" as const,
     label: "Sell Accounts",
     desc: "I want to sell my social media accounts",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-      </svg>
-    ),
+    icon: <ArrowUpDown className="h-6 w-6" strokeWidth={1.8} aria-hidden />,
   },
   {
     value: "BOTH" as const,
     label: "Buy & Sell",
     desc: "I want to do both buying and selling",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-      </svg>
-    ),
+    icon: <ArrowLeftRight className="h-6 w-6" strokeWidth={1.8} aria-hidden />,
   },
 ];
 
@@ -286,7 +288,7 @@ export default function OnboardingPage() {
                   !isActive && !isDone && "bg-surface-border text-muted",
                 )}>
                   {isDone ? (
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><polyline points="20 6 9 17 4 12" /></svg>
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
                   ) : s.id}
                 </div>
                 <div>
@@ -301,8 +303,9 @@ export default function OnboardingPage() {
         </nav>
 
         <div className="mt-auto">
-          <button onClick={skip} className="text-sm text-muted hover:text-foreground transition-colors">
-            Skip setup →
+          <button onClick={skip} className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors">
+            Skip setup
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </button>
         </div>
       </aside>
@@ -349,9 +352,7 @@ export default function OnboardingPage() {
                       transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 15 }}
                       className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-600"
                     >
-                      <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
+                      <ShieldCheck className="h-7 w-7" strokeWidth={1.8} aria-hidden />
                     </motion.div>
                     <h1 className="text-2xl font-bold text-foreground">What brings you here?</h1>
                     <p className="mt-2 text-sm text-muted">We&apos;ll personalise your experience based on your goal.</p>
@@ -385,7 +386,7 @@ export default function OnboardingPage() {
                           intent === opt.value ? "border-brand-500 bg-brand-500" : "border-surface-border",
                         )}>
                           {intent === opt.value && (
-                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><polyline points="20 6 9 17 4 12" /></svg>
+                            <Check className="h-3 w-3 text-white" strokeWidth={3} aria-hidden />
                           )}
                         </div>
                       </button>
@@ -399,7 +400,7 @@ export default function OnboardingPage() {
                     <div className="lg:hidden" />
                     <Button onClick={goNext} disabled={!intent}>
                       Continue
-                      <svg className="ml-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                      <ArrowRight className="h-4 w-4" aria-hidden />
                     </Button>
                   </div>
                 </div>
@@ -415,9 +416,7 @@ export default function OnboardingPage() {
                       transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 15 }}
                       className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-600"
                     >
-                      <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                        <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
+                      <User className="h-7 w-7" strokeWidth={1.8} aria-hidden />
                     </motion.div>
                     <h1 className="text-2xl font-bold text-foreground">Set up your profile</h1>
                     <p className="mt-2 text-sm text-muted">Help buyers and sellers recognise you on the marketplace.</p>
@@ -431,9 +430,7 @@ export default function OnboardingPage() {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
                         ) : (
-                          <svg className="h-10 w-10 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
+                          <User className="h-10 w-10 text-muted" strokeWidth={1.5} aria-hidden />
                         )}
                       </div>
                       <label className={cn(
@@ -446,9 +443,7 @@ export default function OnboardingPage() {
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                           </svg>
                         ) : (
-                          <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                          </svg>
+                          <Upload className="h-3.5 w-3.5 text-white" strokeWidth={2.5} aria-hidden />
                         )}
                         <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarUpload} disabled={avatarUploading} />
                       </label>
@@ -494,7 +489,7 @@ export default function OnboardingPage() {
 
                   <div className="flex justify-between pt-2">
                     <button type="button" onClick={goBack} className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+                      <ArrowLeft className="h-4 w-4" aria-hidden />
                       Back
                     </button>
                     <div className="flex gap-2">
@@ -503,7 +498,7 @@ export default function OnboardingPage() {
                       </Button>
                       <Button onClick={saveProfile} isLoading={profileSaving}>
                         Save & Continue
-                        <svg className="ml-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                        <ArrowRight className="h-4 w-4" aria-hidden />
                       </Button>
                     </div>
                   </div>
@@ -520,9 +515,7 @@ export default function OnboardingPage() {
                       transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 15 }}
                       className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-600"
                     >
-                      <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
+                      <ShieldCheck className="h-7 w-7" strokeWidth={1.8} aria-hidden />
                     </motion.div>
                     <h1 className="text-2xl font-bold text-foreground">Verify your identity</h1>
                     <p className="mt-2 text-sm text-muted">Keeps the marketplace safe from fake accounts.</p>
@@ -536,11 +529,9 @@ export default function OnboardingPage() {
                         emailVerified ? "bg-success/20 text-success" : "bg-brand-500/10 text-brand-600"
                       )}>
                         {emailVerified ? (
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
+                          <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
                         ) : (
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
+                          <Mail className="h-4 w-4" aria-hidden />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -566,9 +557,16 @@ export default function OnboardingPage() {
                               <button
                                 onClick={sendEmailVerification}
                                 disabled={emailSending}
-                                className="text-xs font-semibold text-brand-600 hover:underline disabled:opacity-60"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline disabled:opacity-60"
                               >
-                                {emailSending ? "Sending…" : "Send verification email →"}
+                                {emailSending ? (
+                                  "Sending…"
+                                ) : (
+                                  <>
+                                    Send verification email
+                                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                                  </>
+                                )}
                               </button>
                             )}
                           </div>
@@ -585,11 +583,9 @@ export default function OnboardingPage() {
                         phoneVerified ? "bg-success/20 text-success" : "bg-surface-border text-muted"
                       )}>
                         {phoneVerified ? (
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
+                          <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
                         ) : (
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                          </svg>
+                          <MessageSquare className="h-4 w-4" aria-hidden />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -652,12 +648,12 @@ export default function OnboardingPage() {
 
                   <div className="flex justify-between pt-2">
                     <button type="button" onClick={goBack} className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+                      <ArrowLeft className="h-4 w-4" aria-hidden />
                       Back
                     </button>
                     <Button onClick={goNext}>
                       Continue
-                      <svg className="ml-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                      <ArrowRight className="h-4 w-4" aria-hidden />
                     </Button>
                   </div>
                 </div>
@@ -672,9 +668,7 @@ export default function OnboardingPage() {
                     transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 15 }}
                     className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-500/30"
                   >
-                    <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                    <Check className="h-10 w-10 text-white" strokeWidth={2.5} aria-hidden />
                   </motion.div>
 
                   <div>
@@ -692,7 +686,7 @@ export default function OnboardingPage() {
                   <div className="w-full max-w-xs flex flex-col gap-3">
                     <Button onClick={handleFinish} isLoading={saving} className="w-full py-3 text-base">
                       Go to Dashboard
-                      <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                      <ArrowRight className="h-5 w-5" aria-hidden />
                     </Button>
                     <p className="text-xs text-muted">
                       You can always update your profile in{" "}
@@ -718,9 +712,9 @@ export default function OnboardingPage() {
                               {item.value}
                             </span>
                             {item.done ? (
-                              <svg className="h-3.5 w-3.5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
+                              <Check className="h-3.5 w-3.5 text-success" strokeWidth={2.5} aria-hidden />
                             ) : (
-                              <svg className="h-3.5 w-3.5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" /></svg>
+                              <CircleAlert className="h-3.5 w-3.5 text-muted" aria-hidden />
                             )}
                           </div>
                         </div>

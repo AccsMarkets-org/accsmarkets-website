@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: { username: string 
       select: { name: true, username: true },
     });
     if (!seller) return {};
-    const title = `Reviews for ${seller.name ?? seller.username} — AccsMarkets`;
+    const title = `Reviews for ${seller.name ?? seller.username}`;
     const url = `${BASE_URL}/seller/${seller.username}/reviews`;
     return {
       title,

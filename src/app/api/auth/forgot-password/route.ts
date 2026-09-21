@@ -21,13 +21,15 @@ export async function POST(req: Request) {
   const { email } = parsed.data;
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (user && user.password) {
+  // Google-only accounts (no password yet) also get a link: completing it simply
+  // adds password sign-in to an address they have just proven they control.
+  if (user && !user.isBanned) {
     await prisma.verificationToken.deleteMany({ where: { identifier: `reset:${email}` } });
     const token = randomUUID();
     await prisma.verificationToken.create({
       data: { identifier: `reset:${email}`, token, expires: new Date(Date.now() + 60 * 60 * 1000) },
     });
-    const { subject, html } = passwordResetTemplate(user.name ?? "there", token);
+    const { subject, html } = passwordResetTemplate(user.name ?? "there", token, ip);
     await sendEmail({ to: email, subject, html });
   }
 

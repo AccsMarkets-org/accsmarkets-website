@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
 import { ReferralDashboard } from "@/components/referrals/ReferralDashboard";
 
-export const metadata = { title: "Referrals — AccsMarkets" };
+export const metadata = { title: "Referrals" };
 
 export default async function ReferralsPage() {
   const session = await getServerSession(authOptions);

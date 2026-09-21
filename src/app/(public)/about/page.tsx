@@ -4,7 +4,11 @@ import { LegalPageLayout, LegalSection } from "@/components/ui/LegalPageLayout";
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = { title: "About — AccsMarkets", description: "The escrow layer for the creator economy's secondary market." };
+export const metadata: Metadata = {
+  title: "About",
+  description: "AccsMarkets is the escrow layer for the creator economy's secondary market — our mission, what we believe, how we make money, and live platform stats.",
+  alternates: { canonical: "/about" },
+};
 
 const SECTIONS = [
   { id: "mission", title: "Our Mission" },

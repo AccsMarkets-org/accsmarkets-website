@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Maximize2 } from "lucide-react";
 
 export function PhotoGallery({ screenshots }: { screenshots: string[] }) {
   const [active, setActive] = useState(0);
@@ -23,8 +24,9 @@ export function PhotoGallery({ screenshots }: { screenshots: string[] }) {
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
         />
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="rounded-full bg-black/50 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
-            🔍 Expand
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/50 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+            <Maximize2 className="h-4 w-4" aria-hidden />
+            Expand
           </span>
         </div>
         {screenshots.length > 1 && (

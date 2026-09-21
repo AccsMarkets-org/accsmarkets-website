@@ -2,7 +2,11 @@
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "App Directory — AccsMarkets" };
+export const metadata: Metadata = {
+  title: "App Directory",
+  description: "Discover third-party apps and integrations built on the AccsMarkets API, or register as a developer and publish your own app to the directory.",
+  alternates: { canonical: "/apps" },
+};
 export const revalidate = 300;
 
 export default async function AppDirectoryPage() {

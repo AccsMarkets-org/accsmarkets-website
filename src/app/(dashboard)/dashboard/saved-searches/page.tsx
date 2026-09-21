@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { SavedSearchList } from "@/components/listings/SavedSearchList";
 
-export const metadata = { title: "Saved Searches — AccsMarkets" };
+export const metadata = { title: "Saved Searches" };
 
 export default async function SavedSearchesPage() {
   const session = await getServerSession(authOptions);

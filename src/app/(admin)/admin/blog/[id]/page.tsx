@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { ArrowLeft, ExternalLink, Link2, Sparkles } from "lucide-react";
 
 interface Post {
   id: string;
@@ -339,8 +340,9 @@ export default function BlogEditPage() {
     <div className="flex flex-col gap-0 -mt-4 -mx-4 md:-mt-6 md:-mx-6">
       {/* ── Sticky top bar ── */}
       <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b border-surface-border bg-background/95 backdrop-blur px-4 md:px-6 py-3">
-        <Link href="/admin/blog" className="text-sm text-brand-500 hover:underline shrink-0">
-          ← Blog
+        <Link href="/admin/blog" className="inline-flex items-center gap-1.5 text-sm text-brand-500 hover:underline shrink-0">
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Blog
         </Link>
         <span className="text-muted/40">|</span>
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[status]}`}>
@@ -382,9 +384,10 @@ export default function BlogEditPage() {
               href={`/blog/${slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-xl border border-surface-border px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50"
             >
-              View ↗
+              View
+              <ExternalLink className="h-4 w-4" aria-hidden />
             </a>
           )}
         </div>
@@ -478,7 +481,7 @@ export default function BlogEditPage() {
               <button type="button" onClick={() => insertAtCursor("\n<h3>Subheading</h3>\n")} className="rounded-lg border border-surface-border bg-background px-2 py-1 text-xs font-bold hover:bg-surface-border" title="Insert H3">H3</button>
               <button type="button" onClick={() => insertAtCursor("\n<p></p>\n")} className="rounded-lg border border-surface-border bg-background px-2 py-1 text-xs hover:bg-surface-border" title="Insert paragraph">¶</button>
               <button type="button" onClick={() => insertAtCursor("\n<ul>\n  <li></li>\n  <li></li>\n</ul>\n")} className="rounded-lg border border-surface-border bg-background px-2 py-1 text-xs hover:bg-surface-border" title="Insert list">≡</button>
-              <button type="button" onClick={() => insertAtCursor('\n<a href="" class="text-brand-600 underline"></a>')} className="rounded-lg border border-surface-border bg-background px-2 py-1 text-xs hover:bg-surface-border" title="Insert link">🔗</button>
+              <button type="button" onClick={() => insertAtCursor('\n<a href="" class="text-brand-600 underline"></a>')} className="inline-flex h-[26px] items-center rounded-lg border border-surface-border bg-background px-2 py-1 text-xs hover:bg-surface-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500" title="Insert link" aria-label="Insert link"><Link2 className="h-3.5 w-3.5" aria-hidden /></button>
 
               <div className="w-px h-4 bg-surface-border mx-1" />
 
@@ -524,9 +527,10 @@ export default function BlogEditPage() {
             <button
               type="button"
               onClick={() => setRegen(!regen)}
-              className="text-xs font-semibold text-brand-700 dark:text-brand-400 hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-brand-400 hover:underline"
             >
-              ✨ {regen ? "Close" : "AI: Improve or Expand a Section"}
+              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              {regen ? "Close" : "AI: Improve or Expand a Section"}
             </button>
             {regen && (
               <div className="mt-2 flex flex-col gap-2 sm:flex-row">

@@ -14,6 +14,25 @@ import { LatestBlogPosts } from "@/components/landing/LatestBlogPosts";
 
 export const revalidate = 120;
 
+const HOME_TITLE = "AccsMarkets — Buy & Sell Social Media Accounts";
+const HOME_DESCRIPTION =
+  "Buy and sell YouTube, Instagram, TikTok, Telegram and other social media accounts on a secure peer-to-peer marketplace where every deal is escrow-protected.";
+
+export const metadata = {
+  title: { absolute: HOME_TITLE },
+  description: HOME_DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website" as const,
+    locale: "en_US",
+    siteName: "AccsMarkets",
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    url: "https://accsmarkets.org",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "AccsMarkets" }],
+  },
+};
+
 const WEBSITE_JSONLD = {
   "@context": "https://schema.org",
   "@type": "WebSite",

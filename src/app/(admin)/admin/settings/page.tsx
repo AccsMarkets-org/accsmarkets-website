@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminSettingsClient } from "@/components/admin/AdminSettingsClient";
 
-export const metadata = { title: "Settings — AccsMarkets Admin" };
+export const metadata = { title: "Settings" };
 
 export default async function AdminSettingsPage() {
   const session = await getServerSession(authOptions);

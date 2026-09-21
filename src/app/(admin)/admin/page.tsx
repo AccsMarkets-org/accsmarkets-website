@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getAdminSidebarCounts } from "@/lib/admin-cache";
 import { Card } from "@/components/ui/Card";
@@ -444,8 +445,9 @@ export default async function AdminDashboardPage() {
                     <h3 className="font-semibold text-foreground">Listings by Platform</h3>
                     <p className="text-sm text-muted">{totalPlatformListings} active listings</p>
                   </div>
-                  <Link href="/admin/listings" className="text-xs font-medium text-brand-600 hover:underline">
-                    View all →
+                  <Link href="/admin/listings" className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:underline">
+                    View all
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                   </Link>
                 </div>
                 <AdminPlatformBreakdown platforms={platforms} />
@@ -510,8 +512,9 @@ export default async function AdminDashboardPage() {
               <Card>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-foreground">Recent Activity</h3>
-                  <Link href="/admin/audit-log" className="text-xs font-medium text-brand-600 hover:underline">
-                    View all →
+                  <Link href="/admin/audit-log" className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:underline">
+                    View all
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                   </Link>
                 </div>
                 <div className="divide-y divide-surface-border">

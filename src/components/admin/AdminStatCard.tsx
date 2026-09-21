@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 
 interface Props {
   label: string;
@@ -40,7 +41,7 @@ export function AdminStatCard({ label, value, icon, href, color, bg, trend, urge
               trend > 0 ? "bg-success/10 text-success" : trend < 0 ? "bg-danger/10 text-danger" : "bg-muted/10 text-muted",
             )}
           >
-            {trend > 0 ? "▲" : trend < 0 ? "▼" : "—"}
+            {trend > 0 ? <TrendingUp className="h-3 w-3" aria-hidden /> : trend < 0 ? <TrendingDown className="h-3 w-3" aria-hidden /> : <Minus className="h-3 w-3" aria-hidden />}
             {Math.abs(trend)}%
           </span>
         )}

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { ListingWizard } from "@/components/listings/ListingWizard";
+import { ArrowRight, Check, Lock } from "lucide-react";
 
 async function getReviewHours(): Promise<number> {
   const settings = await prisma.platformSettings.findUnique({
@@ -51,8 +52,8 @@ function VerificationGate({ kycLevel }: { kycLevel: string }) {
 
   return (
     <div className="flex flex-col items-center gap-6 rounded-2xl border border-surface-border bg-surface px-8 py-12 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/50 text-3xl">
-        🔒
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 text-brand-600 dark:bg-brand-900/50 dark:text-brand-400">
+        <Lock className="h-8 w-8" strokeWidth={1.5} aria-hidden />
       </div>
 
       <div>
@@ -75,7 +76,7 @@ function VerificationGate({ kycLevel }: { kycLevel: string }) {
                     : "border-2 border-surface-border bg-background text-muted"
                 }`}
               >
-                {step.done ? "✓" : i + 1}
+                {step.done ? <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden /> : i + 1}
               </div>
               <span className={`text-xs ${step.done ? "text-success font-medium" : "text-muted"}`}>
                 {step.label}
@@ -92,9 +93,10 @@ function VerificationGate({ kycLevel }: { kycLevel: string }) {
 
       <Link
         href="/dashboard/settings/verification"
-        className="rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-600 transition"
+        className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-600 transition"
       >
-        Complete verification →
+        Complete verification
+        <ArrowRight className="h-4 w-4" aria-hidden />
       </Link>
 
       <p className="text-xs text-muted">

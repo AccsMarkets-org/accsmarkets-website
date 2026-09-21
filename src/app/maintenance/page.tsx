@@ -3,6 +3,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 
+export const metadata = {
+  title: "Maintenance",
+  robots: { index: false, follow: false },
+};
+
 export default async function MaintenancePage() {
   const settings = await prisma.platformSettings.findUnique({
     where: { id: "singleton" },
@@ -20,9 +25,9 @@ export default async function MaintenancePage() {
     redirect("https://accsmarkets.org");
   }
 
-  const title = settings.maintenanceTitle || "Maintenance in Progress";
-  const message = settings.maintenanceMessage || "We're currently performing scheduled maintenance. We'll be back online shortly. Thank you for your patience.";
-  const endTime = settings.maintenanceEndTime;
+  const title = settings?.maintenanceTitle || "Maintenance in Progress";
+  const message = settings?.maintenanceMessage || "We're currently performing scheduled maintenance. We'll be back online shortly. Thank you for your patience.";
+  const endTime = settings?.maintenanceEndTime;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-surface to-background p-6">

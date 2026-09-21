@@ -6,10 +6,10 @@ import { createEscrowSchema } from "@/lib/validation/escrow";
 import { calculateEscrowFee } from "@/lib/fees";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { RATE_LIMITS } from "@/lib/constants";
-import { createNotification } from "@/lib/notifications";
+import { createNotification, wantsEmail } from "@/lib/notifications";
 import { emitToUser, conversationId } from "@/lib/socket";
 import { sendEmail } from "@/lib/email";
-import { escrowFundedTemplate } from "@/lib/email-templates";
+import { escrowFundedTemplate, escrowCreatedTemplate } from "@/lib/email-templates";
 import { formatCurrency } from "@/lib/utils";
 import { upsertRiskScore } from "@/lib/risk";
 import { requiresPhoneVerification, phoneVerificationRequiredResponse } from "@/lib/phone-gate";
@@ -250,6 +250,26 @@ export async function POST(req: Request) {
       escrow.id,
     );
     await sendEmail({ to: listing.seller.email, subject, html, slug: "escrow_funded" });
+
+    // Buyer's confirmation — previously only the seller was emailed, so the
+    // party who just paid got no receipt of the escrow being opened.
+    const buyerUser = await prisma.user
+      .findUnique({ where: { id: escrow.buyerId }, select: { email: true, name: true, username: true } })
+      .catch(() => null);
+    if (buyerUser?.email && (await wantsEmail(escrow.buyerId, "ESCROW").catch(() => true))) {
+      const buyerDisplay = buyerUser.name ?? buyerUser.username ?? "there";
+      const buyerTpl = escrowCreatedTemplate(
+        buyerDisplay,
+        listing.title,
+        escrowFee > 0
+          ? `${formatCurrency(buyerTotal)} (incl. ${formatCurrency(escrowFee)} escrow fee)`
+          : formatCurrency(buyerTotal),
+        escrow.id,
+        buyerDisplay === "there" ? "You" : buyerDisplay,
+        listing.seller.name ?? listing.seller.username ?? "The seller",
+      );
+      sendEmail({ to: buyerUser.email, subject: buyerTpl.subject, html: buyerTpl.html }).catch(() => null);
+    }
 
     // System DM to buyer↔seller thread — appears in messages with the stepper above it
     void prisma.message.create({

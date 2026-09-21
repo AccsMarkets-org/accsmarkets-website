@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ListingCard, type ListingCardData } from "@/components/listings/ListingCard";
+import { ArrowRight } from "lucide-react";
 
 export function FeaturedListings({ listings }: { listings: ListingCardData[] }) {
   if (listings.length === 0) return null;
@@ -21,8 +22,9 @@ export function FeaturedListings({ listings }: { listings: ListingCardData[] }) 
           </span>
           <h2 className="mt-2 text-3xl font-bold">Fresh listings</h2>
         </div>
-        <Link href="/listings" className="text-sm font-semibold text-brand-600 hover:underline">
-          View all →
+        <Link href="/listings" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline">
+          View all
+          <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </motion.div>
 

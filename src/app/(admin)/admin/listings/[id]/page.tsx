@@ -1,5 +1,6 @@
 ﻿import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, ArrowRight, Check, ExternalLink, Hourglass, Star } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -78,15 +79,18 @@ export default async function AdminListingDetailPage({
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link href="/admin/listings" className="mb-1 inline-block text-sm text-brand-500 hover:underline">
-            ← All listings
+          <Link href="/admin/listings" className="mb-1 inline-flex items-center gap-1.5 text-sm text-brand-500 hover:underline">
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            All listings
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold">{listing.title}</h1>
             <StatusPill label={style.label} className={style.className} />
             {listing.ownershipVerified ? (
-              <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-                Ownership ✓
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                Ownership
+                <Check className="h-3.5 w-3.5" aria-hidden />
+                <span className="sr-only">verified</span>
               </span>
             ) : (
               <span className="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning-foreground">
@@ -198,9 +202,10 @@ export default async function AdminListingDetailPage({
             </dl>
             <Link
               href={`/admin/users/${listing.seller.id}`}
-              className="mt-3 inline-block text-sm text-brand-500 hover:underline"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-500 hover:underline"
             >
-              View seller profile →
+              View seller profile
+              <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </Card>
 
@@ -214,7 +219,10 @@ export default async function AdminListingDetailPage({
               className="inline-flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-500/10 px-4 py-3 text-sm font-medium text-brand-700 dark:text-brand-400 hover:bg-brand-100 break-all"
             >
               {listing.accountUrl}
-              <span className="shrink-0">↗ Open</span>
+              <span className="inline-flex shrink-0 items-center gap-1.5">
+                <ExternalLink className="h-4 w-4" aria-hidden />
+                Open
+              </span>
             </a>
           </Card>
 
@@ -260,8 +268,13 @@ export default async function AdminListingDetailPage({
           )}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="font-semibold">
-                  {listing.ownershipVerified ? "✓ Ownership verified" : "⏳ Ownership not verified"}
+                <h2 className="flex items-center gap-1.5 font-semibold">
+                  {listing.ownershipVerified ? (
+                    <Check className="h-4 w-4 text-success" aria-hidden />
+                  ) : (
+                    <Hourglass className="h-4 w-4 text-warning" aria-hidden />
+                  )}
+                  {listing.ownershipVerified ? "Ownership verified" : "Ownership not verified"}
                 </h2>
                 <p className="mt-1 text-sm text-muted">
                   {listing.ownershipVerified
@@ -308,7 +321,8 @@ export default async function AdminListingDetailPage({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-500/10 px-4 py-2 text-sm font-medium text-brand-700 dark:text-brand-400 hover:bg-brand-100 break-all"
                 >
-                  {listing.accountUrl} ↗
+                  {listing.accountUrl}
+                  <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
                 </a>
               </div>
               {listing.verifiedPlatformId && (
@@ -392,7 +406,15 @@ export default async function AdminListingDetailPage({
           {reviews.map((r) => (
             <Card key={r.id}>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-warning">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
+                <span className="inline-flex items-center gap-0.5 text-warning" role="img" aria-label={`${r.rating} out of 5`}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      className={cn("h-3.5 w-3.5", n <= r.rating ? "fill-current" : "text-surface-border")}
+                      aria-hidden
+                    />
+                  ))}
+                </span>
                 <span className="text-sm text-muted">
                   by {r.reviewer.username ?? "user"} · {formatDate(r.createdAt)}
                 </span>

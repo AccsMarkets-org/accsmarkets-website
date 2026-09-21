@@ -9,7 +9,9 @@ const TITLE = "Resources — AccsMarkets";
 const DESCRIPTION = "Guides, insights, and news on buying and selling social media accounts safely.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  // Bare title — the root layout's "%s — AccsMarkets" template adds the brand.
+  // TITLE (with brand) is still used for openGraph/twitter, which aren't templated.
+  title: "Resources",
   description: DESCRIPTION,
   alternates: { canonical: `${BASE_URL}${RESOURCES_BASE}` },
   openGraph: {

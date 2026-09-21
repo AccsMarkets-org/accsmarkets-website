@@ -9,6 +9,7 @@ import {
   getMarketTrends,
 } from "@/lib/intelligence";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,19 @@ export async function POST(req: NextRequest) {
   try {
     // Listing analysis
     if (typeof body.listingId === "string") {
+      // Only the seller, or anyone for a publicly visible listing, may analyze it.
+      const listing = await prisma.listing.findUnique({
+        where: { id: body.listingId },
+        select: { sellerId: true, status: true, isPrivate: true },
+      });
+      if (!listing) {
+        return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+      }
+      const isOwner = listing.sellerId === session.user.id;
+      const isPublic = listing.status === "ACTIVE" && !listing.isPrivate;
+      if (!isOwner && !isPublic) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
       const data = await analyzeListing(body.listingId);
       return NextResponse.json({ data });
     }

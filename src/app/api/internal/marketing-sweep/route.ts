@@ -13,7 +13,8 @@ import {
 } from "@/lib/email-templates";
 
 // Automated re-engagement email sweep — runs daily
-// (scripts/run-marketing-sweep.ps1 via Windows Task Scheduler), same
+// (scripts/run-marketing-sweep.sh via cron on the Linux server, or
+// scripts/run-marketing-sweep.ps1 via Windows Task Scheduler), same
 // external-trigger pattern as src/app/api/internal/sweep/route.ts. Each
 // segment has its own dedup/cooldown via MarketingEmailLog so nobody gets
 // the same campaign twice in the same window.
@@ -79,6 +80,7 @@ export async function POST(req: Request) {
      WHERE u.createdAt < ?
        AND u.marketingOptOut = false
        AND u.isBanned = false
+       AND u.emailVerified IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM Listing l WHERE l.sellerId = u.id)
        AND NOT EXISTS (SELECT 1 FROM Offer o WHERE o.buyerId = u.id)
      LIMIT 500`,
@@ -87,7 +89,10 @@ export async function POST(req: Request) {
   for (const u of newSignupCandidates) {
     // One-time campaign — any prior send at all (no cooldown window) skips it.
     if (await alreadySent(u.id, "new_signup_nudge", 36500)) continue;
-    await sendEmail({ to: u.email, ...newSignupNudgeTemplate(u.name ?? u.username ?? "there") });
+    // Only log a send that was actually handed to a transport — this campaign
+    // is one-time, so logging a failed send would lose it for good.
+    const sent = await sendEmail({ to: u.email, ...newSignupNudgeTemplate(u.name ?? u.username ?? "there") }).catch(() => false);
+    if (!sent) continue;
     await logSent(u.id, "new_signup_nudge");
     results.newSignupNudgeSent++;
   }
@@ -98,6 +103,7 @@ export async function POST(req: Request) {
     `SELECT u.id, u.email, u.name, u.username FROM User u
      WHERE u.marketingOptOut = false
        AND u.isBanned = false
+       AND u.emailVerified IS NOT NULL
        AND (u.lastSeenAt IS NULL OR u.lastSeenAt < ?)
        AND u.createdAt < ?
        AND (
@@ -110,7 +116,8 @@ export async function POST(req: Request) {
   );
   for (const u of inactiveCandidates) {
     if (await alreadySent(u.id, "inactive_winback", INACTIVE_COOLDOWN_DAYS)) continue;
-    await sendEmail({ to: u.email, ...inactiveWinbackTemplate(u.name ?? u.username ?? "there") });
+    const sent = await sendEmail({ to: u.email, ...inactiveWinbackTemplate(u.name ?? u.username ?? "there") }).catch(() => false);
+    if (!sent) continue;
     await logSent(u.id, "inactive_winback");
     results.inactiveWinbackSent++;
   }
@@ -140,10 +147,11 @@ export async function POST(req: Request) {
     const buyer = rows[0];
     if (!buyer || buyer.marketingOptOut || buyer.isBanned) continue;
     if (await alreadySent(offer.buyerId, "offer_abandoned", 36500)) continue;
-    await sendEmail({
+    const sent = await sendEmail({
       to: buyer.email,
       ...offerAbandonedTemplate(buyer.name ?? buyer.username ?? "there", offer.listing.title, offer.id),
-    });
+    }).catch(() => false);
+    if (!sent) continue;
     await logSent(offer.buyerId, "offer_abandoned");
     results.offerAbandonedSent++;
   }

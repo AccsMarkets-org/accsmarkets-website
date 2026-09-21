@@ -13,7 +13,7 @@ export default async function MaintenanceModePage() {
     <div className="flex flex-col gap-6 max-w-3xl">
       <AdminPageHeader
         title="Maintenance Mode"
-        subtitle={settings.maintenanceMode ? "⚠️ Currently active — users cannot access the site" : "Control site availability and display maintenance notices"}
+        subtitle={settings.maintenanceMode ? "Currently active — users cannot access the site" : "Control site availability and display maintenance notices"}
       />
       <MaintenanceModeClient
         initialMode={settings.maintenanceMode}

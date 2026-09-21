@@ -3,7 +3,11 @@ import { LegalPageLayout, LegalSection } from "@/components/ui/LegalPageLayout";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = { title: "Refund Policy — AccsMarkets", description: "How refunds work for escrows, deposits, and subscriptions." };
+export const metadata: Metadata = {
+  title: "Refund Policy",
+  description: "How refunds work on AccsMarkets — escrow cancellations, refunds after credentials are submitted, dispute outcomes, crypto deposits and subscriptions.",
+  alternates: { canonical: "/refunds" },
+};
 
 const SECTIONS = [
   { id: "escrow-cancel", title: "Escrow Cancellations" },

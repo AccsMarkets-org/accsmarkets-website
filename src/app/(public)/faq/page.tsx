@@ -1,6 +1,10 @@
 import { ProsePage } from "@/components/ui/ProsePage";
 
-export const metadata = { title: "FAQ — AccsMarkets" };
+export const metadata = {
+  title: "FAQ",
+  description: "Answers to common AccsMarkets questions — escrow safety, funding your wallet, offers, verified badges, trust scores, listing limits and disputes.",
+  alternates: { canonical: "/faq" },
+};
 
 const FAQS: { q: string; a: string }[] = [
   { q: "Is my money safe while an escrow is open?", a: "Yes. Funds are debited from your wallet into the platform's escrow ledger and can only move two ways: to the seller when you confirm completion, or back to you on cancellation/refund." },
@@ -13,9 +17,23 @@ const FAQS: { q: string; a: string }[] = [
   { q: "Do you support PayPal or cards?", a: "Not PayPal. You can fund your wallet by bank transfer or by crypto (TRON, BNB Chain, Ethereum, Polygon, Solana). Crypto keeps funding fast, global, and chargeback-free — which is what makes instant refunds possible." },
 ];
 
+const FAQ_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQS.map((faq) => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: { "@type": "Answer", text: faq.a },
+  })),
+};
+
 export default function FaqPage() {
   return (
     <ProsePage title="Frequently asked questions">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD).replace(/</g, "\\u003c") }}
+      />
       <div className="flex flex-col gap-4">
         {FAQS.map((faq) => (
           <details key={faq.q} className="group rounded-2xl border border-surface-border bg-surface p-5">

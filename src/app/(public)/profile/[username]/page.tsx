@@ -27,8 +27,11 @@ export async function generateMetadata({ params }: { params: { username: string 
     });
     if (!user) return {};
     return {
-      title: `${user.username ?? user.name} — AccsMarkets`,
-      description: user.bio ?? `View ${user.username}'s listings and reviews on AccsMarkets.`,
+      title: `${user.username ?? user.name}`,
+      description: user.bio?.slice(0, 160) ?? `View ${user.username}'s listings and reviews on AccsMarkets.`,
+      // /seller/[username] renders the same user's public profile and is the
+      // one listed in the sitemap — point this duplicate at it.
+      alternates: { canonical: `/seller/${user.username ?? params.username}` },
     };
   } catch {
     return {};
@@ -127,6 +130,7 @@ export default async function PublicProfilePage({ params }: { params: { username
               sellerId={user.id}
               sellerUsername={user.username ?? ""}
               initialFollowing={!!isFollowing}
+              initialCount={user._count?.followers ?? 0}
             />
           ) : (
             <Link

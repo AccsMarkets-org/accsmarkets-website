@@ -36,13 +36,19 @@ export async function POST(req: NextRequest) {
   const appSecret = process.env.WHATSAPP_APP_SECRET;
   const rawBody = await req.text();
 
-  if (appSecret) {
-    const signature = req.headers.get("x-hub-signature-256");
-    const expected =
-      "sha256=" + crypto.createHmac("sha256", appSecret).update(rawBody).digest("hex");
-    if (!signature || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-    }
+  // Fail closed: without the app secret the signature can't be verified, so
+  // nothing is processed.
+  if (!appSecret) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+  }
+  const signature = req.headers.get("x-hub-signature-256");
+  const expected =
+    "sha256=" + crypto.createHmac("sha256", appSecret).update(rawBody).digest("hex");
+  const signatureBuf = Buffer.from(signature ?? "");
+  const expectedBuf = Buffer.from(expected);
+  // timingSafeEqual throws on unequal lengths — check first.
+  if (signatureBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(signatureBuf, expectedBuf)) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
   let body: { entry?: WhatsAppWebhookEntry[] };

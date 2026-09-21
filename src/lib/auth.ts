@@ -9,9 +9,98 @@ import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { prisma } from "@/lib/db";
 import { decryptSecret, verifyCode } from "@/lib/totp";
 import { rpID, origin as webauthnOrigin, getChallengeCookie, clearChallengeCookie } from "@/lib/webauthn";
+import { sendEmail } from "@/lib/email";
+import { loginAlertTemplate } from "@/lib/email-templates";
+import { createNotification, wantsEmail } from "@/lib/notifications";
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
+
+type AuthorizeHeaders = Record<string, unknown> | undefined;
+
+function headerValue(headers: AuthorizeHeaders, name: string): string {
+  const raw = headers?.[name];
+  if (Array.isArray(raw)) return String(raw[0] ?? "");
+  return typeof raw === "string" ? raw : "";
+}
+
+// Same precedence as getClientIp() in src/lib/rate-limit.ts, but NextAuth hands
+// authorize() a plain lower-cased header object rather than a Headers instance.
+// Restricted to IP characters — the value is client-influenced and ends up in
+// an email template that does no HTML escaping.
+function clientIpFrom(headers: AuthorizeHeaders): string {
+  const forwarded = headerValue(headers, "x-forwarded-for").split(",")[0].trim();
+  const ip = (forwarded || headerValue(headers, "x-real-ip").trim()).replace(/[^0-9a-fA-F:.]/g, "").slice(0, 45);
+  return ip || "unknown";
+}
+
+// Whitelisted "Browser on OS" summary — the raw user-agent is never echoed.
+function summarizeUserAgent(ua: string): string {
+  const browser = /Edg\//.test(ua) ? "Edge"
+    : /OPR\/|Opera/.test(ua) ? "Opera"
+    : /Firefox\//.test(ua) ? "Firefox"
+    : /Chrome\//.test(ua) ? "Chrome"
+    : /Safari\//.test(ua) ? "Safari"
+    : /okhttp|Expo|Dalvik|CFNetwork/i.test(ua) ? "Mobile app"
+    : "Unknown browser";
+  const os = /Windows/.test(ua) ? "Windows"
+    : /Android/.test(ua) ? "Android"
+    : /iPhone|iPad|iOS/.test(ua) ? "iOS"
+    : /Mac OS X|Macintosh/.test(ua) ? "macOS"
+    : /Linux/.test(ua) ? "Linux"
+    : "unknown device";
+  return `${browser} on ${os}`;
+}
+
+// New-IP sign-in detection. "New" = the account has signed in successfully
+// before from at least one known IP, and never from this one. Rows written
+// before real IPs were recorded carry ip "unknown" and are ignored, so the first
+// login after that change doesn't alert every existing user. Must run BEFORE the
+// current attempt's success row is written. Never throws.
+async function isNewIpLogin(email: string, ip: string): Promise<boolean> {
+  try {
+    if (ip === "unknown") return false;
+    const [knownIpLogins, sameIpLogins] = await Promise.all([
+      prisma.loginAttempt.count({ where: { email, success: true, ip: { not: "unknown" } } }),
+      prisma.loginAttempt.count({ where: { email, success: true, ip } }),
+    ]);
+    return knownIpLogins > 0 && sameIpLogins === 0;
+  } catch {
+    return false;
+  }
+}
+
+// Best-effort SECURITY notification + login-alert email. Called without await —
+// an alert failure must never block or delay a valid login.
+async function sendNewIpAlert(
+  user: { id: string; email: string; name: string | null },
+  ip: string,
+  headers: AuthorizeHeaders,
+): Promise<void> {
+  try {
+    const device = summarizeUserAgent(headerValue(headers, "user-agent"));
+    const country = (headerValue(headers, "cf-ipcountry") || headerValue(headers, "x-vercel-ip-country"))
+      .replace(/[^A-Za-z]/g, "")
+      .slice(0, 2)
+      .toUpperCase();
+    const loginAt = new Date().toUTCString();
+
+    await createNotification({
+      userId: user.id,
+      type: "SECURITY",
+      title: "New sign-in to your account",
+      body: `${device} signed in from a new IP address (${ip}). If this wasn't you, change your password and review your sessions.`,
+      link: "/dashboard/settings/sessions",
+    });
+
+    if (await wantsEmail(user.id, "SECURITY")) {
+      const tpl = loginAlertTemplate(user.name ?? "there", device, ip, country || "Not available", loginAt);
+      sendEmail({ to: user.email, subject: tpl.subject, html: tpl.html }).catch(() => null);
+    }
+  } catch {
+    // swallowed — see above
+  }
+}
 
 const useSecureCookies = (process.env.NEXTAUTH_URL ?? "").startsWith("https://");
 
@@ -68,10 +157,12 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
         totpCode: { label: "2FA Code", type: "text" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("MISSING_CREDENTIALS");
         }
+
+        const ip = clientIpFrom(req?.headers);
 
         const email = credentials.email.toLowerCase().trim();
         const windowStart = new Date(Date.now() - LOCKOUT_MINUTES * 60 * 1000);
@@ -87,7 +178,7 @@ export const authOptions: NextAuthOptions = {
         const user = await prisma.user.findUnique({ where: { email } });
 
         if (!user || !user.password) {
-          await prisma.loginAttempt.create({ data: { email, ip: "unknown", success: false } });
+          await prisma.loginAttempt.create({ data: { email, ip, success: false } });
           throw new Error("INVALID_CREDENTIALS");
         }
 
@@ -97,7 +188,7 @@ export const authOptions: NextAuthOptions = {
 
         const valid = await bcrypt.compare(credentials.password, user.password);
         if (!valid) {
-          await prisma.loginAttempt.create({ data: { email, ip: "unknown", success: false } });
+          await prisma.loginAttempt.create({ data: { email, ip, success: false } });
           const newFailures = recentFailures + 1;
           const remaining = MAX_LOGIN_ATTEMPTS - newFailures;
           if (remaining <= 0) throw new Error("ACCOUNT_LOCKED");
@@ -112,8 +203,14 @@ export const authOptions: NextAuthOptions = {
         // special field `totpCode` in the credentials object. Enforced for every
         // role, including ADMIN — a previous version of this check exempted admins
         // entirely, which meant a leaked admin password bypassed 2FA outright.
+        //
+        // A row whose secret still carries the PENDING: marker is a setup the user
+        // started but never confirmed with a code — it must not gate login, or an
+        // abandoned setup locks the account out. decryptSecret throws on an
+        // unreadable secret, which fails the login (closed), never skips the check.
         const tfa = await prisma.twoFactorAuth.findUnique({ where: { userId: user.id } });
-        if (tfa) {
+        const tfaSecret = tfa ? decryptSecret(tfa.secret) : "";
+        if (tfa && !tfaSecret.startsWith("PENDING:")) {
           const totpCode = (credentials as Record<string, string>).totpCode ?? "";
           if (!totpCode) {
             throw new Error("TOTP_REQUIRED");
@@ -132,12 +229,17 @@ export const authOptions: NextAuthOptions = {
               break;
             }
           }
-          if (!usedBackup && !verifyCode(decryptSecret(tfa.secret), totpCode)) {
+          if (!usedBackup && !verifyCode(tfaSecret, totpCode)) {
+            // Count a wrong code as a failed login so the 5-per-15-min lockout
+            // above also covers TOTP guessing.
+            await prisma.loginAttempt.create({ data: { email, ip, success: false } });
             throw new Error("INVALID_TOTP");
           }
         }
 
-        await prisma.loginAttempt.create({ data: { email, ip: "unknown", success: true } });
+        const newIp = await isNewIpLogin(email, ip);
+        await prisma.loginAttempt.create({ data: { email, ip, success: true } });
+        if (newIp) void sendNewIpAlert(user, ip, req?.headers);
 
         return {
           id: user.id,
@@ -161,10 +263,12 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         credential: { label: "Credential", type: "text" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.credential) {
           throw new Error("MISSING_CREDENTIALS");
         }
+
+        const ip = clientIpFrom(req?.headers);
 
         const challenge = getChallengeCookie();
         if (!challenge) throw new Error("CHALLENGE_EXPIRED");
@@ -212,7 +316,7 @@ export const authOptions: NextAuthOptions = {
           where: { id: stored.id },
           data: { counter: verification.authenticationInfo.newCounter, lastUsedAt: new Date() },
         });
-        await prisma.loginAttempt.create({ data: { email, ip: "unknown", success: true } });
+        await prisma.loginAttempt.create({ data: { email, ip, success: true } });
 
         return {
           id: user.id,

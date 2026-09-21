@@ -6,6 +6,7 @@ import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { cn, relativeTime } from "@/lib/utils";
 import { useSocket } from "@/hooks/useSocket";
 import type { VerifiedBadge as VerifiedBadgeEnum } from "@prisma/client";
+import { ArrowRight } from "lucide-react";
 
 interface Partner {
   id: string;
@@ -206,9 +207,10 @@ export function PartnerProfilePanel({ partnerId, isOfficialThread = false }: Pro
           ) : (
             <Link
               href={`/listings?seller=${partner.username ?? partner.id}`}
-              className="text-xs text-brand-600 hover:underline"
+              className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline"
             >
-              View listings →
+              View listings
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
             </Link>
           )}
         </div>

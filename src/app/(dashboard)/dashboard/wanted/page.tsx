@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { Search } from "lucide-react";
 
 const STATUS_STYLE: Record<string, { label: string; className: string }> = {
   OPEN:     { label: "Open",     className: "bg-success/10 text-success" },
@@ -35,7 +36,7 @@ export default async function WantedListingsPage() {
 
       {items.length === 0 ? (
         <Card className="py-12 text-center">
-          <p className="text-3xl mb-2">🔍</p>
+          <Search className="mx-auto mb-2 h-10 w-10 text-muted" strokeWidth={1.5} aria-hidden />
           <p className="font-medium">No wanted listings yet</p>
           <p className="mt-1 text-sm text-muted">Post what you&apos;re looking for and sellers will reach out.</p>
           <Link

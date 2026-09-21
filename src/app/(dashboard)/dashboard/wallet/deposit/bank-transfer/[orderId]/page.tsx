@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn, formatCurrency } from "@/lib/utils";
+import { ArrowLeft, Check } from "lucide-react";
 
 interface BankAccount {
   bankName: string;
@@ -59,9 +60,16 @@ function CopyRow({ label, value, highlight }: { label: string; value: string; hi
         <button
           type="button"
           onClick={copy}
-          className="shrink-0 rounded-md border border-surface-border px-2 py-0.5 text-xs text-muted hover:bg-surface transition"
+          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-surface-border px-2 py-0.5 text-xs text-muted hover:bg-surface transition"
         >
-          {copied ? "✓" : "Copy"}
+          {copied ? (
+            <>
+              <Check className="h-3.5 w-3.5 text-success" aria-hidden />
+              <span className="sr-only">Copied</span>
+            </>
+          ) : (
+            "Copy"
+          )}
         </button>
       </div>
     </div>
@@ -133,8 +141,9 @@ export default function BankTransferConfirmationPage() {
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
         <p className="text-danger">{error}</p>
-        <Link href="/dashboard/wallet" className="mt-4 inline-block text-sm text-brand-500 hover:underline">
-          ← Back to wallet
+        <Link href="/dashboard/wallet" className="mt-4 inline-flex items-center gap-1.5 text-sm text-brand-500 hover:underline">
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Back to wallet
         </Link>
       </div>
     );
@@ -165,8 +174,9 @@ export default function BankTransferConfirmationPage() {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6 py-6">
       <div>
-        <Link href="/dashboard/wallet" className="text-xs text-muted hover:text-foreground transition">
-          ← Back to wallet
+        <Link href="/dashboard/wallet" className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition">
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+          Back to wallet
         </Link>
         <h1 className="mt-2 text-2xl font-bold">Bank Transfer</h1>
         <p className="text-sm text-muted">Reference: <span className="font-mono font-semibold text-foreground">{order.referenceId}</span></p>
@@ -191,7 +201,7 @@ export default function BankTransferConfirmationPage() {
                         done ? "bg-success text-white" : active ? "border-2 border-brand-400 bg-brand-500/10 text-brand-600" : "border-2 border-surface-border bg-background text-muted",
                       )}
                     >
-                      {done ? "✓" : i + 1}
+                      {done ? <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden /> : i + 1}
                     </div>
                     {i < STEPS.length - 1 && (
                       <div className={cn("h-0.5 flex-1", done && i < step ? "bg-success" : "bg-surface-border")} />

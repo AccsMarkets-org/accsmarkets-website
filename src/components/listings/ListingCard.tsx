@@ -14,6 +14,7 @@ import { CountryFlag } from "@/components/ui/CountryFlag";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { WatchlistHeart } from "@/components/listings/WatchlistHeart";
 import type { AdsenseStatus, Platform, SaleType, VerifiedBadge as VerifiedBadgeEnum } from "@prisma/client";
+import { Check, Gavel, Lock, Pin, Star } from "lucide-react";
 
 export interface ListingCardData {
   id: string;
@@ -98,11 +99,11 @@ export function ListingCard({
   const trustTier = getTrustTier(listing.seller.trustScore ?? 0);
 
   const topBadge = listing.isPremiumFeatured
-    ? { label: "⭐ Premium", cls: "bg-amber-400 text-amber-900" }
+    ? { label: "Premium", icon: Star, cls: "bg-amber-400 text-amber-900" }
     : listing.isFeatured
-      ? { label: "Featured", cls: "bg-brand-500 text-white" }
+      ? { label: "Featured", icon: null, cls: "bg-brand-500 text-white" }
       : listing.isPinned
-        ? { label: "📌 Pinned", cls: "bg-surface-border text-foreground" }
+        ? { label: "Pinned", icon: Pin, cls: "bg-surface-border text-foreground" }
         : null;
 
   return (
@@ -152,7 +153,8 @@ export function ListingCard({
 
         {/* Top badge */}
         {topBadge && (
-          <span className={cn("absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-[11px] font-bold shadow-sm backdrop-blur-sm", topBadge.cls)}>
+          <span className={cn("absolute left-2 top-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold shadow-sm backdrop-blur-sm", topBadge.cls)}>
+            {topBadge.icon && <topBadge.icon className="h-3 w-3 fill-current" aria-hidden />}
             {topBadge.label}
           </span>
         )}
@@ -175,15 +177,17 @@ export function ListingCard({
 
         {/* Auction countdown pill */}
         {listing.saleType === "AUCTION" && listing.auctionEndsAt && (
-          <span className="absolute bottom-3 right-2 rounded-full bg-amber-500 px-2.5 py-0.5 text-[11px] font-bold text-white shadow">
-            🔨 Ends {new Date(listing.auctionEndsAt).toLocaleDateString()}
+          <span className="absolute bottom-3 right-2 inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-0.5 text-[11px] font-bold text-white shadow">
+            <Gavel className="h-3 w-3" aria-hidden />
+            Ends {new Date(listing.auctionEndsAt).toLocaleDateString()}
           </span>
         )}
 
         {/* Private lock */}
         {listing.isPrivate && (
           <span className="absolute left-2 bottom-2.5 inline-flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
-            🔒 Private
+            <Lock className="h-3 w-3" aria-hidden />
+            Private
           </span>
         )}
 
@@ -230,8 +234,9 @@ export function ListingCard({
             </span>
           )}
           {listing.ownershipVerified && (
-            <span className="rounded-full bg-brand-500/10 px-2 py-0.5 text-[11px] font-semibold text-brand-700 ring-1 ring-brand-200 dark:bg-brand-950/30 dark:text-brand-400 dark:ring-brand-800">
-              ✓ Verified
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/10 px-2 py-0.5 text-[11px] font-semibold text-brand-700 ring-1 ring-brand-200 dark:bg-brand-950/30 dark:text-brand-400 dark:ring-brand-800">
+              <Check className="h-3 w-3" aria-hidden />
+              Verified
             </span>
           )}
           {listing.adsenseStatus && ADSENSE_STATUS_STYLE[listing.adsenseStatus].show && (

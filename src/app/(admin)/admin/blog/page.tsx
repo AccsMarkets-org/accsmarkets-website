@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -167,15 +168,17 @@ export default async function AdminBlogPage() {
                   </div>
                   {/* Actions */}
                   <div className="flex flex-col gap-1 shrink-0">
-                    <Link href={`/blog/${a.slug}`} target="_blank" className="rounded-lg border border-surface-border px-2 py-1 text-[10px] font-medium hover:bg-surface-border text-center">
-                      View ↗
+                    <Link href={`/blog/${a.slug}`} target="_blank" className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-surface-border px-2 py-1 text-[10px] font-medium hover:bg-surface-border text-center">
+                      View
+                      <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                     </Link>
-                    <Link href={`/admin/blog/${a.blogPostId}`} className="rounded-lg border border-surface-border px-2 py-1 text-[10px] font-medium hover:bg-surface-border text-center">
+                    <Link href={`/admin/blog/${a.blogPostId}`} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-surface-border px-2 py-1 text-[10px] font-medium hover:bg-surface-border text-center">
                       Edit
                     </Link>
                     {a.publishedUrl && (
-                      <a href={a.publishedUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 px-2 py-1 text-[10px] font-medium text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-950/50 text-center">
-                        Source ↗
+                      <a href={a.publishedUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 px-2 py-1 text-[10px] font-medium text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-950/50 text-center">
+                        Source
+                        <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                       </a>
                     )}
                   </div>
@@ -200,7 +203,7 @@ export default async function AdminBlogPage() {
                   <Link href={`/admin/blog/${post.id}`} className="font-medium hover:underline">
                     {post.title}
                   </Link>
-                  <Link href={`/blog/${post.slug}`} target="_blank" className="text-xs text-muted hover:text-brand-500" title="View live">↗</Link>
+                  <Link href={`/blog/${post.slug}`} target="_blank" className="inline-flex items-center rounded text-xs text-muted hover:text-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500" title="View live" aria-label="View live post"><ExternalLink className="h-3.5 w-3.5" aria-hidden /></Link>
                   <StatusPill label={style.label} className={style.className} />
                   {post.isAiGen && <span className="rounded-full bg-brand-500/10 px-1.5 py-0.5 text-[10px] text-brand-700">AI</span>}
                 </div>

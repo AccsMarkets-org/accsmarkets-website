@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { Heart } from "lucide-react";
 
 interface Props {
   listingId: string;
@@ -44,18 +45,16 @@ export function WatchlistHeart({ listingId, saved: initialSaved }: Props) {
 
   return (
     <button
+      type="button"
       onClick={toggle}
+      aria-pressed={saved}
       aria-label={saved ? "Remove from saved" : "Save listing"}
-      className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 shadow backdrop-blur transition hover:scale-110 active:scale-95"
+      className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 shadow backdrop-blur transition hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
     >
-      <svg
+      <Heart
         className={`h-4 w-4 transition-colors ${saved ? "fill-danger text-danger" : "fill-transparent text-muted"}`}
-        stroke="currentColor"
-        strokeWidth={2}
-        viewBox="0 0 24 24"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21.593C7.37 17.64 2 14.01 2 9.5 2 5.91 4.91 3 8.5 3c1.74 0 3.41.81 4.5 2.09A5.988 5.988 0 0 1 15.5 3C19.09 3 22 5.91 22 9.5c0 4.51-5.37 8.14-10 12.093z" />
-      </svg>
+        aria-hidden
+      />
     </button>
   );
 }

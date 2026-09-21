@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { PLATFORM_LABEL } from "@/lib/constants";
 import { PLATFORMS } from "@/lib/validation/listing";
 import { Button } from "@/components/ui/Button";
+import { BellPlus, Search } from "lucide-react";
 
 function useDebounce<T>(value: T, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -101,7 +102,7 @@ export function ListingFilters({ isAuthenticated = false }: { isAuthenticated?: 
             onChange={(e) => setQuery(e.target.value)}
             className="h-10 w-full rounded-xl border border-surface-border bg-surface pl-9 pr-3 text-sm focus:border-brand-400 focus:outline-none"
           />
-          <span className="pointer-events-none absolute left-3 top-2.5 text-muted text-base">🔍</span>
+          <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted" aria-hidden />
         </div>
 
         {/* Mobile filter toggle */}
@@ -132,9 +133,10 @@ export function ListingFilters({ isAuthenticated = false }: { isAuthenticated?: 
         {isAuthenticated && hasFilters && !showSaveForm && (
           <button
             onClick={() => setShowSaveForm(true)}
-            className="flex items-center gap-1 text-sm text-brand-600 hover:underline"
+            className="flex items-center gap-1.5 text-sm text-brand-600 hover:underline"
           >
-            🔔 Save search
+            <BellPlus className="h-4 w-4" aria-hidden />
+            Save search
           </button>
         )}
       </div>

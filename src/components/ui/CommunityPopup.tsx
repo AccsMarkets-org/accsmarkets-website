@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "community_popup_dismissed_v1";
-const DELAY_MS = 8000;
+const COOKIE_CONSENT_KEY = "cookie_consent_v1";
+const DELAY_MS = 30000;
 
 const COMMUNITIES = [
   {
@@ -51,8 +52,20 @@ export function CommunityPopup() {
     try {
       if (localStorage.getItem(STORAGE_KEY)) return;
     } catch { /* ignore */ }
-    const t = setTimeout(() => setVisible(true), DELAY_MS);
-    return () => clearTimeout(t);
+
+    // Never stack on top of the cookie banner: wait until the visitor has answered it.
+    let shown: ReturnType<typeof setTimeout> | undefined;
+    const poll = setInterval(() => {
+      let answered = true;
+      try { answered = Boolean(localStorage.getItem(COOKIE_CONSENT_KEY)); } catch { /* ignore */ }
+      if (!answered) return;
+      clearInterval(poll);
+      shown = setTimeout(() => setVisible(true), DELAY_MS);
+    }, 2000);
+    return () => {
+      clearInterval(poll);
+      if (shown) clearTimeout(shown);
+    };
   }, []);
 
   function dismiss() {

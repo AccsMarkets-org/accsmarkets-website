@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Activity, CheckCircle2, ClipboardList, ShoppingBag, Star, Zap } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface ActivityEventItem {
   id: string;
@@ -13,12 +15,12 @@ interface ActivityEventItem {
   user: { id: string; username: string | null; verifiedBadge: string; trustScore: number };
 }
 
-const EVENT_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
-  "listing.created":    { label: "listed an account",     icon: "📋", color: "bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-400" },
-  "escrow.sold":        { label: "completed a sale",       icon: "✅", color: "bg-success/10 text-success" },
-  "escrow.purchased":   { label: "purchased an account",   icon: "🛍️", color: "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300" },
-  "review.received":    { label: "received a review",      icon: "⭐", color: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400" },
-  "listing.bumped":     { label: "bumped a listing",       icon: "⚡", color: "bg-brand-50 text-brand-600" },
+const EVENT_CONFIG: Record<string, { label: string; icon: LucideIcon; color: string }> = {
+  "listing.created":    { label: "listed an account",     icon: ClipboardList, color: "bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-400" },
+  "escrow.sold":        { label: "completed a sale",       icon: CheckCircle2,  color: "bg-success/10 text-success" },
+  "escrow.purchased":   { label: "purchased an account",   icon: ShoppingBag,   color: "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300" },
+  "review.received":    { label: "received a review",      icon: Star,          color: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400" },
+  "listing.bumped":     { label: "bumped a listing",       icon: Zap,           color: "bg-brand-50 text-brand-600" },
 };
 
 function relTime(iso: string): string {
@@ -76,9 +78,7 @@ export default function ActivityFeedPage() {
       {events.length === 0 && !loading && !error && (
         <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-surface-border py-20 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-border">
-            <svg className="h-7 w-7 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-            </svg>
+            <Activity className="h-7 w-7 text-muted" strokeWidth={1.5} aria-hidden />
           </div>
           <div>
             <p className="font-medium text-foreground">No activity yet</p>
@@ -122,7 +122,8 @@ export default function ActivityFeedPage() {
                 {/* Type badge */}
                 {config && (
                   <span className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${config.color}`}>
-                    {config.icon} {config.label}
+                    <config.icon className="h-3 w-3" aria-hidden />
+                    {config.label}
                   </span>
                 )}
               </div>

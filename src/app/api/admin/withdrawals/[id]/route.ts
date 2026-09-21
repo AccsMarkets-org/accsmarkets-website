@@ -5,6 +5,8 @@ import { requireAdmin, auditLog } from "@/lib/admin";
 import { createNotification } from "@/lib/notifications";
 import { formatCurrency } from "@/lib/utils";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { sendEmail } from "@/lib/email";
+import { withdrawalCompletedTemplate } from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
@@ -91,7 +93,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     );
   }
 
-  const withdrawalMeta = withdrawal.metadata as { method?: string } | null;
+  const withdrawalMeta = withdrawal.metadata as {
+    method?: string;
+    address?: string;
+    bankAccountNumber?: string;
+  } | null;
   await createNotification({
     userId: withdrawal.userId,
     type: "PAYMENT",
@@ -102,6 +108,25 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         : `${formatCurrency(result.amount)} is being sent to your wallet address.`,
     link: "/dashboard/wallet",
   });
+
+  const recipient = await prisma.user.findUnique({
+    where: { id: withdrawal.userId },
+    select: { name: true, email: true },
+  });
+  if (recipient?.email) {
+    const destinationMasked =
+      withdrawalMeta?.method === "bank"
+        ? `Bank account ...${(withdrawalMeta.bankAccountNumber ?? "").slice(-4)}`
+        : `Crypto wallet ...${(withdrawalMeta?.address ?? "").slice(-8)}`;
+    const { subject, html } = withdrawalCompletedTemplate(
+      recipient.name ?? "there",
+      formatCurrency(result.amount),
+      withdrawal.id,
+      destinationMasked,
+      new Date().toLocaleDateString("en-US", { dateStyle: "long" }),
+    );
+    sendEmail({ to: recipient.email, subject, html }).catch(() => null);
+  }
 
   return NextResponse.json({ success: true });
 }

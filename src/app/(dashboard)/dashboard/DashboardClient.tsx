@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ReactNode, useState } from "react";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { Bell, Heart, MessageSquare, Shield } from "lucide-react";
 
 // ── Date range picker ─────────────────────────────────────────────────────────
 
@@ -122,30 +123,13 @@ export function NotificationFeed({ items }: { items: NotificationItem[] }) {
   const getIcon = (type: string) => {
     switch (type) {
       case "OFFER_RECEIVED":
-        return (
-          <svg className="h-4 w-4 text-brand-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-          </svg>
-        );
+        return <Heart className="h-4 w-4 text-brand-500" aria-hidden />;
       case "ESCROW_UPDATE":
-        return (
-          <svg className="h-4 w-4 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-        );
+        return <Shield className="h-4 w-4 text-success" aria-hidden />;
       case "MESSAGE":
-        return (
-          <svg className="h-4 w-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-          </svg>
-        );
+        return <MessageSquare className="h-4 w-4 text-blue-500" aria-hidden />;
       default:
-        return (
-          <svg className="h-4 w-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 01-3.46 0"/>
-          </svg>
-        );
+        return <Bell className="h-4 w-4 text-muted" aria-hidden />;
     }
   };
 

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { createNotification } from "@/lib/notifications";
+import { createNotification, wantsEmail } from "@/lib/notifications";
 import { createHmac } from "crypto";
 import { logger } from "@/lib/logger";
 import { sendEmail } from "@/lib/email";
-import { subscriptionRenewalReminderTemplate } from "@/lib/email-templates";
+import { subscriptionRenewalReminderTemplate, escrowActionRequiredTemplate } from "@/lib/email-templates";
+import type { NotificationType } from "@prisma/client";
 
 const SECRET = process.env.INTERNAL_SWEEP_SECRET;
 
@@ -15,6 +16,40 @@ const SECRET = process.env.INTERNAL_SWEEP_SECRET;
 // overlapping run if the scheduled trigger fired again before a slow sweep
 // finished, or a manual run collided with the scheduled one.
 let sweepRunning = false;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Pre-deadline warning dedupe (steps 10-13). Primary check is the same one the
+// overdue-transfer step uses: a Notification with this exact link + type in the
+// last 24h. That alone isn't enough here, because createNotification writes NO
+// row when the recipient has switched that type's in-app preference off — the
+// lookup would then miss forever and the warning (and its email) would repeat
+// on every 15-minute run. This in-memory map covers that case; it is reliable
+// for the same reason sweepRunning is (single long-lived process), and a
+// restart costs at most one repeated warning.
+const warnedAt = new Map<string, number>();
+
+async function alreadyWarned(link: string, type: NotificationType, now: Date): Promise<boolean> {
+  const mem = warnedAt.get(link);
+  if (mem !== undefined && now.getTime() - mem < DAY_MS) return true;
+  const recent = await prisma.notification.findFirst({
+    where: { link, type, createdAt: { gte: new Date(now.getTime() - DAY_MS) } },
+    select: { id: true },
+  });
+  return Boolean(recent);
+}
+
+function markWarned(link: string, now: Date) {
+  warnedAt.set(link, now.getTime());
+  warnedAt.forEach((at, key) => {
+    if (now.getTime() - at >= DAY_MS) warnedAt.delete(key);
+  });
+}
+
+function hoursLeftLabel(deadline: Date, now: Date): string {
+  const hours = Math.max(1, Math.ceil((deadline.getTime() - now.getTime()) / (60 * 60 * 1000)));
+  return `${hours} hour${hours !== 1 ? "s" : ""}`;
+}
 
 export async function POST(req: Request) {
   // Reject if no secret is configured or the caller doesn't send it.
@@ -102,11 +137,52 @@ export async function POST(req: Request) {
 
   // 1. Expire stale PENDING offers whose expiresAt has passed.
   await runStep("offersExpired", async () => {
-    const expiredOffers = await prisma.offer.updateMany({
+    const staleOffers = await prisma.offer.findMany({
       where: { status: "PENDING", expiresAt: { lt: now } },
+      select: { id: true, buyerId: true, listing: { select: { id: true, title: true, sellerId: true } } },
+    });
+    if (staleOffers.length === 0) {
+      results.offersExpired = 0;
+      return;
+    }
+
+    // Re-assert status: "PENDING" so an offer accepted/declined between the
+    // read above and this write is not clobbered.
+    const expiredOffers = await prisma.offer.updateMany({
+      where: { id: { in: staleOffers.map((o) => o.id) }, status: "PENDING" },
       data: { status: "EXPIRED" },
     });
     results.offersExpired = expiredOffers.count;
+
+    // Only notify for offers that actually ended up EXPIRED.
+    let toNotify = staleOffers;
+    if (expiredOffers.count !== staleOffers.length) {
+      const confirmed = await prisma.offer.findMany({
+        where: { id: { in: staleOffers.map((o) => o.id) }, status: "EXPIRED" },
+        select: { id: true },
+      });
+      const confirmedIds = new Set(confirmed.map((o) => o.id));
+      toNotify = staleOffers.filter((o) => confirmedIds.has(o.id));
+    }
+
+    for (const offer of toNotify) {
+      await Promise.all([
+        createNotification({
+          userId: offer.buyerId,
+          type: "OFFER",
+          title: "Offer expired",
+          body: `Your offer on "${offer.listing.title}" expired.`,
+          link: "/dashboard/offers",
+        }),
+        createNotification({
+          userId: offer.listing.sellerId,
+          type: "OFFER",
+          title: "Offer expired",
+          body: `An offer on "${offer.listing.title}" expired unanswered.`,
+          link: "/dashboard/offers",
+        }),
+      ]).catch(() => null);
+    }
   });
 
   // 2. Flag overdue escrow transfers: find escrows whose transferDeadline has passed
@@ -470,6 +546,169 @@ export async function POST(req: Request) {
       });
     }
     results.subscriptionsExpired = expiredUsers.length;
+  });
+
+  // 10. Escrow transfer-deadline warnings — until now both parties only heard
+  //     about a deadline AFTER it passed (step 2). Warn once when it is under
+  //     24h away, and email whoever the current status is waiting on.
+  await runStep("escrowDeadlineWarnings", async () => {
+    const dueSoon = await prisma.escrow.findMany({
+      where: {
+        status: { in: ["FUNDED", "AWAITING_MANAGER_ADD", "PENDING_VERIFICATION", "SUBMITTED", "VERIFIED", "IN_TRANSFER"] },
+        transferDeadline: { gte: now, lte: new Date(now.getTime() + DAY_MS) },
+      },
+      select: {
+        id: true,
+        status: true,
+        transferModel: true,
+        transferDeadline: true,
+        listing: { select: { title: true } },
+        buyer: { select: { id: true, email: true, name: true, username: true } },
+        seller: { select: { id: true, email: true, name: true, username: true } },
+      },
+    });
+
+    let warned = 0;
+    for (const escrow of dueSoon) {
+      const link = `/dashboard/escrows/${escrow.id}?r=deadline`;
+      if (await alreadyWarned(link, "ESCROW", now)) continue;
+      markWarned(link, now);
+
+      const deadline = escrow.transferDeadline!;
+      const left = hoursLeftLabel(deadline, now);
+      const body = `The transfer deadline for "${escrow.listing.title}" is in about ${left}. Complete any outstanding step before it passes.`;
+      await Promise.all(
+        [escrow.buyer.id, escrow.seller.id].map((userId) =>
+          createNotification({ userId, type: "ESCROW", title: "Escrow deadline approaching", body, link }),
+        ),
+      );
+
+      // Who the current status is waiting on. The verification / admin-driven
+      // and countdown-driven states have no single actor, so both get the email.
+      let actors: ("buyer" | "seller")[] = ["buyer", "seller"];
+      let actionTitle = "Your escrow deadline is approaching";
+      let requiredAction = "Open the escrow and complete any outstanding step on your side before the deadline.";
+      let buttonText = "Review escrow";
+      if (escrow.status === "FUNDED") {
+        actors = ["seller"];
+        actionTitle = "Submit the transfer details";
+        requiredAction = `The buyer has funded "${escrow.listing.title}". Submit the account transfer details before the deadline.`;
+        buttonText = "Submit details";
+      } else if (escrow.status === "AWAITING_MANAGER_ADD") {
+        actors = ["seller"];
+        actionTitle = "Add the escrow manager";
+        requiredAction = `Add the escrow manager email to "${escrow.listing.title}" and confirm it on the escrow page before the deadline.`;
+        buttonText = "Open escrow";
+      } else if (escrow.status === "IN_TRANSFER" && !escrow.transferModel) {
+        actors = ["buyer"];
+        actionTitle = "Confirm you received the account";
+        requiredAction = `Check that you have full access to "${escrow.listing.title}", then confirm receipt to release the escrow — or open a dispute if something is wrong.`;
+        buttonText = "Confirm receipt";
+      }
+
+      const deadlineLabel = `${deadline.toUTCString()} (about ${left} left)`;
+      for (const role of actors) {
+        const party = escrow[role];
+        if (!party.email || !(await wantsEmail(party.id, "ESCROW"))) continue;
+        const tpl = escrowActionRequiredTemplate(
+          party.name ?? party.username ?? "there",
+          escrow.id,
+          actionTitle,
+          requiredAction,
+          buttonText,
+          deadlineLabel,
+        );
+        sendEmail({ to: party.email, subject: tpl.subject, html: tpl.html }).catch(() => null);
+      }
+      warned++;
+    }
+    results.escrowDeadlineWarnings = warned;
+  });
+
+  // 11. Dispute evidence-deadline warnings — counterpart of step 7, fired while
+  //     there is still time to upload evidence.
+  await runStep("disputeEvidenceWarnings", async () => {
+    const closingSoon = await prisma.dispute.findMany({
+      where: { phase: "EVIDENCE", evidenceDeadline: { gte: now, lte: new Date(now.getTime() + DAY_MS) } },
+      select: {
+        id: true,
+        evidenceDeadline: true,
+        escrow: { select: { id: true, buyerId: true, sellerId: true } },
+      },
+    });
+
+    let warned = 0;
+    for (const dispute of closingSoon) {
+      const link = `/dashboard/escrows/${dispute.escrow.id}?r=evidence`;
+      if (await alreadyWarned(link, "DISPUTE", now)) continue;
+      markWarned(link, now);
+
+      const body = `The evidence window for your dispute closes in about ${hoursLeftLabel(dispute.evidenceDeadline!, now)}. Submit any remaining statements or files before then.`;
+      await Promise.all(
+        [dispute.escrow.buyerId, dispute.escrow.sellerId].map((userId) =>
+          createNotification({ userId, type: "DISPUTE", title: "Dispute evidence deadline approaching", body, link }),
+        ),
+      );
+      warned++;
+    }
+    results.disputeEvidenceWarnings = warned;
+  });
+
+  // 12. Offer expiry warnings — tell the seller while they can still respond
+  //     (step 1 only reports the offer once it's already EXPIRED).
+  await runStep("offerExpiryWarnings", async () => {
+    const expiringOffers = await prisma.offer.findMany({
+      where: { status: "PENDING", expiresAt: { gte: now, lte: new Date(now.getTime() + 12 * 60 * 60 * 1000) } },
+      select: { id: true, sellerId: true, listing: { select: { title: true } } },
+    });
+
+    let warned = 0;
+    for (const offer of expiringOffers) {
+      const link = `/dashboard/offers?r=expiring-${offer.id}`;
+      if (await alreadyWarned(link, "OFFER", now)) continue;
+      markWarned(link, now);
+
+      await createNotification({
+        userId: offer.sellerId,
+        type: "OFFER",
+        title: "Offer expiring soon",
+        body: `An offer on "${offer.listing.title}" expires in under 12 hours. Accept, counter or decline it before it lapses.`,
+        link,
+      });
+      warned++;
+    }
+    results.offerExpiryWarnings = warned;
+  });
+
+  // 13. Boost expiry warnings — step 0 only notifies after the placement is gone.
+  await runStep("boostExpiryWarnings", async () => {
+    const in24h = new Date(now.getTime() + DAY_MS);
+    const endingBoosts = await prisma.listing.findMany({
+      where: {
+        OR: [
+          { isFeatured: true, featuredUntil: { gte: now, lte: in24h } },
+          { isPinned: true, pinnedUntil: { gte: now, lte: in24h } },
+        ],
+      },
+      select: { id: true, title: true, sellerId: true },
+    });
+
+    let warned = 0;
+    for (const listing of endingBoosts) {
+      const link = `/dashboard/listings?r=boost-${listing.id}`;
+      if (await alreadyWarned(link, "LISTING", now)) continue;
+      markWarned(link, now);
+
+      await createNotification({
+        userId: listing.sellerId,
+        type: "LISTING",
+        title: "Your boost ends tomorrow",
+        body: `Your boost on "${listing.title}" ends tomorrow — extend it to keep your placement.`,
+        link,
+      });
+      warned++;
+    }
+    results.boostExpiryWarnings = warned;
   });
 
   } finally {

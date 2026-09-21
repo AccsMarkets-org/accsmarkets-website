@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { auditLog } from "@/lib/admin";
-import { decryptAdminTotpSecret, verifyAdminTotpCode } from "@/lib/admin-totp";
+import { decryptSecret, verifyCode } from "@/lib/totp";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +45,14 @@ export async function DELETE(req: Request) {
   const record = await prisma.twoFactorAuth.findUnique({ where: { userId: session.user.id } });
   if (!record) return NextResponse.json({ error: "2FA is not enabled." }, { status: 400 });
 
-  const secret = decryptAdminTotpSecret(record.secret).replace("PENDING:", "");
-  const codeOk = await verifyAdminTotpCode(secret, parsed.data.code);
+  let secret: string;
+  try {
+    secret = decryptSecret(record.secret).replace("PENDING:", "");
+  } catch {
+    // Unreadable secret — never verify a code against an empty/garbage key.
+    return NextResponse.json({ error: "2FA secret is unreadable. Re-run 2FA setup." }, { status: 400 });
+  }
+  const codeOk = verifyCode(secret, parsed.data.code);
   if (!codeOk) return NextResponse.json({ error: "Incorrect authentication code." }, { status: 400 });
 
   await prisma.twoFactorAuth.delete({ where: { userId: session.user.id } });

@@ -4,7 +4,7 @@ import { PLATFORM_SEO } from "@/lib/seo-platforms";
 const BASE_URL = "https://accsmarkets.org";
 
 export const metadata = {
-  title: "Sitemap — AccsMarkets",
+  title: "Sitemap",
   description: "Browse all sections of AccsMarkets — listings, platforms, trust & safety, company and legal pages.",
   alternates: { canonical: `${BASE_URL}/sitemap` },
 };

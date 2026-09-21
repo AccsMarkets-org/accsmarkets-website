@@ -1,5 +1,6 @@
 ﻿import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, ArrowRight, CheckCircle2, X } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -47,8 +48,9 @@ export default async function AdminDisputeDetailPage({ params }: { params: { id:
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link href="/admin/disputes" className="mb-1 inline-block text-sm text-brand-500 hover:underline">
-            ← All disputes
+          <Link href="/admin/disputes" className="mb-1 inline-flex items-center gap-1.5 text-sm text-brand-500 hover:underline">
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            All disputes
           </Link>
           <h1 className="text-xl font-bold">{dispute.escrow.listing.title}</h1>
           <p className="text-sm text-muted">
@@ -122,12 +124,20 @@ export default async function AdminDisputeDetailPage({ params }: { params: { id:
                 <p className="text-xs font-medium text-muted uppercase tracking-wide">Mediation offer</p>
                 <p className="mt-1 text-sm font-semibold">${Number(dispute.mediationOffer).toFixed(2)}</p>
                 {dispute.mediationAccepted !== null && (
-                  <p className="text-xs text-muted">{dispute.mediationAccepted ? "✅ Accepted" : "❌ Rejected"}</p>
+                  <p className="flex items-center gap-1.5 text-xs text-muted">
+                    {dispute.mediationAccepted ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden />
+                    ) : (
+                      <X className="h-3.5 w-3.5 text-danger" aria-hidden />
+                    )}
+                    {dispute.mediationAccepted ? "Accepted" : "Rejected"}
+                  </p>
                 )}
               </div>
             )}
-            <Link href={`/admin/escrows/${dispute.escrow.id}`} className="mt-3 inline-block text-sm text-brand-500 hover:underline">
-              View escrow & chat →
+            <Link href={`/admin/escrows/${dispute.escrow.id}`} className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-500 hover:underline">
+              View escrow & chat
+              <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </Card>
 

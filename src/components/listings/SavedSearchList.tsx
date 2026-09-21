@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Card } from "@/components/ui/Card";
 import { useConfirm } from "@/hooks/useConfirm";
+import { Bell, BellOff } from "lucide-react";
 
 interface SavedSearch {
   id: string;
@@ -81,9 +82,11 @@ export function SavedSearchList({ initialSearches }: { initialSearches: SavedSea
             <button
               onClick={() => toggleAlert(s.id, s.alertEnabled)}
               title={s.alertEnabled ? "Disable alerts" : "Enable alerts"}
-              className={`text-lg transition-opacity ${s.alertEnabled ? "opacity-100" : "opacity-30"}`}
+              aria-label={s.alertEnabled ? "Disable alerts" : "Enable alerts"}
+              aria-pressed={s.alertEnabled}
+              className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-brand-500/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${s.alertEnabled ? "text-brand-500" : "text-muted"}`}
             >
-              🔔
+              {s.alertEnabled ? <Bell className="h-4 w-4 fill-current" aria-hidden /> : <BellOff className="h-4 w-4" aria-hidden />}
             </button>
             <a
               href={`/listings?${filtersToQuery(s.filters)}`}

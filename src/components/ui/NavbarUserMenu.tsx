@@ -6,6 +6,7 @@ import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { notifyNativeLogout } from "@/lib/native-app";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown, LayoutDashboard, LogOut, Settings, ShieldCheck, Wallet } from "lucide-react";
 
 export function NavbarUserMenu({ name, image, role }: { name: string; image: string | null; role?: string | null }) {
   const [open, setOpen] = useState(false);
@@ -29,7 +30,10 @@ export function NavbarUserMenu({ name, image, role }: { name: string; image: str
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-full border border-surface-border bg-surface px-1.5 py-1 text-sm font-medium text-foreground transition-all hover:border-brand-200 hover:shadow-sm active:scale-[0.96]"
+        aria-label="Account menu"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-2 rounded-full border border-surface-border bg-surface px-1.5 py-1 text-sm font-medium text-foreground transition-all hover:border-brand-200 hover:shadow-sm active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
       >
         {image ? (
           <Image src={image} alt={name} width={28} height={28} className="rounded-full" />
@@ -38,9 +42,7 @@ export function NavbarUserMenu({ name, image, role }: { name: string; image: str
             {name.slice(0, 1).toUpperCase()}
           </span>
         )}
-        <svg className={`h-3.5 w-3.5 text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <ChevronDown className={`h-3.5 w-3.5 text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`} strokeWidth={2.25} aria-hidden />
       </button>
 
       <AnimatePresence>
@@ -62,12 +64,7 @@ export function NavbarUserMenu({ name, image, role }: { name: string; image: str
                 className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground transition-colors hover:bg-surface"
                 onClick={() => setOpen(false)}
               >
-                <svg className="h-4 w-4 text-muted" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                  <rect x="3" y="3" width="7" height="7" rx="1"/>
-                  <rect x="14" y="3" width="7" height="7" rx="1"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1"/>
-                  <rect x="14" y="14" width="7" height="7" rx="1"/>
-                </svg>
+                <LayoutDashboard className="h-4 w-4 text-muted" aria-hidden />
                 Dashboard
               </Link>
               <Link
@@ -75,10 +72,7 @@ export function NavbarUserMenu({ name, image, role }: { name: string; image: str
                 className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground transition-colors hover:bg-surface"
                 onClick={() => setOpen(false)}
               >
-                <svg className="h-4 w-4 text-muted" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
+                <Settings className="h-4 w-4 text-muted" aria-hidden />
                 Settings
               </Link>
               <Link
@@ -86,11 +80,7 @@ export function NavbarUserMenu({ name, image, role }: { name: string; image: str
                 className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground transition-colors hover:bg-surface"
                 onClick={() => setOpen(false)}
               >
-                <svg className="h-4 w-4 text-muted" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                  <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
-                  <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
-                  <path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>
-                </svg>
+                <Wallet className="h-4 w-4 text-muted" aria-hidden />
                 Wallet
               </Link>
             </div>
@@ -101,9 +91,7 @@ export function NavbarUserMenu({ name, image, role }: { name: string; image: str
                   className="flex items-center gap-2.5 px-4 py-2 text-sm font-medium text-brand-600 transition-colors hover:bg-brand-500/8"
                   onClick={() => setOpen(false)}
                 >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  </svg>
+                  <ShieldCheck className="h-4 w-4" aria-hidden />
                   Admin Panel
                 </Link>
               </div>
@@ -113,11 +101,7 @@ export function NavbarUserMenu({ name, image, role }: { name: string; image: str
                 onClick={() => { notifyNativeLogout(); signOut({ callbackUrl: "/" }); }}
                 className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-danger transition-colors hover:bg-danger/5"
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                  <polyline points="16 17 21 12 16 7"/>
-                  <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
+                <LogOut className="h-4 w-4" aria-hidden />
                 Sign out
               </button>
             </div>

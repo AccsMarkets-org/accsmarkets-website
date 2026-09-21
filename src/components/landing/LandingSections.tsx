@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
+import { ArrowRight, Check, CircleCheck, KeyRound, Lock, ScanSearch, ShieldCheck, Star, Wallet } from "lucide-react";
 
 /* ---------- Stats band with count-up ---------- */
 
@@ -78,19 +79,19 @@ const STEPS = [
     n: "01",
     title: "Buyer funds escrow",
     body: "Payment (price + fee) is locked in the platform wallet. The seller sees the funds are real before sharing anything.",
-    icon: "💰",
+    icon: Wallet,
   },
   {
     n: "02",
     title: "Seller hands over the account",
     body: "Credentials and transfer details are submitted through an encrypted channel — never over DMs.",
-    icon: "🔐",
+    icon: KeyRound,
   },
   {
     n: "03",
     title: "Buyer verifies, funds release",
     body: "Once the buyer confirms access, the seller is paid the full price instantly. Trust scores go up for both.",
-    icon: "✅",
+    icon: CircleCheck,
   },
 ];
 
@@ -122,7 +123,9 @@ export function HowItWorks() {
               className="relative rounded-2xl border border-surface-border bg-background p-6 shadow-card"
             >
               <span className="absolute right-5 top-4 text-4xl font-black text-brand-100">{step.n}</span>
-              <span className="text-3xl">{step.icon}</span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                <step.icon className="h-6 w-6" strokeWidth={1.75} aria-hidden />
+              </span>
               <h3 className="mt-4 font-semibold">{step.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">{step.body}</p>
             </motion.div>
@@ -136,10 +139,10 @@ export function HowItWorks() {
 /* ---------- Security section ---------- */
 
 const SECURITY_POINTS = [
-  { icon: "🛡️", title: "Funds held in escrow", body: "Money only moves when the buyer confirms the transfer worked." },
-  { icon: "🔍", title: "Every listing reviewed", body: "Human moderation plus automated scam detection on all listings." },
-  { icon: "🔒", title: "Encrypted handovers", body: "Account credentials are encrypted at rest — visible only to the buyer." },
-  { icon: "⭐", title: "Trust scores & badges", body: "Seller reputations are earned from completed escrows, not claimed." },
+  { icon: ShieldCheck, title: "Funds held in escrow", body: "Money only moves when the buyer confirms the transfer worked." },
+  { icon: ScanSearch, title: "Every listing reviewed", body: "Human moderation plus automated scam detection on all listings." },
+  { icon: Lock, title: "Encrypted handovers", body: "Account credentials are encrypted at rest — visible only to the buyer." },
+  { icon: Star, title: "Trust scores & badges", body: "Seller reputations are earned from completed escrows, not claimed." },
 ];
 
 export function SecuritySection() {
@@ -165,9 +168,10 @@ export function SecuritySection() {
           </p>
           <Link
             href="/escrow-guide"
-            className="mt-6 inline-block rounded-xl border border-brand-300 bg-brand-500/10 px-5 py-2.5 text-sm font-semibold text-brand-700 dark:text-brand-300 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-950/40 dark:hover:bg-brand-900/50"
+            className="inline-flex items-center gap-1.5 mt-6 rounded-xl border border-brand-300 bg-brand-500/10 px-5 py-2.5 text-sm font-semibold text-brand-700 dark:text-brand-300 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-950/40 dark:hover:bg-brand-900/50"
           >
-            Read the escrow guide →
+            Read the escrow guide
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </motion.div>
 
@@ -181,7 +185,9 @@ export function SecuritySection() {
               transition={{ delay: i * 0.1, duration: 0.5 }}
               className="rounded-2xl border border-surface-border bg-surface p-5 shadow-card"
             >
-              <span className="text-2xl">{point.icon}</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                <point.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+              </span>
               <h3 className="mt-3 text-sm font-semibold">{point.title}</h3>
               <p className="mt-1 text-xs leading-relaxed text-muted">{point.body}</p>
             </motion.div>
@@ -242,9 +248,9 @@ export function PricingSection() {
                 <span className="text-sm font-medium text-muted">/mo</span>
               </p>
               <ul className="mt-4 flex flex-col gap-2 text-sm text-muted">
-                <li>✓ {plan.listings === 999 ? "Unlimited" : plan.listings} active listings</li>
-                <li>✓ {plan.fee} escrow fee</li>
-                <li>✓ Full buyer protection</li>
+                <li className="flex items-center gap-1.5"><Check className="h-4 w-4 shrink-0 text-success" aria-hidden />{plan.listings === 999 ? "Unlimited" : plan.listings} active listings</li>
+                <li className="flex items-center gap-1.5"><Check className="h-4 w-4 shrink-0 text-success" aria-hidden />{plan.fee} escrow fee</li>
+                <li className="flex items-center gap-1.5"><Check className="h-4 w-4 shrink-0 text-success" aria-hidden />Full buyer protection</li>
               </ul>
               <Link
                 href="/register"

@@ -3,7 +3,11 @@ import { LegalPageLayout, LegalSection } from "@/components/ui/LegalPageLayout";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = { title: "Terms of Service — AccsMarkets" };
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "The terms governing your use of AccsMarkets: eligibility, listings and conduct, escrow and payments, dispute resolution, prohibited items and liability.",
+  alternates: { canonical: "/terms" },
+};
 
 const SECTIONS = [
   { id: "service", title: "The Service" },

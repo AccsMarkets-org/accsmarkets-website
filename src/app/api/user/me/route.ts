@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { updateProfileSchema } from "@/lib/validation/user";
+import { isPendingSecret } from "@/lib/totp";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export async function GET() {
       where: { id: session.user.id },
       include: {
         subscriptionPlan: true,
-        twoFactorAuth: { select: { enabledAt: true } },
+        twoFactorAuth: { select: { secret: true } },
         phoneVerification: { select: { phoneNumber: true, verifiedAt: true } },
       },
     });
@@ -27,7 +28,7 @@ export async function GET() {
   return NextResponse.json({
     user: {
       ...safeUser,
-      twoFactorEnabled: Boolean(twoFactorAuth),
+      twoFactorEnabled: Boolean(twoFactorAuth) && !isPendingSecret(twoFactorAuth!.secret),
       phoneVerified: Boolean(phoneVerification?.verifiedAt),
       verifiedPhoneNumber: phoneVerification?.verifiedAt ? phoneVerification.phoneNumber : null,
     },

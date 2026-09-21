@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminPagination } from "@/components/ui/AdminPagination";
@@ -194,9 +195,10 @@ export default async function AdminDisputesPage({
                     <StatusPill label={STATUS_STYLE[d.status].label} className={STATUS_STYLE[d.status].className} />
                     <Link
                       href={`/admin/disputes/${d.id}`}
-                      className="rounded-xl bg-brand-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-600 transition"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-600 transition"
                     >
-                      Review →
+                      Review
+                      <ArrowRight className="h-4 w-4" aria-hidden />
                     </Link>
                   </div>
                 </div>

@@ -3,7 +3,11 @@ import { LegalPageLayout, LegalSection } from "@/components/ui/LegalPageLayout";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = { title: "AML Policy — AccsMarkets", description: "Our Anti-Money Laundering policy and compliance procedures." };
+export const metadata: Metadata = {
+  title: "AML Policy",
+  description: "AccsMarkets' Anti-Money Laundering policy: KYC requirements, transaction monitoring, suspicious-activity reporting, record keeping and enforcement.",
+  alternates: { canonical: "/aml" },
+};
 
 const SECTIONS = [
   { id: "purpose", title: "Purpose" },

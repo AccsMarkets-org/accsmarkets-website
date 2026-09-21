@@ -2,6 +2,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { checkRateLimit } from "@/lib/rate-limit";
 import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,12 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // The code is a short numeric OTP — cap guesses so it can't be brute-forced.
+  const { allowed } = await checkRateLimit(`email-otp-confirm:${session.user.id}`, 5, 15 * 60);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many attempts. Try again in 15 minutes." }, { status: 429 });
+  }
 
   const { code } = await req.json().catch(() => ({}));
   if (!code) return NextResponse.json({ error: "Code required" }, { status: 400 });

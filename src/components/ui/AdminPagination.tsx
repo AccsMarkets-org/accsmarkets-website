@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 interface Props {
   page: number;
@@ -24,9 +25,10 @@ export function AdminPagination({ page, hasMore, baseHref, extraParams }: Props)
       {page > 0 ? (
         <Link
           href={buildHref(baseHref, page - 1, extraParams)}
-          className="rounded-lg border border-surface-border px-4 py-1.5 text-sm font-medium hover:bg-surface-border transition"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-4 py-1.5 text-sm font-medium hover:bg-surface-border transition"
         >
-          ← Previous
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Previous
         </Link>
       ) : (
         <div />
@@ -35,9 +37,10 @@ export function AdminPagination({ page, hasMore, baseHref, extraParams }: Props)
       {hasMore ? (
         <Link
           href={buildHref(baseHref, page + 1, extraParams)}
-          className="rounded-lg border border-surface-border px-4 py-1.5 text-sm font-medium hover:bg-surface-border transition"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-4 py-1.5 text-sm font-medium hover:bg-surface-border transition"
         >
-          Next →
+          Next
+          <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       ) : (
         <div />

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { DashboardViewToggle } from "./DashboardViewToggle";
+import { Bell, MessageSquare, ShieldCheck } from "lucide-react";
 
 interface DashboardHeaderProps {
   name: string | null;
@@ -160,9 +161,7 @@ export function DashboardHeader({
             </span>
             <span className="text-muted">·</span>
             <span className="flex items-center gap-1">
-              <svg className="h-3 w-3 text-brand-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
+              <ShieldCheck className="h-3 w-3 text-brand-500" aria-hidden />
               Trust {trustScore}
             </span>
           </div>
@@ -182,9 +181,7 @@ export function DashboardHeader({
             href="/dashboard/messages"
             className="relative flex items-center gap-1.5 rounded-xl border border-surface-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground hover:bg-brand-500/8 hover:text-brand-600 transition"
           >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-            </svg>
+            <MessageSquare className="h-3.5 w-3.5" aria-hidden />
             <span className="hidden sm:inline">Messages</span>
             <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-bold text-white">
               {unreadMessages > 99 ? "99+" : unreadMessages}
@@ -198,10 +195,7 @@ export function DashboardHeader({
             href="/dashboard/notifications"
             className="relative flex items-center gap-1.5 rounded-xl border border-surface-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground hover:bg-brand-500/8 hover:text-brand-600 transition"
           >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.73 21a2 2 0 01-3.46 0" />
-            </svg>
+            <Bell className="h-3.5 w-3.5" aria-hidden />
             <span className="hidden sm:inline">Alerts</span>
             <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
               {unreadNotifications > 99 ? "99+" : unreadNotifications}

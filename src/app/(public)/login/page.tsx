@@ -4,7 +4,9 @@ import TrustPanelServer from "@/components/auth/TrustPanelServer";
 import { LoginFormClient } from "@/components/auth/LoginFormClient";
 
 export const metadata = {
-  title: "Log In — AccsMarkets",
+  title: "Log In",
+  description: "Log in to your AccsMarkets account to manage listings, offers, escrows and your wallet on the escrow-protected social media account marketplace.",
+  alternates: { canonical: "/login" },
 };
 
 async function getStats() {

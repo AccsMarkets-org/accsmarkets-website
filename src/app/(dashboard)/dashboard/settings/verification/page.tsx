@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { ArrowRight, CalendarDays, Check, ClipboardList, Eye, Lock, Scale, ShieldCheck, TriangleAlert, Upload } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 const STEPS = ["Email", "Verify Identity", "ID Verified"] as const;
 const RESEND_COOLDOWN = 60;
@@ -31,9 +33,7 @@ function KycConsentModal({ onAccept }: { onAccept: () => void }) {
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-surface-border px-6 py-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/10">
-            <svg className="h-5 w-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
+            <ShieldCheck className="h-5 w-5 text-brand-500" aria-hidden />
           </div>
           <div>
             <h2 className="font-bold text-foreground">Identity Verification Consent</h2>
@@ -47,7 +47,7 @@ function KycConsentModal({ onAccept }: { onAccept: () => void }) {
             To unlock full marketplace access, AccsMarkets requires identity verification (KYC). Before you proceed, please read and agree to the following:
           </p>
 
-          <Section icon="📋" title="What we collect">
+          <Section icon={ClipboardList} title="What we collect">
             <ul className="list-disc pl-4 space-y-1">
               <li>A photo of the <strong>front of your government-issued ID</strong> (passport, national ID, or driver's licence)</li>
               <li>A photo of the <strong>back of your ID</strong> (where applicable)</li>
@@ -55,25 +55,25 @@ function KycConsentModal({ onAccept }: { onAccept: () => void }) {
             </ul>
           </Section>
 
-          <Section icon="🔒" title="How it is stored">
+          <Section icon={Lock} title="How it is stored">
             <p>
               All document images are encrypted at rest using <strong>AES-256-GCM</strong> before being saved to our database. Raw Cloudinary URLs are never stored in plaintext. Only authorised AccsMarkets staff can decrypt and review your submission.
             </p>
           </Section>
 
-          <Section icon="👁️" title="Who reviews it">
+          <Section icon={Eye} title="Who reviews it">
             <p>
               Your submission is reviewed by AccsMarkets compliance staff within <strong>24 hours</strong>. We do not share your documents with third parties except where required by law.
             </p>
           </Section>
 
-          <Section icon="🗓️" title="Retention">
+          <Section icon={CalendarDays} title="Retention">
             <p>
               We retain KYC documents for a minimum of <strong>5 years</strong> as required by our AML/CFT obligations. You may request deletion after your account is closed, subject to legal retention requirements.
             </p>
           </Section>
 
-          <Section icon="⚖️" title="Legal basis">
+          <Section icon={Scale} title="Legal basis">
             <p>
               Processing is carried out under our legitimate interest in preventing fraud and complying with applicable Anti-Money Laundering laws. By proceeding you acknowledge our{" "}
               <a href="/kyc-policy" target="_blank" rel="noopener noreferrer" className="text-brand-500 underline hover:text-brand-400">
@@ -126,11 +126,12 @@ function KycConsentModal({ onAccept }: { onAccept: () => void }) {
   );
 }
 
-function Section({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) {
+function Section({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-surface-border bg-surface/60 p-3.5 flex flex-col gap-1.5">
       <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-        <span>{icon}</span> {title}
+        <Icon className="h-3.5 w-3.5 shrink-0 text-brand-500" aria-hidden />
+        {title}
       </p>
       <div className="text-muted">{children}</div>
     </div>
@@ -205,7 +206,7 @@ function UploadField({ label, value, onChange }: UploadFieldProps) {
           <img src={value} alt="preview" className="h-14 w-14 rounded-lg object-cover border border-surface-border shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-success flex items-center gap-1.5">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>
+              <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
               Uploaded
             </p>
             <p className="text-xs text-muted truncate">{value.split("/").pop()}</p>
@@ -242,9 +243,7 @@ function UploadField({ label, value, onChange }: UploadFieldProps) {
             </>
           ) : (
             <>
-              <svg className="h-7 w-7 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-              </svg>
+              <Upload className="h-7 w-7 text-muted" strokeWidth={1.5} aria-hidden />
               <div>
                 <p className="text-sm font-medium text-foreground">Click to upload or drag & drop</p>
                 <p className="text-xs text-muted">JPG, PNG · Max 10 MB</p>
@@ -404,7 +403,7 @@ export default function VerificationPage() {
                   i === currentStep ? "border-2 border-brand-500 text-brand-600" :
                   "border-2 border-surface-border text-muted"
                 }`}>
-                  {i < currentStep ? "✓" : i + 1}
+                  {i < currentStep ? <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden /> : i + 1}
                 </div>
                 <span className="text-xs text-muted">{label}</span>
               </div>
@@ -487,7 +486,7 @@ export default function VerificationPage() {
                 <UploadField label="Selfie (hold your ID next to your face)" value={selfieUrl} onChange={setSelfieUrl} />
 
                 <div className="flex items-center gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-2.5 text-xs text-amber-700 dark:text-amber-400">
-                  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                  <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden />
                   Make sure all images are clear and legible. Blurry or cropped images may be rejected.
                 </div>
 
@@ -498,7 +497,8 @@ export default function VerificationPage() {
                   onClick={submitKyc}
                   className="self-start"
                 >
-                  Submit for review →
+                  Submit for review
+                  <ArrowRight className="h-4 w-4" aria-hidden />
                 </Button>
               </div>
             )}
@@ -508,7 +508,7 @@ export default function VerificationPage() {
         {kycLevel === "ID_VERIFIED" && (
           <Card className="bg-success/5">
             <p className="font-semibold text-success flex items-center gap-2">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>
+              <Check className="h-5 w-5" strokeWidth={2.5} aria-hidden />
               Fully verified
             </p>
             <p className="mt-1 text-sm text-muted">Your identity has been verified.</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function timeAgo(date: Date): string {
@@ -219,9 +220,10 @@ export function ContactMessagesClient({ messages: initial }: Props) {
             <div className="md:hidden border-b border-surface-border px-4 py-2">
               <button
                 onClick={() => setSelected(null)}
-                className="text-xs font-medium text-muted hover:text-foreground transition"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted hover:text-foreground transition"
               >
-                ← Back
+                <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+                Back
               </button>
             </div>
             {/* Thread header */}

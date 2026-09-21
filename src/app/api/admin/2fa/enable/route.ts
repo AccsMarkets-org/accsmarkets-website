@@ -4,11 +4,11 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { auditLog } from "@/lib/admin";
-import {
-  decryptAdminTotpSecret as decrypt,
-  encryptAdminTotpSecret as encrypt,
-  verifyAdminTotpCode,
-} from "@/lib/admin-totp";
+// Same helpers as the regular-user 2FA flow — the login check in src/lib/auth.ts
+// reads TwoFactorAuth.secret with decryptSecret, so it must be written with
+// encryptSecret (a separate admin-only cipher here made enrolled admins unable
+// to log in).
+import { decryptSecret, encryptSecret, verifyCode } from "@/lib/totp";
 
 export const dynamic = "force-dynamic";
 import crypto from "crypto";
@@ -37,13 +37,19 @@ export async function POST(req: Request) {
   const record = await prisma.twoFactorAuth.findUnique({ where: { userId: session.user.id } });
   if (!record) return NextResponse.json({ error: "Run setup first" }, { status: 400 });
 
-  const decrypted = decrypt(record.secret);
+  let decrypted: string;
+  try {
+    decrypted = decryptSecret(record.secret);
+  } catch {
+    // Legacy row written with the old admin-only cipher — setup must be re-run.
+    return NextResponse.json({ error: "Run setup first" }, { status: 400 });
+  }
   if (!decrypted.startsWith("PENDING:")) {
     return NextResponse.json({ error: "2FA already activated" }, { status: 400 });
   }
-  const secret = decrypted.replace("PENDING:", "");
+  const secret = decrypted.slice("PENDING:".length);
 
-  const valid = await verifyAdminTotpCode(secret, token);
+  const valid = verifyCode(secret, String(token));
   if (!valid) return NextResponse.json({ error: "Invalid code — check your authenticator app" }, { status: 400 });
 
   const plainCodes = generateBackupCodes();
@@ -52,7 +58,7 @@ export async function POST(req: Request) {
   await prisma.twoFactorAuth.update({
     where: { userId: session.user.id },
     data: {
-      secret: encrypt(secret),
+      secret: encryptSecret(secret),
       backupCodes: JSON.stringify(hashedCodes),
       enabledAt: new Date(),
     },

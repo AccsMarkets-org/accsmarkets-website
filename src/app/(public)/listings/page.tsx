@@ -13,7 +13,7 @@ import type { Prisma, Platform } from "@prisma/client";
 
 export const revalidate = 60;
 export const metadata = {
-  title: "Browse Listings — AccsMarkets",
+  title: "Browse Listings",
   description: "Browse thousands of verified social media accounts for sale. YouTube, Instagram, TikTok, Facebook, Telegram and more — all protected by escrow.",
   openGraph: {
     title: "Browse Listings — AccsMarkets",

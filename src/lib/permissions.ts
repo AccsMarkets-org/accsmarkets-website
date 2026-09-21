@@ -63,8 +63,8 @@ export const STAFF_ROLE_PRESETS: {
   {
     id: "SUPPORT",
     label: "Support",
-    description: "Customer-facing support: users, escrow messages, reports, analytics",
-    permissions: ["MANAGE_USERS", "MANAGE_ESCROW_MESSAGES", "VIEW_ANALYTICS", "MANAGE_REPORTS"],
+    description: "Customer-facing support: users, KYC review, escrow messages, reports, analytics",
+    permissions: ["MANAGE_USERS", "MANAGE_KYC", "MANAGE_ESCROW_MESSAGES", "VIEW_ANALYTICS", "MANAGE_REPORTS"],
   },
   {
     id: "MODERATOR",

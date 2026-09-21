@@ -11,7 +11,7 @@ const schema = z.object({
 });
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const session = await requireAdmin("MANAGE_USERS");
+  const session = await requireAdmin("MANAGE_REPORTS");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const report = await prisma.report.findUnique({ where: { id: params.id } });

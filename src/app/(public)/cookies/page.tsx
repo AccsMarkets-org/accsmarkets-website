@@ -3,7 +3,11 @@ import { LegalPageLayout, LegalSection } from "@/components/ui/LegalPageLayout";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = { title: "Cookie Policy — AccsMarkets", description: "How we use cookies and similar technologies." };
+export const metadata: Metadata = {
+  title: "Cookie Policy",
+  description: "How AccsMarkets uses cookies and similar technologies — essential, analytics and preference cookies, and how to manage or disable them.",
+  alternates: { canonical: "/cookies" },
+};
 
 const SECTIONS = [
   { id: "what", title: "What Are Cookies" },

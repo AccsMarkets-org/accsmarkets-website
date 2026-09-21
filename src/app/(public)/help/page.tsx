@@ -3,7 +3,7 @@ import { HelpCenterClient } from "./HelpCenterClient";
 const BASE_URL = "https://accsmarkets.org";
 
 export const metadata = {
-  title: "Help Center — AccsMarkets",
+  title: "Help Center",
   description: "Search answers on buying, selling, escrow, payments, disputes, and account security on AccsMarkets.",
   alternates: { canonical: `${BASE_URL}/help` },
   openGraph: {

@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { ArrowRight, BadgeCheck, Package, ShieldCheck, TriangleAlert, Undo2 } from "lucide-react";
 
 const NETWORKS = [
-  { id: "TRC20", label: "TRC-20 (USDT)", icon: "🔵" },
-  { id: "BEP20", label: "BEP-20 (USDT)", icon: "🟡" },
-  { id: "ERC20", label: "ERC-20 (USDT)", icon: "🔷" },
-  { id: "POLYGON", label: "Polygon (USDT)", icon: "🟣" },
-  { id: "SOLANA", label: "Solana (USDT)", icon: "🟢" },
+  { id: "TRC20", label: "TRC-20 (USDT)", dot: "bg-red-500" },
+  { id: "BEP20", label: "BEP-20 (USDT)", dot: "bg-yellow-400" },
+  { id: "ERC20", label: "ERC-20 (USDT)", dot: "bg-indigo-500" },
+  { id: "POLYGON", label: "Polygon (USDT)", dot: "bg-purple-500" },
+  { id: "SOLANA", label: "Solana (USDT)", dot: "bg-emerald-500" },
 ];
 
 interface CheckoutFormProps {
@@ -80,8 +81,8 @@ export function CheckoutForm(props: CheckoutFormProps) {
       <Card>
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">You are buying</p>
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-100 dark:bg-brand-900/50 text-lg">
-            📦
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-600 dark:bg-brand-900/50 dark:text-brand-400">
+            <Package className="h-5 w-5" aria-hidden />
           </div>
           <div>
             <p className="font-semibold leading-tight">{props.listingTitle}</p>
@@ -106,7 +107,7 @@ export function CheckoutForm(props: CheckoutFormProps) {
                   : "border-surface-border bg-background text-foreground hover:border-brand-200",
               )}
             >
-              <span className="text-base">{n.icon}</span>
+              <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", n.dot)} aria-hidden />
               <div className="flex-1">
                 <span>{n.label}</span>
               </div>
@@ -127,7 +128,7 @@ export function CheckoutForm(props: CheckoutFormProps) {
         {/* Insufficient balance inline warning */}
         {!sufficient && (
           <div className="mt-3 flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/5 p-3">
-            <span className="mt-0.5 shrink-0 text-warning">⚠️</span>
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
             <div className="flex-1 text-sm">
               <p className="font-medium text-warning-foreground">Insufficient balance</p>
               <p className="text-muted">
@@ -138,9 +139,10 @@ export function CheckoutForm(props: CheckoutFormProps) {
               <button
                 type="button"
                 onClick={() => router.push("/dashboard/wallet/deposit")}
-                className="mt-1 text-brand-600 hover:underline font-medium"
+                className="mt-1 inline-flex items-center gap-1.5 font-medium text-brand-600 hover:underline"
               >
-                Top up now →
+                Top up now
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </button>
             </div>
           </div>
@@ -187,12 +189,12 @@ export function CheckoutForm(props: CheckoutFormProps) {
       {/* Trust badges */}
       <div className="flex flex-wrap justify-center gap-4 py-1">
         {[
-          { icon: "🛡️", label: "Escrow Protected" },
-          { icon: "✅", label: "Verified Listing" },
-          { icon: "↩️", label: "Buyer Protection" },
+          { icon: ShieldCheck, label: "Escrow Protected" },
+          { icon: BadgeCheck, label: "Verified Listing" },
+          { icon: Undo2, label: "Buyer Protection" },
         ].map((b) => (
           <div key={b.label} className="flex items-center gap-1.5 text-xs text-muted">
-            <span>{b.icon}</span>
+            <b.icon className="h-4 w-4 text-success" aria-hidden />
             <span>{b.label}</span>
           </div>
         ))}

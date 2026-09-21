@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { Check, Plus } from "lucide-react";
 
 interface FollowButtonProps {
   sellerId: string;
@@ -58,11 +59,21 @@ export function FollowButton({
     }
   }
 
-  const buttonLabel = following
-    ? hovered
-      ? "Unfollow"
-      : "Following ✓"
-    : "+ Follow";
+  const buttonLabel = following ? (
+    hovered ? (
+      "Unfollow"
+    ) : (
+      <>
+        <Check className="h-4 w-4" aria-hidden />
+        Following
+      </>
+    )
+  ) : (
+    <>
+      <Plus className="h-4 w-4" aria-hidden />
+      Follow
+    </>
+  );
 
   return (
     <div className="flex items-center gap-3">
@@ -74,7 +85,7 @@ export function FollowButton({
         aria-pressed={following}
         aria-label={following ? "Unfollow seller" : "Follow seller"}
         className={[
-          "inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
+          "inline-flex items-center justify-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
           following
             ? hovered
               ? "border border-red-500 bg-transparent text-red-500 hover:bg-red-50 dark:hover:bg-red-950"

@@ -1,5 +1,7 @@
 "use client";
 
+import { CircleCheck, CircleDollarSign, Headphones, KeyRound, Lock, ShieldCheck, Timer, Undo2, Users, type LucideIcon } from "lucide-react";
+
 interface ListingRequiredSectionsProps {
   listing: {
     id: string;
@@ -66,31 +68,31 @@ export function ListingRequiredSections({ listing }: ListingRequiredSectionsProp
   } = listing;
 
   // Build "Why Buy" bullet points
-  const whyBuyPoints: { icon: string; text: string }[] = [];
+  const whyBuyPoints: { icon: LucideIcon; text: string }[] = [];
   if (followersCount) {
     whyBuyPoints.push({
-      icon: "👥",
+      icon: Users,
       text: `${formatFollowers(followersCount)} followers ready to engage with your content`,
     });
   }
   if (monthlyRevenue) {
     whyBuyPoints.push({
-      icon: "💰",
+      icon: CircleDollarSign,
       text: `Generating ${formatRevenue(monthlyRevenue)}/month in revenue`,
     });
   }
   if (monetizationEnabled) {
     whyBuyPoints.push({
-      icon: "✅",
+      icon: CircleCheck,
       text: "Monetization already enabled",
     });
   }
   const platformTip = PLATFORM_TIPS[platform];
   if (platformTip) {
-    whyBuyPoints.push({ icon: "🛡️", text: platformTip });
+    whyBuyPoints.push({ icon: ShieldCheck, text: platformTip });
   }
   whyBuyPoints.push({
-    icon: "🔒",
+    icon: Lock,
     text: "Protected by AccsMarkets escrow — funds held until transfer verified",
   });
 
@@ -123,8 +125,8 @@ export function ListingRequiredSections({ listing }: ListingRequiredSectionsProp
         <ul className="flex flex-col gap-3">
           {whyBuyPoints.map((point, i) => (
             <li key={i} className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-sm">
-                {point.icon}
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                <point.icon className="h-4 w-4" aria-hidden />
               </span>
               <span className="text-sm leading-relaxed text-foreground/80">{point.text}</span>
             </li>
@@ -244,14 +246,14 @@ export function ListingRequiredSections({ listing }: ListingRequiredSectionsProp
         </h2>
         <ul className="flex flex-col gap-3">
           {[
-            { icon: "⏱️", text: "7-day dispute window after transfer" },
-            { icon: "🔐", text: "Encrypted credential handover" },
-            { icon: "🎧", text: "Dedicated support if anything goes wrong" },
-            { icon: "💸", text: "100% funds returned if transfer fails" },
-          ].map(({ icon, text }, i) => (
+            { icon: Timer, text: "7-day dispute window after transfer" },
+            { icon: KeyRound, text: "Encrypted credential handover" },
+            { icon: Headphones, text: "Dedicated support if anything goes wrong" },
+            { icon: Undo2, text: "100% funds returned if transfer fails" },
+          ].map(({ icon: Icon, text }, i) => (
             <li key={i} className="flex items-center gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-sm">
-                {icon}
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                <Icon className="h-4 w-4" aria-hidden />
               </span>
               <span className="text-sm text-foreground/80">{text}</span>
             </li>

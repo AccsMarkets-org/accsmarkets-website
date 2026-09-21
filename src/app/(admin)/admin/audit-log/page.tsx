@@ -1,4 +1,5 @@
-﻿import { prisma } from "@/lib/db";
+﻿import { ArrowLeft, ArrowRight } from "lucide-react";
+import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { formatDate } from "@/lib/utils";
 
@@ -99,17 +100,19 @@ export default async function AdminAuditLogPage({
             {page > 1 && (
               <a
                 href={`/admin/audit-log?page=${page - 1}${actionFilter ? `&action=${encodeURIComponent(actionFilter)}` : ""}`}
-                className="rounded-xl border border-surface-border px-3 py-1.5 hover:bg-surface transition"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border px-3 py-1.5 hover:bg-surface transition"
               >
-                ← Prev
+                <ArrowLeft className="h-4 w-4" aria-hidden />
+                Prev
               </a>
             )}
             {page < totalPages && (
               <a
                 href={`/admin/audit-log?page=${page + 1}${actionFilter ? `&action=${encodeURIComponent(actionFilter)}` : ""}`}
-                className="rounded-xl border border-surface-border px-3 py-1.5 hover:bg-surface transition"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border px-3 py-1.5 hover:bg-surface transition"
               >
-                Next →
+                Next
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </a>
             )}
           </div>

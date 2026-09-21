@@ -30,7 +30,8 @@ export async function generateMetadata({ params }: { params: { username: string 
     const description = seller.bio?.slice(0, 160) ?? `View ${seller.username}'s listings on AccsMarkets.`;
     const url = `${BASE_URL}/seller/${seller.username}`;
     return {
-      title,
+      // absolute: `title` already carries the brand; skip the root "%s — AccsMarkets" template.
+      title: { absolute: title },
       description,
       alternates: { canonical: url },
       openGraph: { title, description, url, type: "profile", siteName: "AccsMarkets" },
@@ -138,8 +139,37 @@ export default async function SellerProfilePage({ params }: { params: { username
       count,
     }));
 
+  const profileUrl = `${BASE_URL}/seller/${seller.username}`;
+  const profileJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    "@id": profileUrl,
+    url: profileUrl,
+    dateCreated: new Date(seller.createdAt).toISOString(),
+    mainEntity: {
+      "@type": "Person",
+      "@id": `${profileUrl}#person`,
+      name: seller.name ?? seller.username,
+      alternateName: seller.username,
+      identifier: seller.id,
+      url: profileUrl,
+      ...(seller.bio ? { description: seller.bio.slice(0, 300) } : {}),
+      ...(seller.image ? { image: seller.image } : {}),
+      sameAs: Object.values(socialLinks).filter((v) => typeof v === "string" && /^https?:\/\//.test(v)),
+      interactionStatistic: {
+        "@type": "InteractionCounter",
+        interactionType: "https://schema.org/FollowAction",
+        userInteractionCount: seller._count.followers,
+      },
+    },
+  };
+
   return (
     <main className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd).replace(/</g, "\\u003c") }}
+      />
       {/* ── Hero banner ───────────────────────────────────────────────────── */}
       <div className="relative -mx-4 sm:-mx-6">
         <div className="h-36 sm:h-48 w-full bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 rounded-b-3xl overflow-hidden">

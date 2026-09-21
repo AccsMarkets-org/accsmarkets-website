@@ -31,12 +31,15 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const url = `${BASE_URL}${RESOURCES_BASE}/${post.slug}`;
   const hero = opinlyImage(post.titleFile);
   const images = hero ? [{ url: hero.src, alt: hero.alt || post.title }] : [{ url: `${BASE_URL}/og-default.png` }];
+  // `title` is templated by the root layout ("%s — AccsMarkets"); openGraph /
+  // twitter titles are not, so they carry the brand suffix explicitly.
+  const socialTitle = `${title} — AccsMarkets`;
   return {
-    title: `${title} — AccsMarkets`,
+    title,
     description,
     alternates: { canonical: url },
     openGraph: {
-      title,
+      title: socialTitle,
       description,
       url,
       type: "article",
@@ -47,7 +50,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       authors: post.author?.name ? [post.author.name] : undefined,
       tags: post.tags?.map((t) => t.name),
     },
-    twitter: { card: "summary_large_image", title, description, images: images.map((i) => i.url) },
+    twitter: { card: "summary_large_image", title: socialTitle, description, images: images.map((i) => i.url) },
   };
 }
 

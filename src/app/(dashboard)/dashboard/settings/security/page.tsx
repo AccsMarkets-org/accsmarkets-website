@@ -7,6 +7,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { ArrowRight } from "lucide-react";
 
 type Step = "idle" | "qr" | "confirm" | "backup";
 
@@ -173,7 +174,10 @@ export default function SecuritySettingsPage() {
             />
             <p className="text-xs text-muted">Or enter the key manually:</p>
             <code className="rounded-lg bg-surface px-3 py-2 font-mono text-xs tracking-widest">{tfaData.secret}</code>
-            <Button size="sm" onClick={() => setStep("confirm")}>Next →</Button>
+            <Button size="sm" onClick={() => setStep("confirm")}>
+              Next
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Button>
           </div>
         )}
 

@@ -30,6 +30,19 @@ async function isInAppEnabled(userId: string, type: NotificationType): Promise<b
 }
 
 /**
+ * Email counterpart of isInAppEnabled — same User.notifPrefs lookup, same
+ * "missing entry means on" default. Not enforced centrally (see the note on
+ * createNotification below); call sites that send an email for a notification
+ * type should gate on this themselves.
+ */
+export async function wantsEmail(userId: string, type: NotificationType): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { notifPrefs: true } });
+  const prefs = (user?.notifPrefs as unknown as NotifPref[] | null) ?? [];
+  const pref = prefs.find((p) => p.type === type);
+  return pref?.email ?? true;
+}
+
+/**
  * DB row is written first so notification history survives an offline recipient;
  * the socket emit is best-effort on top for users currently connected.
  *

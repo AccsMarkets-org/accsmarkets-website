@@ -2,108 +2,81 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { House, LayoutGrid, LogIn, MessageSquare, Tag, User, Wallet } from "lucide-react";
+
+const TAB_ICON = { className: "h-[22px] w-[22px]", strokeWidth: 1.75, "aria-hidden": true } as const;
 
 interface BottomTabBarProps {
   isAuthenticated?: boolean;
   unreadMessages?: number;
 }
 
-const AUTH_TABS = [
+interface Tab {
+  href: string;
+  label: string;
+  exact: boolean;
+  badgeKey?: "messages";
+  icon: JSX.Element;
+}
+
+const AUTH_TABS: Tab[] = [
   {
     href: "/dashboard",
     label: "Home",
     exact: true,
-    icon: (
-      <svg className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-        <path d="M3 12L12 3l9 9" /><path d="M9 21V12h6v9" />
-      </svg>
-    ),
+    icon: <House {...TAB_ICON} />,
   },
   {
     href: "/listings",
     label: "Browse",
     exact: false,
-    icon: (
-      <svg className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-      </svg>
-    ),
+    icon: <LayoutGrid {...TAB_ICON} />,
   },
   {
     href: "/dashboard/messages",
     label: "Messages",
     exact: false,
     badgeKey: "messages" as const,
-    icon: (
-      <svg className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-    ),
+    icon: <MessageSquare {...TAB_ICON} />,
   },
   {
     href: "/dashboard/wallet",
     label: "Wallet",
     exact: false,
-    icon: (
-      <svg className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-        <rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/>
-      </svg>
-    ),
+    icon: <Wallet {...TAB_ICON} />,
   },
   {
     href: "/dashboard/settings",
     label: "Profile",
     exact: false,
-    icon: (
-      <svg className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg>
-    ),
+    icon: <User {...TAB_ICON} />,
   },
 ];
 
-const GUEST_TABS = [
+const GUEST_TABS: Tab[] = [
   {
     href: "/",
     label: "Home",
     exact: true,
-    icon: (
-      <svg className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-        <path d="M3 12L12 3l9 9" /><path d="M9 21V12h6v9" />
-      </svg>
-    ),
+    icon: <House {...TAB_ICON} />,
   },
   {
     href: "/listings",
     label: "Browse",
     exact: false,
-    icon: (
-      <svg className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-      </svg>
-    ),
+    icon: <LayoutGrid {...TAB_ICON} />,
   },
   {
     href: "/pricing",
     label: "Pricing",
     exact: false,
-    icon: (
-      <svg className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
-      </svg>
-    ),
+    icon: <Tag {...TAB_ICON} />,
   },
   {
     href: "/login",
     label: "Sign In",
     exact: false,
-    icon: (
-      <svg className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg>
-    ),
+    icon: <LogIn {...TAB_ICON} />,
   },
 ];
 
@@ -113,6 +86,7 @@ export function BottomTabBar({ isAuthenticated = false, unreadMessages = 0 }: Bo
 
   return (
     <nav
+      aria-label="Primary"
       className="fixed bottom-0 inset-x-0 z-40 md:hidden border-t border-surface-border bg-background/95 backdrop-blur-xl"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
@@ -130,7 +104,7 @@ export function BottomTabBar({ isAuthenticated = false, unreadMessages = 0 }: Bo
             <Link
               key={tab.href + tab.label}
               href={tab.href}
-              className="flex flex-col items-center justify-center gap-[3px]"
+              className="flex flex-col items-center justify-center gap-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
               aria-current={active ? "page" : undefined}
             >
               <span className={`relative ${active ? "text-brand-500" : "text-muted/70"}`}>

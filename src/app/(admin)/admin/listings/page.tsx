@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { ArrowRight, Check } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -7,7 +8,7 @@ import { AdminPagination } from "@/components/ui/AdminPagination";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { LISTING_STATUS_STYLE, PLATFORM_LABEL, PLATFORM_COLOR } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import type { ListingStatus } from "@prisma/client";
+import type { ListingStatus, Platform, Prisma } from "@prisma/client";
 
 const PAGE_SIZE = 30;
 
@@ -27,9 +28,10 @@ export default async function AdminListingsPage({
   const tab = TABS.find((t) => t.key === (searchParams.tab ?? "pending")) ?? TABS[0];
   const page = Math.max(0, Number(searchParams.page ?? 0));
   const q = searchParams.q?.trim() ?? "";
-  const platformFilter = searchParams.platform?.trim() ?? "";
+  const rawPlatform = searchParams.platform?.trim() ?? "";
+  const platformFilter = rawPlatform in PLATFORM_LABEL ? (rawPlatform as Platform) : undefined;
 
-  const where = {
+  const where: Prisma.ListingWhereInput = {
     status: { in: tab.statuses },
     ...(platformFilter ? { platform: platformFilter } : {}),
     ...(q ? {
@@ -194,7 +196,11 @@ export default async function AdminListingsPage({
                       </span>
                     )}
                     {listing.ownershipVerified ? (
-                      <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-medium text-success">Ownership ✓</span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-medium text-success">
+                        Ownership
+                        <Check className="h-3.5 w-3.5" aria-hidden />
+                        <span className="sr-only">verified</span>
+                      </span>
                     ) : (
                       <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning">Ownership pending</span>
                     )}
@@ -211,9 +217,10 @@ export default async function AdminListingsPage({
                   <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-surface-border mt-1">
                     <Link
                       href={`/admin/listings/${listing.id}`}
-                      className="flex items-center gap-1 rounded-xl bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 transition"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 transition"
                     >
-                      Full review →
+                      Full review
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                     </Link>
                     <AdminActionButtons
                       endpoint={`/api/admin/listings/${listing.id}`}
