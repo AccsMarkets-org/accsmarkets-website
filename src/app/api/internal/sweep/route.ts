@@ -51,11 +51,11 @@ export async function POST(req: Request) {
   await runStep("promotionsExpired", async () => {
     const expiredFeatured = await prisma.listing.findMany({
       where: { isFeatured: true, featuredUntil: { lt: now } },
-      select: { id: true, userId: true },
+      select: { id: true, sellerId: true },
     });
     const expiredPinned = await prisma.listing.findMany({
       where: { isPinned: true, pinnedUntil: { lt: now } },
-      select: { id: true, userId: true },
+      select: { id: true, sellerId: true },
     });
 
     let promotionsCleared = 0;
@@ -78,11 +78,11 @@ export async function POST(req: Request) {
 
     const notifiedKeys = new Set<string>();
     for (const listing of [...expiredFeatured, ...expiredPinned]) {
-      const key = `${listing.userId}:${listing.id}`;
+      const key = `${listing.sellerId}:${listing.id}`;
       if (notifiedKeys.has(key)) continue;
       notifiedKeys.add(key);
       await createNotification({
-        userId: listing.userId,
+        userId: listing.sellerId,
         type: "SYSTEM",
         title: "Listing boost expired",
         body: "Your listing boost has expired. Boost again from your dashboard.",
