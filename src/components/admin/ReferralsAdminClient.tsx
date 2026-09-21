@@ -87,7 +87,7 @@ export function ReferralsAdminClient() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: "Total Referrals", value: stats.total, color: "text-foreground" },
           { label: "Rewarded", value: stats.rewarded, color: "text-green-600" },
@@ -123,7 +123,7 @@ export function ReferralsAdminClient() {
               <div className="animate-pulse p-8 text-center text-sm text-muted">Loading...</div>
             ) : (
               <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[720px] text-sm">
                 <thead className="bg-surface text-left text-xs text-muted uppercase">
                   <tr>
                     <th className="px-4 py-3">Referee</th>

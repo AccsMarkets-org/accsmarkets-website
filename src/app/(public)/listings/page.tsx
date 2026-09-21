@@ -84,11 +84,20 @@ export default async function BrowseListingsPage({
   if (q.trim().length > 0) andClauses.push({ OR: [{ title: { contains: q } }, { description: { contains: q } }] });
 
   const where: Prisma.ListingWhereInput = { status: { in: ["ACTIVE", "SOLD"] }, AND: andClauses };
-  const orderBy: Prisma.ListingOrderByWithRelationInput =
-    filters.sort === "price_asc" ? { price: "asc" }
-    : filters.sort === "price_desc" ? { price: "desc" }
-    : filters.sort === "followers" ? { followers: "desc" }
-    : { createdAt: "desc" };
+  // Active listings always rank above sold ones (enum order: ACTIVE < SOLD).
+  // Default sort honours paid placement: premium > featured > pinned > bumped > newest.
+  const orderBy: Prisma.ListingOrderByWithRelationInput[] =
+    filters.sort === "price_asc" ? [{ status: "asc" }, { price: "asc" }]
+    : filters.sort === "price_desc" ? [{ status: "asc" }, { price: "desc" }]
+    : filters.sort === "followers" ? [{ status: "asc" }, { followers: "desc" }]
+    : [
+        { status: "asc" },
+        { isPremiumFeatured: "desc" },
+        { isFeatured: "desc" },
+        { isPinned: "desc" },
+        { lastBumpedAt: { sort: "desc", nulls: "last" } },
+        { createdAt: "desc" },
+      ];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let listings: any[] = [];

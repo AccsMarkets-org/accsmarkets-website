@@ -123,9 +123,9 @@ export function ContactMessagesClient({ messages: initial }: Props) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem-3rem)] gap-0 overflow-hidden rounded-2xl border border-surface-border bg-background shadow-sm">
+    <div className="flex h-[calc(100dvh-3.5rem-env(safe-area-inset-top)-2rem)] md:h-[calc(100dvh-3.5rem-env(safe-area-inset-top)-3rem)] gap-0 overflow-hidden rounded-2xl border border-surface-border bg-background shadow-sm">
       {/* Left panel */}
-      <div className="flex w-80 shrink-0 flex-col border-r border-surface-border">
+      <div className={cn("w-full md:w-80 shrink-0 flex-col md:border-r border-surface-border", selected ? "hidden md:flex" : "flex")}>
         {/* Header */}
         <div className="border-b border-surface-border p-4">
           <div className="mb-3 flex items-center justify-between">
@@ -212,9 +212,18 @@ export function ContactMessagesClient({ messages: initial }: Props) {
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className={cn("flex-1 flex-col min-w-0", selected ? "flex" : "hidden md:flex")}>
         {selected ? (
           <>
+            {/* Mobile back */}
+            <div className="md:hidden border-b border-surface-border px-4 py-2">
+              <button
+                onClick={() => setSelected(null)}
+                className="text-xs font-medium text-muted hover:text-foreground transition"
+              >
+                ← Back
+              </button>
+            </div>
             {/* Thread header */}
             <div className="flex items-start justify-between border-b border-surface-border p-6">
               <div>

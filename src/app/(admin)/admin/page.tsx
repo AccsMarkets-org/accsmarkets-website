@@ -379,7 +379,7 @@ export default async function AdminDashboardPage() {
               </div>
 
               {/* Stats row */}
-              <div className="grid grid-cols-3 divide-x divide-surface-border border-b border-surface-border">
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-surface-border border-b border-surface-border">
                 <div className="px-3 py-3 sm:px-5 sm:py-4">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">Total Views</p>
                   <p className="mt-1 text-xl font-bold text-foreground sm:text-3xl">{totalListingViews30d.toLocaleString()}</p>

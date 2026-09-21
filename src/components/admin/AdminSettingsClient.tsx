@@ -1098,7 +1098,7 @@ export function AdminSettingsClient({ profile, settings }: Props) {
   }, []);
 
   return (
-    <div className="flex gap-8">
+    <div className="flex flex-col md:flex-row gap-4 md:gap-8">
       <AnimatePresence>
         {toast && <Toast ok={toast.ok} msg={toast.msg} />}
       </AnimatePresence>

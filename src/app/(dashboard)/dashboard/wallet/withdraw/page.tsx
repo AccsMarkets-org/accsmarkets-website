@@ -100,9 +100,9 @@ export default function WithdrawPage() {
   const [bankSubmitted, setBankSubmitted] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/settings")
+    fetch("/api/wallet/withdraw")
       .then((r) => r.json())
-      .then((d) => { if (d.settings?.minWithdrawal) setMinWithdrawal(Number(d.settings.minWithdrawal)); })
+      .then((d) => { if (d.minWithdrawal) setMinWithdrawal(Number(d.minWithdrawal)); })
       .catch(() => {});
     fetch("/api/user/me")
       .then((r) => r.json())

@@ -7,6 +7,7 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { PLATFORM_LABEL } from "@/lib/constants";
 import { DisputePhaseControls } from "@/components/admin/DisputePhaseControls";
 import { DisputeTimeline } from "@/components/admin/DisputeTimeline";
+import { AdminDisputeActions } from "@/components/admin/AdminDisputeActions";
 import { PHASE_LABELS, PHASE_COLORS, PHASE_DESCRIPTIONS } from "@/lib/dispute-phases";
 
 const STATUS_STYLE: Record<string, { label: string; className: string }> = {
@@ -36,6 +37,7 @@ export default async function AdminDisputeDetailPage({ params }: { params: { id:
 
   const style = STATUS_STYLE[dispute.status] ?? STATUS_STYLE.OPEN;
   const isActive = dispute.phase !== "FINAL";
+  const isUnresolved = dispute.status === "OPEN" || dispute.status === "UNDER_REVIEW";
 
   const buyerEvidence = dispute.evidence.filter((e) => e.userId === dispute.escrow.buyerId);
   const sellerEvidence = dispute.evidence.filter((e) => e.userId === dispute.escrow.sellerId);
@@ -183,6 +185,10 @@ export default async function AdminDisputeDetailPage({ params }: { params: { id:
                 mediationOffer={dispute.mediationOffer ? Number(dispute.mediationOffer) : null}
               />
             </Card>
+          )}
+
+          {isUnresolved && (
+            <AdminDisputeActions disputeId={dispute.id} status={dispute.status} />
           )}
         </div>
 

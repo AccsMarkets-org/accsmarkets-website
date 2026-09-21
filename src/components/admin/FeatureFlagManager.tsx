@@ -125,7 +125,7 @@ export function FeatureFlagManager({ initialFlags }: { initialFlags: FeatureFlag
                 {f.description && <p className="text-xs text-muted mt-0.5">{f.description}</p>}
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3">
                 <label className="flex items-center gap-2 text-xs text-muted">
                   Rollout
                   <input

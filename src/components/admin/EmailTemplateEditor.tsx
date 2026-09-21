@@ -76,9 +76,9 @@ export function EmailTemplateEditor({ initialTemplates }: Props) {
   }
 
   return (
-    <div className="flex gap-4">
+    <div className="flex flex-col md:flex-row gap-4">
       {/* Slug list */}
-      <div className="w-48 shrink-0 flex flex-col gap-1">
+      <div className="w-full md:w-48 shrink-0 flex md:flex-col flex-row flex-wrap gap-1">
         {allSlugs.map((slug) => (
           <button key={slug}
             onClick={() => selectSlug(slug)}
@@ -122,7 +122,7 @@ export function EmailTemplateEditor({ initialTemplates }: Props) {
             placeholder="test@example.com"
             value={testEmail}
             onChange={(e) => setTestEmail(e.target.value)}
-            className="w-48"
+            className="w-full sm:w-48"
           />
           <Button size="sm" variant="outline" onClick={async () => {
             if (!testEmail) { toast.error("Enter a recipient email address"); return; }

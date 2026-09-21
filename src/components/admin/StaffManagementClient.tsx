@@ -570,7 +570,7 @@ export function StaffManagementClient() {
       {tab === "members" && (
         <div className="rounded-2xl border border-surface-border overflow-hidden bg-background">
           <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-surface border-b border-surface-border">
               <tr>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted">Member</th>
@@ -648,11 +648,11 @@ export function StaffManagementClient() {
       {/* Create / Edit Role Modal */}
       {showRoleModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
           onClick={() => setShowRoleModal(false)}
         >
           <div
-            className="w-full max-w-lg rounded-2xl border border-surface-border bg-background p-6 shadow-2xl"
+            className="w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border border-surface-border bg-background p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
@@ -744,11 +744,11 @@ export function StaffManagementClient() {
       {/* Add Staff Modal */}
       {showAddStaff && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
           onClick={closeAddModal}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-surface-border bg-background p-6 shadow-2xl"
+            className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border border-surface-border bg-background p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">

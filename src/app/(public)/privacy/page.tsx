@@ -45,7 +45,7 @@ export default function PrivacyPage() {
           <li>We <strong>don&apos;t sell</strong> your data to anyone — ever.</li>
           <li>We <strong>don&apos;t store</strong> plaintext passwords (bcrypt) or plaintext escrow credentials (AES-256-GCM encrypted).</li>
           <li>We <strong>don&apos;t read</strong> your DMs except via automated scam-pattern moderation or during dispute review.</li>
-          <li>We <strong>don&apos;t use</strong> third-party advertising or tracking pixels.</li>
+          <li>We <strong>don&apos;t share</strong> your account data, wallet activity, or escrow details with advertisers. We do use Google Analytics, Google AdSense and the Meta Pixel on public pages for usage measurement and advertising — see our <a href="/cookies">Cookie Policy</a> for details and how to opt out.</li>
         </ul>
       </LegalSection>
 

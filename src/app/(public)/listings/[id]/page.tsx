@@ -634,16 +634,16 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
             <div className="px-5 py-4">
               <p className="mb-3 text-xs font-bold text-foreground">Seller Trust</p>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-xl bg-surface px-2 py-2.5">
-                  <p className="text-lg font-black text-foreground">{dealCount}</p>
+                <div className="min-w-0 rounded-xl bg-surface px-2 py-2.5">
+                  <p className="truncate text-base font-black text-foreground sm:text-lg">{dealCount}</p>
                   <p className="text-[9px] uppercase tracking-wide text-muted">DEALS</p>
                 </div>
-                <div className="rounded-xl bg-surface px-2 py-2.5">
-                  <p className="text-lg font-black text-foreground">{dealVolume ? formatCurrency(dealVolume.toString()) : "$0"}</p>
+                <div className="min-w-0 rounded-xl bg-surface px-2 py-2.5">
+                  <p className="truncate text-base font-black text-foreground sm:text-lg" title={dealVolume ? formatCurrency(dealVolume.toString()) : "$0"}>{dealVolume ? formatCurrency(dealVolume.toString()) : "$0"}</p>
                   <p className="text-[9px] uppercase tracking-wide text-muted">VOLUME</p>
                 </div>
-                <div className="rounded-xl bg-surface px-2 py-2.5">
-                  <p className="text-lg font-black text-foreground">{reviews.length}</p>
+                <div className="min-w-0 rounded-xl bg-surface px-2 py-2.5">
+                  <p className="truncate text-base font-black text-foreground sm:text-lg">{reviews.length}</p>
                   <p className="text-[9px] uppercase tracking-wide text-muted">REVIEWS</p>
                 </div>
               </div>

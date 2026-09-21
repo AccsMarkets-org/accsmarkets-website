@@ -25,9 +25,9 @@ export function ProfileStats({ followers, sales, listings, avgRating, reviewCoun
   ];
 
   return (
-    <div className="grid grid-cols-4 divide-x divide-surface-border border-t border-b border-surface-border bg-surface/40 py-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-surface-border border-t border-b border-surface-border bg-surface/40 py-3">
       {stats.map((s) => (
-        <div key={s.label} className="flex flex-col items-center gap-0.5 px-2 text-center">
+        <div key={s.label} className="flex flex-col items-center gap-0.5 px-2 py-1.5 sm:py-0 text-center">
           <span className="text-base font-bold text-foreground tabular-nums">{s.value}</span>
           <span className="text-[10px] text-muted leading-tight">{s.label}</span>
           {s.sub && <span className="text-[9px] text-muted/70">{s.sub}</span>}

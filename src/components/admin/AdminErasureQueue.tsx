@@ -167,7 +167,7 @@ export function AdminErasureQueue({ pending, resolved }: Props) {
           </h2>
           <div className="overflow-hidden rounded-2xl border border-surface-border">
             <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[480px] text-sm">
               <thead className="border-b border-surface-border bg-surface">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold text-muted">User</th>

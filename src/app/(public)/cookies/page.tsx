@@ -41,13 +41,14 @@ export default function CookiePolicyPage() {
         title="Types of Cookies We Use"
         icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 6h16M4 12h16M4 18h7" /></svg>}
       >
-        <p>We categorize our cookies into three types:</p>
+        <p>We categorize our cookies into four types:</p>
         <ul>
           <li><strong>Essential</strong> — Required for the platform to function. Cannot be disabled.</li>
-          <li><strong>Analytics</strong> — Help us understand usage patterns and improve the platform.</li>
+          <li><strong>Analytics</strong> — Google Analytics helps us understand usage patterns and improve the platform.</li>
+          <li><strong>Advertising</strong> — Google AdSense and the Meta Pixel may set cookies on public pages to measure and serve ads.</li>
           <li><strong>Preferences</strong> — Remember your settings like theme and currency.</li>
         </ul>
-        <p>We do not use advertising or tracking cookies from third parties.</p>
+        <p>You can opt out of analytics and advertising cookies through your browser settings, Google&apos;s Ads Settings, or Meta&apos;s ad preferences. Essential cookies are always set.</p>
       </LegalSection>
 
       <LegalSection

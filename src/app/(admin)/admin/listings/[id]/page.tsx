@@ -125,7 +125,7 @@ export default async function AdminListingDetailPage({
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 rounded-xl bg-surface p-1 w-fit flex-wrap">
+      <div className="flex flex-wrap gap-1 rounded-xl bg-surface p-1 w-fit">
         {TABS.map((t) => (
           <Link
             key={t}

@@ -88,8 +88,8 @@ export default function ApiDocsPage() {
 
       <section className="mb-10">
         <h2 className="mb-4 text-lg font-bold text-foreground">Endpoints</h2>
-        <div className="overflow-hidden rounded-xl border border-surface-border">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-surface-border">
+          <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-surface-border bg-surface">
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-muted">Method</th>

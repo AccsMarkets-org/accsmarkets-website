@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
@@ -219,15 +220,49 @@ interface SidebarProps {
   primaryIntent?: string | null;
 }
 
+function AccountTypeBadge({ primaryIntent }: { primaryIntent: string }) {
+  return (
+    <div className="px-4 pt-3 pb-1">
+      <span className={[
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
+        primaryIntent === "BUYER"
+          ? "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 dark:bg-blue-950 dark:text-blue-300"
+          : primaryIntent === "SELLER"
+          ? "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400 dark:bg-green-950 dark:text-green-300"
+          : "bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400 dark:bg-purple-950 dark:text-purple-300",
+      ].join(" ")}>
+        <span className="h-1.5 w-1.5 rounded-full bg-current" />
+        {primaryIntent === "BUYER" ? "Buyer Account" : primaryIntent === "SELLER" ? "Seller Account" : "Buyer & Seller"}
+      </span>
+    </div>
+  );
+}
+
 export function DashboardSidebar({ counts = EMPTY_COUNTS, primaryIntent }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [open, setOpen] = useState(false);
 
   const viewParam = searchParams.get("view");
   // Buyer mode: pure BUYER account, or BOTH user who switched to Buyer view
   const isBuyerOnly =
     primaryIntent === "BUYER" ||
     (primaryIntent === "BOTH" && viewParam === "BUYER");
+
+  // Close the mobile drawer on Escape and lock body scroll while it's open.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open]);
 
   return (
     <>
@@ -237,24 +272,59 @@ export function DashboardSidebar({ counts = EMPTY_COUNTS, primaryIntent }: Sideb
           {LOGO}
         </div>
         {/* Account type badge */}
-        {primaryIntent && (
-          <div className="px-4 pt-3 pb-1">
-            <span className={[
-              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
-              primaryIntent === "BUYER"
-                ? "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 dark:bg-blue-950 dark:text-blue-300"
-                : primaryIntent === "SELLER"
-                ? "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400 dark:bg-green-950 dark:text-green-300"
-                : "bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400 dark:bg-purple-950 dark:text-purple-300",
-            ].join(" ")}>
-              <span className="h-1.5 w-1.5 rounded-full bg-current" />
-              {primaryIntent === "BUYER" ? "Buyer Account" : primaryIntent === "SELLER" ? "Seller Account" : "Buyer & Seller"}
-            </span>
-          </div>
-        )}
+        {primaryIntent && <AccountTypeBadge primaryIntent={primaryIntent} />}
         <NavList pathname={pathname} counts={counts} isBuyerOnly={isBuyerOnly} />
       </aside>
 
+      {/* Mobile hamburger — sits inside the header row on the left; the header
+          reserves left padding for it on < md. Offset by the safe-area inset so
+          it doesn't render under the status bar in an installed PWA. */}
+      <button
+        type="button"
+        aria-label="Open navigation"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+        className="fixed left-3 z-40 flex h-10 w-10 items-center justify-center rounded-xl text-foreground/80 hover:bg-surface md:hidden"
+        style={{ top: "calc(0.75rem + env(safe-area-inset-top, 0px))" }}
+      >
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {/* Mobile drawer */}
+      {open && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/50 md:hidden" onClick={() => setOpen(false)} />
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="Dashboard navigation"
+            className="fixed inset-y-0 left-0 z-50 flex w-64 max-w-[85vw] flex-col border-r border-surface-border bg-surface shadow-xl md:hidden"
+          >
+            <div
+              className="flex shrink-0 items-center justify-between border-b border-surface-border px-4"
+              style={{ paddingTop: "env(safe-area-inset-top, 0px)", height: "calc(4rem + env(safe-area-inset-top, 0px))" }}
+            >
+              {LOGO}
+              <button
+                type="button"
+                aria-label="Close navigation"
+                onClick={() => setOpen(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:bg-brand-500/8 hover:text-foreground"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {primaryIntent && <AccountTypeBadge primaryIntent={primaryIntent} />}
+            <div className="flex min-h-0 flex-1 flex-col" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+              <NavList pathname={pathname} counts={counts} isBuyerOnly={isBuyerOnly} onNav={() => setOpen(false)} />
+            </div>
+          </aside>
+        </>
+      )}
     </>
   );
 }

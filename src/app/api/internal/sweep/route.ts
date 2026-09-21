@@ -76,6 +76,13 @@ export async function POST(req: Request) {
       promotionsCleared += expiredPinned.length;
     }
 
+    // A bump lifts a listing above un-bumped ones on the default sort; cap that at 7 days.
+    const bumpCutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    await prisma.listing.updateMany({
+      where: { lastBumpedAt: { lt: bumpCutoff } },
+      data: { lastBumpedAt: null },
+    });
+
     const notifiedKeys = new Set<string>();
     for (const listing of [...expiredFeatured, ...expiredPinned]) {
       const key = `${listing.sellerId}:${listing.id}`;

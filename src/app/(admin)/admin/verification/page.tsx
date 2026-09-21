@@ -5,6 +5,18 @@ import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { formatDate } from "@/lib/utils";
 import { CountryFlag } from "@/components/ui/CountryFlag";
+import { decryptKycField, isEncryptedKycField } from "@/lib/kyc-encrypt";
+
+// Rows written before KYC-at-rest encryption hold plain URLs; newer rows hold iv:tag:ct.
+function readKycField(value: string | null): string | null {
+  if (!value) return null;
+  if (!isEncryptedKycField(value)) return value;
+  try {
+    return decryptKycField(value);
+  } catch {
+    return null;
+  }
+}
 
 const STATUS_STYLE: Record<string, { label: string; className: string }> = {
   PENDING:      { label: "Pending",      className: "bg-warning/10 text-warning" },
@@ -138,15 +150,15 @@ export default async function AdminVerificationPage({
                 {/* OCR data */}
                 {(s.ocrName || s.ocrDob || s.ocrDocNumber) && (
                   <div className="rounded-xl bg-surface-muted border border-surface-border px-3 py-2 mb-3 text-xs text-muted flex flex-wrap gap-x-4 gap-y-1">
-                    {s.ocrName && <span><span className="font-medium text-foreground">Name:</span> {s.ocrName}</span>}
-                    {s.ocrDob && <span><span className="font-medium text-foreground">DOB:</span> {s.ocrDob}</span>}
-                    {s.ocrDocNumber && <span><span className="font-medium text-foreground">Doc #:</span> {s.ocrDocNumber}</span>}
+                    {s.ocrName && <span><span className="font-medium text-foreground">Name:</span> {readKycField(s.ocrName)}</span>}
+                    {s.ocrDob && <span><span className="font-medium text-foreground">DOB:</span> {readKycField(s.ocrDob)}</span>}
+                    {s.ocrDocNumber && <span><span className="font-medium text-foreground">Doc #:</span> {readKycField(s.ocrDocNumber)}</span>}
                   </div>
                 )}
 
                 {/* Document thumbnails */}
                 <div className="flex flex-wrap gap-3 mb-3">
-                  {([["ID Front", s.idFrontUrl], ["ID Back", s.idBackUrl], ["Selfie", s.selfieUrl]] as const).map(([label, url]) => (
+                  {([["ID Front", readKycField(s.idFrontUrl)], ["ID Back", readKycField(s.idBackUrl)], ["Selfie", readKycField(s.selfieUrl)]] as const).map(([label, url]) => (
                     url && (
                       <a key={label} href={url} target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-1">
                         {/* eslint-disable-next-line @next/next/no-img-element */}

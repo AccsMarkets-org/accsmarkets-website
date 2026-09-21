@@ -100,7 +100,7 @@ export function EscrowSupportClient() {
       ) : (
         <div className="rounded-2xl border border-surface-border overflow-hidden">
           <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-surface text-left text-xs text-muted uppercase">
               <tr>
                 <th className="px-4 py-3">Escrow</th>

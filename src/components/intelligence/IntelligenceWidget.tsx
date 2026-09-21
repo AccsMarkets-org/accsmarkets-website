@@ -545,7 +545,7 @@ export function IntelligenceWidget() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 12 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute bottom-full right-0 mb-3 w-[340px] max-h-[80vh] overflow-hidden rounded-2xl border border-surface-border bg-background shadow-2xl shadow-black/15 flex flex-col"
+              className="absolute bottom-full right-0 mb-3 w-[calc(100vw-2rem)] sm:w-[340px] max-h-[80vh] overflow-hidden rounded-2xl border border-surface-border bg-background shadow-2xl shadow-black/15 flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-surface-border px-4 py-3 bg-gradient-to-r from-brand-500/5 to-transparent">

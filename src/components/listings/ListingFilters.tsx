@@ -118,7 +118,6 @@ export function ListingFilters({ isAuthenticated = false }: { isAuthenticated?: 
           className="h-10 rounded-xl border border-surface-border bg-surface px-3 text-sm focus:border-brand-400 focus:outline-none"
         >
           <option value="newest">Newest</option>
-          <option value="relevance">Most relevant</option>
           <option value="price_asc">Price: low to high</option>
           <option value="price_desc">Price: high to low</option>
           <option value="followers">Most followers</option>

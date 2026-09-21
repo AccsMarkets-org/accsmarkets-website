@@ -11,6 +11,16 @@ import { withdrawalRequestedTemplate } from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const settings = await prisma.platformSettings.findUnique({
+    where: { id: "singleton" },
+    select: { minWithdrawal: true },
+  });
+  return NextResponse.json({ minWithdrawal: Number(settings?.minWithdrawal ?? 20) });
+}
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

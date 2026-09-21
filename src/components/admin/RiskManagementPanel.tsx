@@ -158,7 +158,7 @@ export function RiskManagementPanel({ initialRiskScores }: { initialRiskScores: 
 
       <div className="overflow-hidden rounded-2xl border border-surface-border bg-surface shadow-sm">
         <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-surface-border text-xs font-semibold uppercase tracking-widest text-muted">
               <th className="px-4 py-3 text-left">User</th>

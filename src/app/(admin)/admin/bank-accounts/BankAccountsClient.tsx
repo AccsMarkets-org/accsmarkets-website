@@ -163,7 +163,7 @@ export function BankAccountsClient({ initialAccounts }: { initialAccounts: Platf
       <div className="flex flex-col gap-3">
         {accounts.map((account) => (
           <Card key={account.id} className="flex flex-wrap items-center justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="font-medium">
                 {account.bankName}
                 <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-medium ${account.isActive ? "bg-success/10 text-success" : "bg-muted/10 text-muted"}`}>
@@ -171,7 +171,7 @@ export function BankAccountsClient({ initialAccounts }: { initialAccounts: Platf
                 </span>
               </p>
               <p className="text-sm text-muted">{account.accountName} · {account.accountNumber}</p>
-              <p className="text-xs text-muted">
+              <p className="text-xs text-muted break-all">
                 {[account.swiftCode && `SWIFT: ${account.swiftCode}`, account.iban && `IBAN: ${account.iban}`, account.routingNumber && `Routing: ${account.routingNumber}`]
                   .filter(Boolean).join(" · ") || "No additional identifiers"}
               </p>

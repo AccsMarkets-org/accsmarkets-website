@@ -46,6 +46,7 @@ export default async function AdminBankTransfersPage({
     }),
     prisma.bankTransferOrder.count({ where }),
   ]);
+  const totalPages = Math.max(1, Math.ceil(total / 50));
 
   return (
     <div className="flex flex-col gap-6">
@@ -136,10 +137,30 @@ export default async function AdminBankTransfersPage({
         )}
       </div>
 
-      {total > 50 && (
-        <p className="text-center text-xs text-muted">
-          Showing {orders.length} of {total}. Use ?page=2 to paginate.
-        </p>
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <span className="text-muted">
+            Page {page} of {totalPages} · {total} transfers
+          </span>
+          <div className="flex gap-2">
+            {page > 1 && (
+              <Link
+                href={`/admin/bank-transfers?page=${page - 1}${statusFilter ? `&status=${statusFilter}` : ""}`}
+                className="rounded-xl border border-surface-border px-3 py-1.5 hover:bg-surface transition"
+              >
+                ← Prev
+              </Link>
+            )}
+            {page < totalPages && (
+              <Link
+                href={`/admin/bank-transfers?page=${page + 1}${statusFilter ? `&status=${statusFilter}` : ""}`}
+                className="rounded-xl border border-surface-border px-3 py-1.5 hover:bg-surface transition"
+              >
+                Next →
+              </Link>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -137,7 +137,7 @@ export function OfferList({ initialType }: { initialType: "received" | "sent" })
                 </div>
 
                 {offer.status === "PENDING" && type === "received" && counteringId !== offer.id && (
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <Button size="sm" onClick={() => act(offer.id, "accept")}>
                       Accept
                     </Button>
@@ -151,7 +151,7 @@ export function OfferList({ initialType }: { initialType: "received" | "sent" })
                 )}
 
                 {counteringId === offer.id && (
-                  <div className="mt-3 flex items-end gap-2">
+                  <div className="mt-3 flex flex-wrap items-end gap-2">
                     <Input
                       label="Counter amount (USD)"
                       type="number"
@@ -177,7 +177,7 @@ export function OfferList({ initialType }: { initialType: "received" | "sent" })
                 )}
 
                 {offer.status === "ACCEPTED" && type === "received" && (
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <Link href={`/dashboard/messages/${offer.buyer.id}`}>
                       <Button size="sm" variant="outline">
                         <svg className="mr-1.5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -190,7 +190,7 @@ export function OfferList({ initialType }: { initialType: "received" | "sent" })
                 )}
 
                 {offer.status === "ACCEPTED" && type === "sent" && !offer.escrow && (
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <Link href={`/checkout/${offer.listing.id}?offerId=${offer.id}&amount=${offer.amount}`}>
                       <Button size="sm">Start escrow</Button>
                     </Link>
@@ -206,7 +206,7 @@ export function OfferList({ initialType }: { initialType: "received" | "sent" })
                 )}
 
                 {offer.escrow && (
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <Link href={`/dashboard/escrows/${offer.escrow.id}`}>
                       <Button size="sm" variant="secondary">
                         View escrow

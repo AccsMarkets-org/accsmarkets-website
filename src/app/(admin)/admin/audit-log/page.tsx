@@ -35,12 +35,12 @@ export default async function AdminAuditLogPage({
       />
 
       {/* Filter bar */}
-      <form method="get" className="flex items-center gap-2">
+      <form method="get" className="flex flex-wrap items-center gap-2">
         <input
           name="action"
           defaultValue={actionFilter ?? ""}
           placeholder="Filter by action…"
-          className="h-9 rounded-xl border border-surface-border bg-background px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 w-56"
+          className="h-9 rounded-xl border border-surface-border bg-background px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-56"
         />
         <button
           type="submit"

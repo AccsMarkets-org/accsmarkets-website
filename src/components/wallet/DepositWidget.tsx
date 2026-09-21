@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { useConfirm } from "@/hooks/useConfirm";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -762,6 +763,7 @@ function CryptoDepositResult({
 }) {
   const [copied, setCopied] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const { confirm, ConfirmDialog } = useConfirm();
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&bgcolor=ffffff&color=000000&data=${encodeURIComponent(result.address)}`;
 
   function copy() {
@@ -849,7 +851,14 @@ function CryptoDepositResult({
             type="button"
             disabled={cancelling}
             onClick={async () => {
-              if (!confirm("Cancel this deposit? The address will become invalid.")) return;
+              const ok = await confirm({
+                title: "Cancel this deposit?",
+                description: "The address will become invalid.",
+                confirmLabel: "Cancel deposit",
+                cancelLabel: "Keep it",
+                destructive: true,
+              });
+              if (!ok) return;
               setCancelling(true);
               await onCancel();
               setCancelling(false);
@@ -860,6 +869,7 @@ function CryptoDepositResult({
           </button>
         )}
       </div>
+      {ConfirmDialog}
     </div>
   );
 }

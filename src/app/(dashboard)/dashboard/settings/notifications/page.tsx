@@ -173,16 +173,16 @@ export default function NotificationsSettingsPage() {
 
       <Card className="p-0 overflow-hidden">
         {/* Header row */}
-        <div className="grid grid-cols-[1fr_80px_80px] gap-2 border-b border-surface-border px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wider">
+        <div className="grid grid-cols-[1fr_56px_56px] sm:grid-cols-[1fr_80px_80px] gap-2 border-b border-surface-border px-4 sm:px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wider">
           <span>Event</span>
           <span className="text-center">Email</span>
-          <span className="text-center">In-app</span>
+          <span className="text-center"><span className="sm:hidden">App</span><span className="hidden sm:inline">In-app</span></span>
         </div>
 
         {NOTIFICATION_TYPES.map((nt) => {
           const pref = prefs.find((p) => p.type === nt.type);
           return (
-            <div key={nt.type} className="grid grid-cols-[1fr_80px_80px] items-center gap-2 border-b border-surface-border last:border-0 px-5 py-3.5">
+            <div key={nt.type} className="grid grid-cols-[1fr_56px_56px] sm:grid-cols-[1fr_80px_80px] items-center gap-2 border-b border-surface-border last:border-0 px-4 sm:px-5 py-3.5">
               <div>
                 <p className="text-sm font-medium">{nt.label}</p>
                 <p className="text-xs text-muted">{nt.desc}</p>

@@ -16,6 +16,7 @@ import { DashboardHeaderActions } from "@/components/ui/DashboardHeaderActions";
 import { CURRENT_TERMS_VERSION } from "@/lib/terms";
 import { getMissingProfileFields } from "@/lib/profile-complete";
 import { IntelligenceWidget } from "@/components/intelligence/IntelligenceWidget";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const getMaintenanceSettings = unstable_cache(
   async () =>
@@ -88,13 +89,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
         primaryIntent={primaryIntent}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
-        <header className="flex items-center justify-between gap-4 border-b border-surface-border bg-background px-4 md:pl-14 md:pr-6" style={{ height: "calc(4rem + env(safe-area-inset-top, 0px))", paddingTop: "env(safe-area-inset-top, 0px)", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
+        {/* pl-14 on < md leaves room for the fixed mobile hamburger rendered by DashboardSidebar. */}
+        <header className="flex items-center justify-between gap-4 border-b border-surface-border bg-background pl-14 pr-4 md:pr-6" style={{ height: "calc(4rem + env(safe-area-inset-top, 0px))", paddingTop: "env(safe-area-inset-top, 0px)", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
           {/* min-w-0 + scroll: on narrow phones the action buttons must squeeze
               or scroll — never push the avatar menu (the sign-out path) off-screen. */}
           <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none]">
             <DashboardHeaderActions balance={walletBalance} />
           </div>
           <div className="flex shrink-0 items-center gap-3">
+            <ThemeToggle />
             <NotificationBell />
             <NavbarUserMenu
               name={session.user.name ?? session.user.email ?? "Account"}

@@ -90,7 +90,7 @@ export default function CannedResponsesPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="max-w-3xl">
       <h1 className="text-xl font-bold mb-1">Canned Responses</h1>
       <p className="text-sm text-muted mb-6">Reusable replies for the official support thread.</p>
 

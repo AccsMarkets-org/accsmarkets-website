@@ -166,7 +166,7 @@ export default async function AdminUserDetailPage({
       </div>
 
       {/* ── Tab bar ──────────────────────────────────────────────────────── */}
-      <div className="flex gap-1 overflow-x-auto rounded-xl bg-surface p-1 w-fit flex-wrap">
+      <div className="flex flex-wrap gap-1 rounded-xl bg-surface p-1 w-fit">
         {TABS.map((t) => (
           <Link
             key={t}
@@ -315,8 +315,8 @@ export default async function AdminUserDetailPage({
             const style = LISTING_STATUS_STYLE[l.status];
             return (
               <Card key={l.id} className="flex items-center justify-between gap-3">
-                <div>
-                  <Link href={`/listings/${l.id}`} className="text-sm font-medium hover:underline">{l.title}</Link>
+                <div className="min-w-0">
+                  <Link href={`/listings/${l.id}`} className="block truncate text-sm font-medium hover:underline">{l.title}</Link>
                   <p className="text-xs text-muted">{formatCurrency(l.price.toString())} · {formatDate(l.createdAt)}</p>
                 </div>
                 <StatusPill label={style.label} className={style.className} />
@@ -334,9 +334,9 @@ export default async function AdminUserDetailPage({
             .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
             .map((e) => (
               <Card key={e.id} className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Link href={`/admin/escrows/${e.id}`} className="text-sm font-medium hover:underline">{e.listing.title}</Link>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Link href={`/admin/escrows/${e.id}`} className="truncate text-sm font-medium hover:underline">{e.listing.title}</Link>
                     <span className="rounded-full bg-surface-border px-2 py-0.5 text-xs">{e.role}</span>
                   </div>
                   <p className="text-xs text-muted">{formatCurrency(e.amount.toString())} · {e.status} · {formatDate(e.createdAt)}</p>

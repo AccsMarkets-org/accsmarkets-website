@@ -141,6 +141,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/admin/feature-flags", label: "Feature Flags", icon: I.featureflags },
       { href: "/admin/risk", label: "Risk", icon: I.risk },
       { href: "/admin/legal", label: "Legal", icon: I.legal },
+      { href: "/admin/audit-log", label: "Audit Log", icon: I.policies },
       { href: "/admin/system", label: "System", icon: I.system },
     ],
   },

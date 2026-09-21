@@ -118,7 +118,7 @@ export function EscrowEmailPool({
         <p className="text-sm text-muted">No emails in the pool yet.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-surface-border text-left text-xs font-semibold uppercase tracking-wide text-muted">
                 <th className="pb-2 pr-4">Address</th>
