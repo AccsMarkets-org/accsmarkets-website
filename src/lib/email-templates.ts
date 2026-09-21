@@ -159,7 +159,9 @@ ${opts.secondaryCtaText && opts.secondaryCtaUrl ? `<div style="margin-top:14px;"
 <p style="margin:0;font:800 13px ${EMAIL_FONT};color:#57534e;letter-spacing:-.01em">AccsMarkets</p>
 <p style="margin:8px 0 0;font:400 12px/1.9 ${EMAIL_FONT};color:#a8a29e">
 <a href="${base}/faq" style="color:#78716c">Help Center</a> &nbsp;·&nbsp; <a href="${base}/privacy" style="color:#78716c">Privacy</a> &nbsp;·&nbsp; <a href="${base}/terms" style="color:#78716c">Terms</a> &nbsp;·&nbsp; <a href="${base}/contact" style="color:#78716c">Support</a><br>
-<a href="tel:+17737156402" style="color:#a8a29e">+1 (773) 715-6402</a> &nbsp;·&nbsp; <a href="mailto:support@accsmarkets.org" style="color:#a8a29e">support@accsmarkets.org</a>
+${process.env.SUPPORT_PHONE
+  ? `<a href="tel:${process.env.SUPPORT_PHONE}" style="color:#a8a29e">${process.env.SUPPORT_PHONE}</a> &nbsp;·&nbsp; `
+  : ""}<a href="mailto:support@accsmarkets.org" style="color:#a8a29e">support@accsmarkets.org</a>
 </p>
 <p style="margin:10px 0 0;font:400 11px/1.6 ${EMAIL_FONT};color:#c2bcb6">© ${year} AccsMarkets — escrow-protected account marketplace</p>
 </td></tr>
@@ -264,18 +266,18 @@ export function offerReceivedTemplate(name: string, listingTitle: string, amount
   };
 }
 
-export function offerAcceptedTemplate(name: string, listingTitle: string): EmailContent {
+export function offerAcceptedTemplate(name: string, listingTitle: string, offerAmount = "", sellerName = "The seller"): EmailContent {
   return {
     subject: "Offer Accepted — Start the Protected Transaction",
     html: renderTemplate("offer_accepted", {
       user_name: name,
       buyer_name: name,
       listing_title: listingTitle,
-      offer_amount: "",
+      offer_amount: offerAmount,
       offer_url: `${appUrl()}/dashboard/offers`,
       // No /escrows/new route exists — funding starts from the accepted offer.
       escrow_create_url: `${appUrl()}/dashboard/offers`,
-      seller_name: "The seller",
+      seller_name: sellerName,
     }),
   };
 }
@@ -311,7 +313,7 @@ export function escrowCreatedTemplate(name: string, listingTitle: string, amount
   };
 }
 
-export function escrowCompletedTemplate(name: string, listingTitle: string, escrowId: string): EmailContent {
+export function escrowCompletedTemplate(name: string, listingTitle: string, escrowId: string, amount = ""): EmailContent {
   return {
     subject: "Escrow Completed — Transaction Successful",
     html: renderTemplate("escrow_completed", {
@@ -319,7 +321,7 @@ export function escrowCompletedTemplate(name: string, listingTitle: string, escr
       listing_title: listingTitle,
       escrow_id: escrowId,
       escrow_url: `${appUrl()}/dashboard/escrows/${escrowId}`,
-      amount: "",
+      amount,
       completed_at: new Date().toLocaleDateString("en-US", { dateStyle: "long" }),
       recipient_name: name,
       // No /dashboard/reviews route — reviews are left from the escrow page.
@@ -328,15 +330,15 @@ export function escrowCompletedTemplate(name: string, listingTitle: string, escr
   };
 }
 
-export function depositConfirmedTemplate(name: string, amount: string): EmailContent {
+export function depositConfirmedTemplate(name: string, amount: string, newBalance = "", paymentMethod = "", transactionId = ""): EmailContent {
   return {
     subject: "Deposit Confirmed — Funds Added",
     html: renderTemplate("deposit_confirmed", {
       user_name: name,
       amount,
-      new_balance: "",
-      payment_method: "",
-      transaction_id: "",
+      new_balance: newBalance,
+      payment_method: paymentMethod,
+      transaction_id: transactionId,
       receipt_url: `${appUrl()}/dashboard/wallet`,
     }),
   };
@@ -354,25 +356,25 @@ export function kycApprovedTemplate(name: string, level: string): EmailContent {
   };
 }
 
-export function kycRejectedTemplate(name: string, reason: string): EmailContent {
+export function kycRejectedTemplate(name: string, reason: string, caseId = ""): EmailContent {
   return {
     subject: "Identity Verification Needs Attention",
     html: renderTemplate("kyc_rejected", {
       user_name: name,
       rejection_reason: reason,
-      case_id: "",
+      case_id: caseId,
     }),
   };
 }
 
-export function subscriptionActivatedTemplate(name: string, planName: string, expiresAt: string): EmailContent {
+export function subscriptionActivatedTemplate(name: string, planName: string, expiresAt: string, planPrice = "", billingCycle = ""): EmailContent {
   return {
     subject: `${planName} Activated — Your Plan Is Live`,
     html: renderTemplate("subscription_activated", {
       user_name: name,
       plan_name: planName,
-      plan_price: "",
-      billing_cycle: "",
+      plan_price: planPrice,
+      billing_cycle: billingCycle,
       renewal_date: expiresAt,
     }),
   };

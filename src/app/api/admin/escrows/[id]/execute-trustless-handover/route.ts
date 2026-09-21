@@ -9,6 +9,7 @@ import { escrowCompletedTemplate } from "@/lib/email-templates";
 import { checkAndAwardBadges } from "@/lib/badges";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { adjustTrustScore, TRUST_SCORE_DELTA } from "@/lib/trust-score";
+import { formatCurrency } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -123,7 +124,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       link: `/dashboard/escrows/${escrow.id}`,
     });
     emitToUser(user.id, "escrow_completed", { escrowId: escrow.id });
-    const { subject, html } = escrowCompletedTemplate(user.name ?? "there", escrow.listing.title, escrow.id);
+    const { subject, html } = escrowCompletedTemplate(user.name ?? "there", escrow.listing.title, escrow.id, formatCurrency(Number(escrow.amount)));
     await sendEmail({ to: user.email, subject, html, slug: "escrow_completed" });
   }
 

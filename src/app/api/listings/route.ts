@@ -12,6 +12,8 @@ import { platformRequiresToken } from "@/lib/ownership-platforms";
 import { requiresPhoneVerification, phoneVerificationRequiredResponse } from "@/lib/phone-gate";
 import type { Prisma } from "@prisma/client";
 import { emitToAdmins } from "@/lib/socket";
+import { sendEmail } from "@/lib/email";
+import { listingSubmittedTemplate } from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
@@ -224,6 +226,19 @@ export async function POST(req: Request) {
   if (!moderation.blocked) {
     // Notify online admins that a new listing is awaiting review.
     emitToAdmins("admin_queue_update", { type: "new_listing", listingId: listing.id });
+
+    // Email the seller confirming their listing is in the review queue.
+    if (user.email) {
+      const submittedAt = new Date().toLocaleDateString("en-US", { dateStyle: "long" });
+      const tpl = listingSubmittedTemplate(
+        user.name ?? user.email,
+        listing.title,
+        listing.id,
+        listing.platform,
+        submittedAt,
+      );
+      sendEmail({ to: user.email, subject: tpl.subject, html: tpl.html }).catch(() => null);
+    }
 
     prisma.activityEvent.create({
       data: {

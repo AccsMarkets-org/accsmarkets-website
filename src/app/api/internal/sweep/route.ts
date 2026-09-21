@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
 import { createHmac } from "crypto";
 import { logger } from "@/lib/logger";
+import { sendEmail } from "@/lib/email";
+import { subscriptionRenewalReminderTemplate } from "@/lib/email-templates";
 
 const SECRET = process.env.INTERNAL_SWEEP_SECRET;
 
@@ -44,6 +46,52 @@ export async function POST(req: Request) {
   }
 
   try {
+
+  // 0. Clear expired listing promotions (featured / pinned boosts).
+  await runStep("promotionsExpired", async () => {
+    const expiredFeatured = await prisma.listing.findMany({
+      where: { isFeatured: true, featuredUntil: { lt: now } },
+      select: { id: true, userId: true },
+    });
+    const expiredPinned = await prisma.listing.findMany({
+      where: { isPinned: true, pinnedUntil: { lt: now } },
+      select: { id: true, userId: true },
+    });
+
+    let promotionsCleared = 0;
+
+    if (expiredFeatured.length > 0) {
+      await prisma.listing.updateMany({
+        where: { isFeatured: true, featuredUntil: { lt: now } },
+        data: { isFeatured: false, isPremiumFeatured: false, featuredUntil: null },
+      });
+      promotionsCleared += expiredFeatured.length;
+    }
+
+    if (expiredPinned.length > 0) {
+      await prisma.listing.updateMany({
+        where: { isPinned: true, pinnedUntil: { lt: now } },
+        data: { isPinned: false, pinnedUntil: null },
+      });
+      promotionsCleared += expiredPinned.length;
+    }
+
+    const notifiedKeys = new Set<string>();
+    for (const listing of [...expiredFeatured, ...expiredPinned]) {
+      const key = `${listing.userId}:${listing.id}`;
+      if (notifiedKeys.has(key)) continue;
+      notifiedKeys.add(key);
+      await createNotification({
+        userId: listing.userId,
+        type: "SYSTEM",
+        title: "Listing boost expired",
+        body: "Your listing boost has expired. Boost again from your dashboard.",
+        link: "/dashboard/listings",
+      });
+    }
+
+    results.promotionsExpired = promotionsCleared;
+  });
 
   // 1. Expire stale PENDING offers whose expiresAt has passed.
   await runStep("offersExpired", async () => {
@@ -315,7 +363,71 @@ export async function POST(req: Request) {
     results.disputeEvidenceDeadlinesFlagged = flagged;
   });
 
-  // 8. Revert expired paid subscriptions to Free. Billing is prepaid/
+  // 8. Subscription renewal reminders: notify users whose paid plan expires
+  //    within the next 3 days so they can renew before losing benefits.
+  //    Deduplicated via a SYSTEM notification check — same pattern as the
+  //    overdue-escrow-transfer flagging above.
+  await runStep("renewalReminders", async () => {
+    const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const freePlan = await prisma.subscriptionPlan.findUnique({ where: { name: "FREE" } });
+    const upcomingExpiryUsers = await prisma.user.findMany({
+      where: {
+        subscriptionExpiresAt: { gte: now, lte: in3Days },
+        subscriptionPlanId: freePlan ? { not: freePlan.id } : { not: null },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        subscriptionPlan: { select: { name: true } },
+        subscriptionExpiresAt: true,
+      },
+    });
+
+    let remindersSent = 0;
+    for (const u of upcomingExpiryUsers) {
+      // Dedup: skip if a renewal-reminder notification was already sent in the last 24h.
+      const recentReminder = await prisma.notification.findFirst({
+        where: {
+          userId: u.id,
+          type: "SYSTEM",
+          link: "/dashboard/settings/subscription",
+          createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+          title: { contains: "subscription expires" },
+        },
+      });
+      if (recentReminder) continue;
+
+      const planName = u.subscriptionPlan?.name ?? "paid";
+      const expiresAt = u.subscriptionExpiresAt!;
+      const daysLeft = Math.max(1, Math.ceil((expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+
+      await createNotification({
+        userId: u.id,
+        type: "SYSTEM",
+        title: `Your ${planName} subscription expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+        body: `Your ${planName} subscription expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}. Renew now to keep your benefits.`,
+        link: "/dashboard/settings/subscription",
+      });
+
+      if (u.email) {
+        const renewalDate = expiresAt.toLocaleDateString("en-US", { dateStyle: "long" });
+        const tpl = subscriptionRenewalReminderTemplate(
+          u.name ?? u.email,
+          planName,
+          renewalDate,
+          "",
+          "",
+        );
+        sendEmail({ to: u.email, subject: tpl.subject, html: tpl.html }).catch(() => null);
+      }
+
+      remindersSent++;
+    }
+    results.renewalReminders = remindersSent;
+  });
+
+  // 9. Revert expired paid subscriptions to Free. Billing is prepaid/
   //    non-recurring (a purchase buys a flat 30-day period, nothing
   //    auto-charges again) — before this step, NOTHING anywhere reverted a
   //    user once subscriptionExpiresAt passed, so paid-plan benefits (higher

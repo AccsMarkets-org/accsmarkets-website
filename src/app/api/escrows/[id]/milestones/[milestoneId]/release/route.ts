@@ -127,7 +127,7 @@ export async function POST(
         link: `/dashboard/escrows/${escrow.id}`,
       });
       emitToUser(user.id, "escrow_completed", { escrowId: escrow.id });
-      const { subject, html } = escrowCompletedTemplate(user.name ?? "there", escrow.listing?.title ?? "listing", escrow.id);
+      const { subject, html } = escrowCompletedTemplate(user.name ?? "there", escrow.listing?.title ?? "listing", escrow.id, formatCurrency(Number(escrow.amount)));
       sendEmail({ to: user.email, subject, html, slug: "escrow_completed" }).catch(() => null);
     }
     const activityPayload = { escrowId: escrow.id, amount: String(escrow.amount) };

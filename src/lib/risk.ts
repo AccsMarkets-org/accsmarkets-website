@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { RiskSeverity } from "@prisma/client";
+import { sendEmail } from "@/lib/email";
+import { adminHighRiskAlertTemplate } from "@/lib/email-templates";
 
 interface RiskFactor {
   key: string;
@@ -122,7 +124,7 @@ export async function upsertRiskScore(userId: string): Promise<void> {
       update: { score, severity, factors: factors as object[], computedAt: new Date(), dismissedAt: null },
     });
     if (severity === "HIGH" || severity === "CRITICAL") {
-      await prisma.securityFlag.create({
+      const flag = await prisma.securityFlag.create({
         data: {
           userId,
           source: "risk_engine",
@@ -130,6 +132,19 @@ export async function upsertRiskScore(userId: string): Promise<void> {
           reason: `Risk score ${score} (${severity}): ${factors.map((f) => f.label).join("; ")}`,
         },
       });
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (adminEmail) {
+        const { subject, html } = adminHighRiskAlertTemplate(
+          userId,
+          flag.id,
+          factors[0]?.label ?? severity,
+          String(score),
+          "",
+          new Date().toLocaleDateString("en-US", { dateStyle: "long" }),
+          "",
+        );
+        sendEmail({ to: adminEmail, subject, html }).catch(() => null);
+      }
     }
   } catch (err) {
     logger.error("upsertRiskScore failed", { userId, err });

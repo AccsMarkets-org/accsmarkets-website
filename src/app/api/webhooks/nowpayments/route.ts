@@ -107,6 +107,9 @@ export async function POST(req: Request) {
       const { subject, html } = depositConfirmedTemplate(
         result.user.name ?? "there",
         formatCurrency(result.amountUsd),
+        formatCurrency(Number(result.user.walletBalance) + result.amountUsd),
+        "Crypto",
+        result.transaction.id,
       );
       await sendEmail({ to: result.user.email, subject, html, slug: "deposit_confirmed" });
     }

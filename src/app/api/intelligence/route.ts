@@ -8,6 +8,7 @@ import {
   suggestListingPrice,
   getMarketTrends,
 } from "@/lib/intelligence";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,11 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { allowed: getAllowed } = await checkRateLimit(`ai-intelligence:${session.user.id}`, 20, 3600);
+  if (!getAllowed) {
+    return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -56,6 +62,11 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { allowed: postAllowed } = await checkRateLimit(`ai-intelligence:${session.user.id}`, 20, 3600);
+  if (!postAllowed) {
+    return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
   }
 
   let body: Record<string, unknown>;

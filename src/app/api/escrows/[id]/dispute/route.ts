@@ -6,6 +6,8 @@ import { assertTransition, EscrowTransitionError } from "@/lib/escrow-state-mach
 import { createNotification } from "@/lib/notifications";
 import { emitToUser, emitToAdmins } from "@/lib/socket";
 import { z } from "zod";
+import { sendEmail } from "@/lib/email";
+import { disputeOpenedTemplate } from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
@@ -68,6 +70,22 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   });
   emitToUser(counterpartyId, "dispute_opened", { escrowId: escrow.id, disputeId: dispute.id });
   emitToAdmins("admin_queue_update", { type: "new_dispute", escrowId: escrow.id });
+
+  const [buyerUser, sellerUser] = await Promise.all([
+    prisma.user.findUnique({ where: { id: escrow.buyerId }, select: { email: true, name: true } }),
+    prisma.user.findUnique({ where: { id: escrow.sellerId }, select: { email: true, name: true } }),
+  ]);
+  for (const participant of [buyerUser, sellerUser]) {
+    if (!participant?.email) continue;
+    const { subject, html } = disputeOpenedTemplate(
+      participant.name ?? "there",
+      dispute.id,
+      escrow.id,
+      parsed.data.reason,
+      "",
+    );
+    sendEmail({ to: participant.email, subject, html }).catch(() => null);
+  }
 
   return NextResponse.json({ dispute }, { status: 201 });
 }

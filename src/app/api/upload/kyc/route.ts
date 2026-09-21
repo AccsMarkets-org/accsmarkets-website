@@ -2,6 +2,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { uploadBuffer } from "@/lib/cloudinary";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,11 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { allowed } = await checkRateLimit(`kyc-upload:${session.user.id}`, 5, 3600);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many upload attempts. Try again later." }, { status: 429 });
   }
 
   const formData = await req.formData().catch(() => null);

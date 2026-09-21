@@ -138,6 +138,9 @@ export async function PUT(req: Request, { params }: { params: { orderId: string 
   const { subject, html } = depositConfirmedTemplate(
     result.user.name ?? "there",
     formatCurrency(result.creditAmount),
+    formatCurrency(Number(result.user.walletBalance) + result.creditAmount),
+    "Bank Transfer",
+    order.id,
   );
   await sendEmail({ to: result.user.email, subject, html, slug: "deposit_confirmed" });
 

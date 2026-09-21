@@ -14,7 +14,7 @@ import { submitToIndexNow } from "@/lib/indexnow";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SECRET = process.env.AUTOSEO_WEBHOOK_SECRET || "aseo_wh_f3b7da2bad5aa7771da7dfd7c57fbce6";
+const SECRET = process.env.AUTOSEO_WEBHOOK_SECRET;
 const BASE_URL = (process.env.NEXTAUTH_URL ?? "https://accsmarkets.org").replace(/\/$/, "");
 
 // ── New mapping/storage table (created lazily, once per process) ──────────────
@@ -160,6 +160,8 @@ function stripTags(html: string): string {
 
 // ── Route ─────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  if (!SECRET) return NextResponse.json({ error: "Webhook not configured" }, { status: 401 });
+
   // Read the RAW body first — needed for HMAC verification (must not re-serialize).
   const rawBody = await req.text();
 

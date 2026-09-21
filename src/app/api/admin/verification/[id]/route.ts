@@ -79,7 +79,7 @@ export async function PATCH(
       link: "/dashboard/settings/verification",
     });
     if (submissionUser?.email) {
-      const tpl = kycRejectedTemplate(submissionUser.name ?? "there", reason);
+      const tpl = kycRejectedTemplate(submissionUser.name ?? "there", reason, params.id);
       sendEmail({ to: submissionUser.email, subject: tpl.subject, html: tpl.html }).catch(() => null);
     }
     await auditLog(prisma, session.user.id, "kyc.reject", "KycSubmission", params.id, { userId: submission.userId, reason }).catch(() => null);

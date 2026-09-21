@@ -6,6 +6,8 @@ import { withdrawSchema } from "@/lib/validation/wallet";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createNotification } from "@/lib/notifications";
 import { formatCurrency } from "@/lib/utils";
+import { sendEmail } from "@/lib/email";
+import { withdrawalRequestedTemplate } from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +76,20 @@ export async function POST(req: Request) {
     body: `Your request for ${formatCurrency(amountUsd)} is pending admin approval.`,
     link: "/dashboard/wallet",
   });
+
+  const destinationMasked = metadata.method === "crypto"
+    ? `...${metadata.address.slice(-8)}`
+    : `...${metadata.bankAccountNumber.slice(-4)}`;
+  if (user.email) {
+    const { subject, html } = withdrawalRequestedTemplate(
+      user.name ?? "there",
+      formatCurrency(amountUsd),
+      transaction.id,
+      destinationMasked,
+      new Date().toLocaleDateString("en-US", { dateStyle: "long" }),
+    );
+    sendEmail({ to: user.email, subject, html }).catch(() => null);
+  }
 
   return NextResponse.json({ success: true, transactionId: transaction.id });
 }

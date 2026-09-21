@@ -121,7 +121,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     link: `/dashboard/messages/${offer.sellerId}`,
   });
   if (buyer) {
-    const { subject, html } = offerAcceptedTemplate(buyer.name ?? "there", offer.listing.title);
+    const { subject, html } = offerAcceptedTemplate(
+      buyer.name ?? "there",
+      offer.listing.title,
+      formatCurrency(Number(offer.amount)),
+      seller?.name ?? seller?.username ?? "The seller",
+    );
     await sendEmail({ to: buyer.email, subject, html }).catch(() => null);
   }
 

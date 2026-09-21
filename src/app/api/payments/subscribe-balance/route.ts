@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Decimal } from "@prisma/client/runtime/library";
+import { sendEmail } from "@/lib/email";
+import { subscriptionActivatedTemplate } from "@/lib/email-templates";
+import { createNotification } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +30,7 @@ export async function POST(req: Request) {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { walletBalance: true, subscriptionPlanId: true },
+    select: { walletBalance: true, subscriptionPlanId: true, email: true, name: true },
   });
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -83,6 +86,25 @@ export async function POST(req: Request) {
       { error: "Insufficient balance", balance, price },
       { status: 400 },
     );
+  }
+
+  await createNotification({
+    userId: session.user.id,
+    type: "SYSTEM",
+    title: "Subscription activated",
+    body: `Your subscription to ${plan.name} is now active.`,
+    link: "/dashboard/settings/subscription",
+  });
+
+  if (user.email) {
+    const { subject, html } = subscriptionActivatedTemplate(
+      user.name ?? "there",
+      plan.name,
+      expiresAt.toLocaleDateString("en-US", { dateStyle: "long" }),
+      `$${Number(plan.priceMonthly).toFixed(2)}`,
+      "Monthly",
+    );
+    sendEmail({ to: user.email, subject, html }).catch(() => null);
   }
 
   return NextResponse.json({ success: true, plan: plan.name, expiresAt });

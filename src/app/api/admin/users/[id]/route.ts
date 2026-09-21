@@ -226,8 +226,12 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         link: "/dashboard/settings/subscription",
       });
       if (user.email) {
-        const planName = user.subscriptionPlanId ? "your current plan" : "Pro";
-        const tpl = subscriptionActivatedTemplate(user.name ?? "there", planName, newExpiry.toLocaleDateString());
+        const activePlan = user.subscriptionPlanId
+          ? await prisma.subscriptionPlan.findUnique({ where: { id: user.subscriptionPlanId } })
+          : null;
+        const planName = activePlan?.name ?? "Pro";
+        const planPrice = activePlan?.priceMonthly ? `$${Number(activePlan.priceMonthly).toFixed(2)}` : "";
+        const tpl = subscriptionActivatedTemplate(user.name ?? "there", planName, newExpiry.toLocaleDateString(), planPrice, "Monthly");
         sendEmail({ to: user.email, subject: tpl.subject, html: tpl.html }).catch(() => null);
       }
       return NextResponse.json({ ok: true });
@@ -296,7 +300,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         link: "/dashboard/settings/subscription",
       });
       if (user.email) {
-        const tpl = subscriptionActivatedTemplate(user.name ?? "there", plan.name, expiry.toLocaleDateString());
+        const tpl = subscriptionActivatedTemplate(user.name ?? "there", plan.name, expiry.toLocaleDateString(), `$${Number(plan.priceMonthly).toFixed(2)}`, "Monthly");
         sendEmail({ to: user.email, subject: tpl.subject, html: tpl.html }).catch(() => null);
       }
       return NextResponse.json({ ok: true });

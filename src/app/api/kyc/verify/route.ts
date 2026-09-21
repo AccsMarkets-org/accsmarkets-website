@@ -5,6 +5,9 @@ import { prisma } from "@/lib/db";
 import { emitToAdmins } from "@/lib/socket";
 import { z } from "zod";
 import { encryptKycField } from "@/lib/kyc-encrypt";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { sendEmail } from "@/lib/email";
+import { kycSubmittedTemplate } from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +20,11 @@ const schema = z.object({
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { allowed } = await checkRateLimit(`kyc-verify:${session.user.id}`, 3, 86400);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many verification attempts. Try again tomorrow." }, { status: 429 });
+  }
 
   const user = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
   if (user.kycLevel === "NONE" || user.kycLevel === "EMAIL")
@@ -46,6 +54,15 @@ export async function POST(req: Request) {
 
   // Notify online admins of the new KYC submission in the review queue.
   emitToAdmins("admin_queue_update", { type: "new_kyc" });
+
+  if (user.email) {
+    const { subject, html } = kycSubmittedTemplate(
+      user.name ?? "there",
+      submission.id,
+      new Date().toLocaleDateString("en-US", { dateStyle: "long" }),
+    );
+    sendEmail({ to: user.email, subject, html }).catch(() => null);
+  }
 
   return NextResponse.json({ id: submission.id, status });
 }

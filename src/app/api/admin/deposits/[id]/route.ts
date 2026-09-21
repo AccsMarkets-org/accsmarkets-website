@@ -128,7 +128,13 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     link: "/dashboard/wallet",
   });
   emitToUser(result.user.id, "deposit_confirmed", { amountUsd: result.amountUsd });
-  const { subject, html } = depositConfirmedTemplate(result.user.name ?? "there", formatCurrency(result.amountUsd));
+  const { subject, html } = depositConfirmedTemplate(
+    result.user.name ?? "there",
+    formatCurrency(result.amountUsd),
+    formatCurrency(Number(result.user.walletBalance) + result.amountUsd),
+    "Crypto",
+    params.id,
+  );
   await sendEmail({ to: result.user.email, subject, html, slug: "deposit_confirmed" });
 
   return NextResponse.json({ success: true });
