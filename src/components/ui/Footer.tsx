@@ -50,6 +50,7 @@ const FOOTER_COLUMNS = [
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Cookie Policy", href: "/cookies" },
       { label: "AML Policy", href: "/aml" },
+      { label: "KYC Policy", href: "/kyc-policy" },
       { label: "Sitemap", href: "/sitemap" },
       { label: "Status", href: "/status" },
     ],

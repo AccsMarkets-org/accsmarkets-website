@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 
 const STEPS = ["Email", "Verify Identity", "ID Verified"] as const;
 const RESEND_COOLDOWN = 60;
+const CONSENT_KEY = "kyc_consent_v1";
 
 type KycLevel = "NONE" | "EMAIL" | "PHONE" | "ID_VERIFIED";
 type SubStep = "email-entry" | "email-code" | "id-upload" | "id-pending";
@@ -17,6 +18,123 @@ function stepIndex(level: KycLevel): number {
   if (level === "NONE" || level === "EMAIL") return 0;
   if (level === "PHONE") return 1;
   return 2;
+}
+
+// ── KYC Consent Modal ──────────────────────────────────────────────────────────
+
+function KycConsentModal({ onAccept }: { onAccept: () => void }) {
+  const [checked, setChecked] = useState(false);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-lg rounded-2xl bg-bg border border-surface-border shadow-2xl flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-3 border-b border-surface-border px-6 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/10">
+            <svg className="h-5 w-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="font-bold text-foreground">Identity Verification Consent</h2>
+            <p className="text-xs text-muted">Please read before continuing</p>
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="overflow-y-auto max-h-[55vh] px-6 py-5 flex flex-col gap-4 text-sm text-muted">
+          <p className="text-foreground font-medium">
+            To unlock full marketplace access, AccsMarkets requires identity verification (KYC). Before you proceed, please read and agree to the following:
+          </p>
+
+          <Section icon="📋" title="What we collect">
+            <ul className="list-disc pl-4 space-y-1">
+              <li>A photo of the <strong>front of your government-issued ID</strong> (passport, national ID, or driver's licence)</li>
+              <li>A photo of the <strong>back of your ID</strong> (where applicable)</li>
+              <li>A <strong>selfie</strong> holding your ID next to your face</li>
+            </ul>
+          </Section>
+
+          <Section icon="🔒" title="How it is stored">
+            <p>
+              All document images are encrypted at rest using <strong>AES-256-GCM</strong> before being saved to our database. Raw Cloudinary URLs are never stored in plaintext. Only authorised AccsMarkets staff can decrypt and review your submission.
+            </p>
+          </Section>
+
+          <Section icon="👁️" title="Who reviews it">
+            <p>
+              Your submission is reviewed by AccsMarkets compliance staff within <strong>24 hours</strong>. We do not share your documents with third parties except where required by law.
+            </p>
+          </Section>
+
+          <Section icon="🗓️" title="Retention">
+            <p>
+              We retain KYC documents for a minimum of <strong>5 years</strong> as required by our AML/CFT obligations. You may request deletion after your account is closed, subject to legal retention requirements.
+            </p>
+          </Section>
+
+          <Section icon="⚖️" title="Legal basis">
+            <p>
+              Processing is carried out under our legitimate interest in preventing fraud and complying with applicable Anti-Money Laundering laws. By proceeding you acknowledge our{" "}
+              <a href="/kyc-policy" target="_blank" rel="noopener noreferrer" className="text-brand-500 underline hover:text-brand-400">
+                KYC Policy
+              </a>,{" "}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-500 underline hover:text-brand-400">
+                Privacy Policy
+              </a>{" "}
+              and{" "}
+              <a href="/aml" target="_blank" rel="noopener noreferrer" className="text-brand-500 underline hover:text-brand-400">
+                AML Policy
+              </a>.
+            </p>
+          </Section>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-surface-border px-6 py-4 flex flex-col gap-3">
+          <label className="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(e) => setChecked(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-surface-border accent-brand-500 cursor-pointer"
+            />
+            <span className="text-sm text-foreground">
+              I have read and agree to the KYC data collection terms above. I consent to AccsMarkets processing my identity documents as described.
+            </span>
+          </label>
+
+          <div className="flex gap-2 justify-end">
+            <a
+              href="/dashboard/settings"
+              className="inline-flex items-center justify-center rounded-lg border border-surface-border px-4 py-2 text-sm font-medium text-muted hover:text-foreground transition"
+            >
+              Cancel
+            </a>
+            <button
+              type="button"
+              disabled={!checked}
+              onClick={onAccept}
+              className="inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              I agree — Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Section({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-surface-border bg-surface/60 p-3.5 flex flex-col gap-1.5">
+      <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+        <span>{icon}</span> {title}
+      </p>
+      <div className="text-muted">{children}</div>
+    </div>
+  );
 }
 
 // ── File upload widget ─────────────────────────────────────────────────────────
@@ -83,7 +201,6 @@ function UploadField({ label, value, onChange }: UploadFieldProps) {
       />
       {value ? (
         <div className="flex items-center gap-3 rounded-xl border border-success/40 bg-success/5 px-4 py-3">
-          {/* Preview thumbnail */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value} alt="preview" className="h-14 w-14 rounded-lg object-cover border border-surface-border shrink-0" />
           <div className="min-w-0 flex-1">
@@ -146,7 +263,6 @@ export default function VerificationPage() {
   const router = useRouter();
   const [kycLevel, setKycLevel] = useState<KycLevel>("EMAIL");
   const [subStep, setSubStep] = useState<SubStep>("email-entry");
-  const [phone, setPhone] = useState("");
   const [userEmail, setUserEmail] = useState<string>("");
   const [code, setCode] = useState("");
   const [idFrontUrl, setIdFrontUrl] = useState("");
@@ -156,28 +272,42 @@ export default function VerificationPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [showConsent, setShowConsent] = useState(false);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetch("/api/user/me")
       .then((r) => r.json())
       .then((d) => {
-        // API returns { user: {...} } wrapper
         const u = d.user ?? d;
-        setKycLevel(u.kycLevel ?? "EMAIL");
+        const level: KycLevel = u.kycLevel ?? "EMAIL";
+        setKycLevel(level);
         setUserEmail(u.email ?? "");
-        if (u.kycLevel === "PHONE") setSubStep("id-upload");
-        else if (u.kycLevel === "ID_VERIFIED") setSubStep("id-pending");
+        if (level === "PHONE") setSubStep("id-upload");
+        else if (level === "ID_VERIFIED") setSubStep("id-pending");
         else setSubStep("email-entry");
+
+        // Show consent modal for users who haven't finished KYC yet
+        if (level !== "ID_VERIFIED") {
+          const consented = (() => { try { return localStorage.getItem(CONSENT_KEY) === "1"; } catch { return false; } })();
+          if (!consented) setShowConsent(true);
+        }
       })
       .catch(() => {})
       .finally(() => setFetching(false));
+
     fetch("/api/kyc/status")
       .then((r) => r.json())
       .then((d) => { if (d.status) setKycStatus(d.status); })
       .catch(() => {});
+
     return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
   }, []);
+
+  function handleConsent() {
+    try { localStorage.setItem(CONSENT_KEY, "1"); } catch {}
+    setShowConsent(false);
+  }
 
   function startCooldown() {
     setResendCooldown(RESEND_COOLDOWN);
@@ -258,141 +388,133 @@ export default function VerificationPage() {
   if (fetching) return null;
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-6">
-      <h1 className="text-2xl font-bold">Identity verification</h1>
+    <>
+      {showConsent && <KycConsentModal onAccept={handleConsent} />}
 
-      {/* Stepper */}
-      <div className="flex items-center gap-0">
-        {STEPS.map((label, i) => (
-          <div key={label} className="flex flex-1 items-center">
-            <div className="flex flex-col items-center gap-1">
-              <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-                i < currentStep ? "bg-brand-500 text-white" :
-                i === currentStep ? "border-2 border-brand-500 text-brand-600" :
-                "border-2 border-surface-border text-muted"
-              }`}>
-                {i < currentStep ? "✓" : i + 1}
+      <div className="mx-auto flex max-w-xl flex-col gap-6">
+        <h1 className="text-2xl font-bold">Identity verification</h1>
+
+        {/* Stepper */}
+        <div className="flex items-center gap-0">
+          {STEPS.map((label, i) => (
+            <div key={label} className="flex flex-1 items-center">
+              <div className="flex flex-col items-center gap-1">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+                  i < currentStep ? "bg-brand-500 text-white" :
+                  i === currentStep ? "border-2 border-brand-500 text-brand-600" :
+                  "border-2 border-surface-border text-muted"
+                }`}>
+                  {i < currentStep ? "✓" : i + 1}
+                </div>
+                <span className="text-xs text-muted">{label}</span>
               </div>
-              <span className="text-xs text-muted">{label}</span>
+              {i < STEPS.length - 1 && (
+                <div className={`mx-2 h-0.5 flex-1 ${i < currentStep ? "bg-brand-500" : "bg-surface-border"}`} />
+              )}
             </div>
-            {i < STEPS.length - 1 && (
-              <div className={`mx-2 h-0.5 flex-1 ${i < currentStep ? "bg-brand-500" : "bg-surface-border"}`} />
+          ))}
+        </div>
+
+        {/* Email verification */}
+        {kycLevel !== "PHONE" && kycLevel !== "ID_VERIFIED" && (
+          <Card>
+            <h2 className="mb-3 font-semibold">Verify your email address</h2>
+            {subStep === "email-entry" && (
+              <div className="flex flex-col gap-3">
+                <div className="rounded-xl border border-surface-border bg-surface px-4 py-3 text-sm">
+                  <p className="font-medium text-foreground">We will send a code to:</p>
+                  <p className="mt-0.5 font-semibold text-brand-600">{userEmail || "your registered email"}</p>
+                </div>
+                <Button size="sm" isLoading={loading} onClick={sendCode} className="self-start">
+                  Send verification code
+                </Button>
+              </div>
             )}
-          </div>
-        ))}
-      </div>
-
-      {/* Email verification (step 2) */}
-      {kycLevel !== "PHONE" && kycLevel !== "ID_VERIFIED" && (
-        <Card>
-          <h2 className="mb-3 font-semibold">Verify your email address</h2>
-          {subStep === "email-entry" && (
-            <div className="flex flex-col gap-3">
-              <div className="rounded-xl border border-surface-border bg-surface px-4 py-3 text-sm">
-                <p className="font-medium text-foreground">We will send a code to:</p>
-                <p className="mt-0.5 font-semibold text-brand-600">{userEmail || "your registered email"}</p>
+            {subStep === "email-code" && (
+              <div className="flex flex-col gap-3">
+                <div className="rounded-xl border border-brand-200 bg-brand-500/10 px-4 py-3 text-sm">
+                  <p className="font-medium text-brand-700">Check your inbox</p>
+                  <p className="mt-0.5 text-brand-600">
+                    A 6-digit code was sent to{" "}
+                    <span className="font-semibold">{userEmail || "your email address"}</span>.
+                    It expires in 10 minutes.
+                  </p>
+                </div>
+                <Input label="Verification code" type="text" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} placeholder="123456" />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setSubStep("email-entry")}>Back</Button>
+                  <Button size="sm" isLoading={loading} disabled={code.length < 6} onClick={confirmCode}>Confirm</Button>
+                  <button
+                    type="button"
+                    onClick={resendCode}
+                    disabled={resendCooldown > 0 || loading}
+                    className="ml-auto text-xs text-brand-500 hover:underline disabled:cursor-not-allowed disabled:text-muted"
+                  >
+                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+                  </button>
+                </div>
               </div>
-              <Button size="sm" isLoading={loading} onClick={sendCode} className="self-start">
-                Send verification code
-              </Button>
-            </div>
-          )}
-          {subStep === "email-code" && (
-            <div className="flex flex-col gap-3">
-              <div className="rounded-xl border border-brand-200 bg-brand-500/10 px-4 py-3 text-sm">
-                <p className="font-medium text-brand-700">Check your inbox</p>
-                <p className="mt-0.5 text-brand-600">
-                  A 6-digit code was sent to{" "}
-                  <span className="font-semibold">{userEmail || "your email address"}</span>.
-                  It expires in 10 minutes.
+            )}
+          </Card>
+        )}
+
+        {/* ID upload */}
+        {kycLevel === "PHONE" && (
+          <Card>
+            <h2 className="mb-1 font-semibold">ID verification</h2>
+
+            {(kycStatus === "PENDING" || kycStatus === "UNDER_REVIEW" || subStep === "id-pending") && (
+              <div className="rounded-xl bg-brand-500/10 p-4 text-sm">
+                <p className="font-medium text-brand-700">Submission under review</p>
+                <p className="mt-1 text-muted">Our team typically reviews submissions within 24 hours.</p>
+              </div>
+            )}
+
+            {kycStatus === "REJECTED" && (
+              <div className="mb-3 rounded-xl bg-danger/5 p-3 text-sm text-danger">
+                Your submission was rejected. Please upload updated images and resubmit.
+              </div>
+            )}
+
+            {(!kycStatus || kycStatus === "REJECTED") && subStep !== "id-pending" && (
+              <div className="flex flex-col gap-5 mt-3">
+                <p className="text-sm text-muted -mt-1">
+                  Upload clear photos of your government-issued ID and a selfie. Accepted: JPG, PNG · Max 10 MB each.
                 </p>
-              </div>
-              <Input label="Verification code" type="text" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} placeholder="123456" />
-              <div className="flex flex-wrap items-center gap-2">
-                <Button size="sm" variant="outline" onClick={() => setSubStep("email-entry")}>Back</Button>
-                <Button size="sm" isLoading={loading} disabled={code.length < 6} onClick={confirmCode}>Confirm</Button>
-                <button
-                  type="button"
-                  onClick={resendCode}
-                  disabled={resendCooldown > 0 || loading}
-                  className="ml-auto text-xs text-brand-500 hover:underline disabled:cursor-not-allowed disabled:text-muted"
+
+                <UploadField label="ID front (front of your ID card / passport)" value={idFrontUrl} onChange={setIdFrontUrl} />
+                <UploadField label="ID back (back of your ID card)" value={idBackUrl} onChange={setIdBackUrl} />
+                <UploadField label="Selfie (hold your ID next to your face)" value={selfieUrl} onChange={setSelfieUrl} />
+
+                <div className="flex items-center gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-2.5 text-xs text-amber-700 dark:text-amber-400">
+                  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                  Make sure all images are clear and legible. Blurry or cropped images may be rejected.
+                </div>
+
+                <Button
+                  size="sm"
+                  isLoading={loading}
+                  disabled={!idFrontUrl || !idBackUrl || !selfieUrl}
+                  onClick={submitKyc}
+                  className="self-start"
                 >
-                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
-                </button>
+                  Submit for review →
+                </Button>
               </div>
-            </div>
-          )}
-        </Card>
-      )}
+            )}
+          </Card>
+        )}
 
-      {/* ID upload */}
-      {kycLevel === "PHONE" && (
-        <Card>
-          <h2 className="mb-1 font-semibold">ID verification</h2>
-
-          {(kycStatus === "PENDING" || kycStatus === "UNDER_REVIEW" || subStep === "id-pending") && (
-            <div className="rounded-xl bg-brand-500/10 p-4 text-sm">
-              <p className="font-medium text-brand-700">Submission under review</p>
-              <p className="mt-1 text-muted">Our team typically reviews submissions within 24 hours.</p>
-            </div>
-          )}
-
-          {kycStatus === "REJECTED" && (
-            <div className="mb-3 rounded-xl bg-danger/5 p-3 text-sm text-danger">
-              Your submission was rejected. Please upload updated images and resubmit.
-            </div>
-          )}
-
-          {(!kycStatus || kycStatus === "REJECTED") && subStep !== "id-pending" && (
-            <div className="flex flex-col gap-5 mt-3">
-              <p className="text-sm text-muted -mt-1">
-                Upload clear photos of your government-issued ID and a selfie. Accepted: JPG, PNG · Max 10 MB each.
-              </p>
-
-              <UploadField
-                label="ID front (front of your ID card / passport)"
-                value={idFrontUrl}
-                onChange={setIdFrontUrl}
-              />
-              <UploadField
-                label="ID back (back of your ID card)"
-                value={idBackUrl}
-                onChange={setIdBackUrl}
-              />
-              <UploadField
-                label="Selfie (hold your ID next to your face)"
-                value={selfieUrl}
-                onChange={setSelfieUrl}
-              />
-
-              <div className="flex items-center gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-2.5 text-xs text-amber-700 dark:text-amber-400">
-                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                Make sure all images are clear and legible. Blurry or cropped images may be rejected.
-              </div>
-
-              <Button
-                size="sm"
-                isLoading={loading}
-                disabled={!idFrontUrl || !idBackUrl || !selfieUrl}
-                onClick={submitKyc}
-                className="self-start"
-              >
-                Submit for review →
-              </Button>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {kycLevel === "ID_VERIFIED" && (
-        <Card className="bg-success/5">
-          <p className="font-semibold text-success flex items-center gap-2">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>
-            Fully verified
-          </p>
-          <p className="mt-1 text-sm text-muted">Your identity has been verified.</p>
-        </Card>
-      )}
-    </div>
+        {kycLevel === "ID_VERIFIED" && (
+          <Card className="bg-success/5">
+            <p className="font-semibold text-success flex items-center gap-2">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>
+              Fully verified
+            </p>
+            <p className="mt-1 text-sm text-muted">Your identity has been verified.</p>
+          </Card>
+        )}
+      </div>
+    </>
   );
 }

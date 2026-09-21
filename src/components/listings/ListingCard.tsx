@@ -19,6 +19,7 @@ export interface ListingCardData {
   id: string;
   title: string;
   platform: Platform;
+  status?: string | null;
   price: string | number | { toString(): string };
   followers: number | null;
   monetized: boolean;
@@ -156,8 +157,17 @@ export function ListingCard({
           </span>
         )}
 
+        {/* SOLD overlay */}
+        {listing.status === "SOLD" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
+            <span className="rotate-[-20deg] rounded-xl border-4 border-red-500 px-4 py-1.5 text-2xl font-black tracking-widest text-red-500 shadow-lg">
+              SOLD
+            </span>
+          </div>
+        )}
+
         {/* Watchlist heart */}
-        {showWatchlistHeart && (
+        {showWatchlistHeart && listing.status !== "SOLD" && (
           <div className="absolute right-2 top-2">
             <WatchlistHeart listingId={listing.id} saved={watchlisted ?? false} />
           </div>

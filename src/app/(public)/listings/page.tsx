@@ -83,7 +83,7 @@ export default async function BrowseListingsPage({
   if ("verifiedOnly" in filters && filters.verifiedOnly) andClauses.push({ seller: { kycLevel: { in: ["PHONE","ID_VERIFIED"] } } });
   if (q.trim().length > 0) andClauses.push({ OR: [{ title: { contains: q } }, { description: { contains: q } }] });
 
-  const where: Prisma.ListingWhereInput = { status: "ACTIVE", AND: andClauses };
+  const where: Prisma.ListingWhereInput = { status: { in: ["ACTIVE", "SOLD"] }, AND: andClauses };
   const orderBy: Prisma.ListingOrderByWithRelationInput =
     filters.sort === "price_asc" ? { price: "asc" }
     : filters.sort === "price_desc" ? { price: "desc" }

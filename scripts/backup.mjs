@@ -46,7 +46,7 @@ loadEnv();
 
 // ── Parse DATABASE_URL ────────────────────────────────────────────────────────
 function parseDbUrl(url) {
-  const m = url.match(/^mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/);
+  const m = url.match(/^mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/([^?]+)/);
   if (!m) throw new Error("Cannot parse DATABASE_URL: " + url);
   return { user: m[1], pass: m[2], host: m[3], port: m[4], db: m[5] };
 }
@@ -54,11 +54,13 @@ function parseDbUrl(url) {
 // ── mysqldump ─────────────────────────────────────────────────────────────────
 function runMysqldump(db) {
   return new Promise((resolve, reject) => {
-    const mysqldump = "C:\\xampp\\mysql\\bin\\mysqldump.exe";
+    const mysqldump = process.platform === "win32"
+      ? "C:\\xampp\\mysql\\bin\\mysqldump.exe"
+      : "mysqldump";
     const args = [
       `--host=${db.host}`, `--port=${db.port}`,
       `--user=${db.user}`, `--password=${db.pass}`,
-      "--single-transaction", "--quick", "--routines", "--triggers",
+      "--single-transaction", "--quick", "--routines", "--triggers", "--no-tablespaces",
       db.db,
     ];
     const chunks = [];

@@ -72,6 +72,7 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [markingSold, setMarkingSold] = useState(false);
+  const [relisting, setRelisting] = useState(false);
   const [promoteOpen, setPromoteOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { confirm, ConfirmDialog } = useConfirm();
@@ -145,6 +146,30 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setMarkingSold(false);
+    }
+  }
+
+  async function handleRelist() {
+    const ok = await confirm({
+      title: "Relist this listing?",
+      description: "The listing will be set back to Active and visible in the marketplace.",
+      confirmLabel: "Relist",
+      destructive: false,
+    });
+    if (!ok) return;
+    setRelisting(true);
+    try {
+      const res = await fetch(`/api/listings/${listing.id}/relist`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Failed to relist");
+      }
+      toast.success("Listing is active again");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setRelisting(false);
     }
   }
 
@@ -385,6 +410,18 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
                 className="border-success/40 text-success hover:bg-success/8"
               >
                 ✓ Mark Sold
+              </Button>
+            )}
+
+            {listing.status === "SOLD" && (
+              <Button
+                variant="outline"
+                size="sm"
+                isLoading={relisting}
+                onClick={handleRelist}
+                className="border-brand-300 text-brand-600 hover:bg-brand-500/8"
+              >
+                ↩ Relist
               </Button>
             )}
 

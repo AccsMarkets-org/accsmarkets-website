@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import { logger } from "@/lib/logger";
 import { getEmailQueue } from "@/lib/queue";
 import { prisma } from "@/lib/db";
+import { sendBrevoEmail, isBrevoConfigured } from "@/lib/brevo";
 
 let transporter: nodemailer.Transporter | null = null;
 
@@ -30,7 +31,8 @@ interface SendEmailInput {
 /**
  * Non-fatal by design: email delivery must never break the API response that triggered it.
  * When Redis/BullMQ is available, the job is enqueued and returns immediately (non-blocking).
- * Without Redis, retries once inline then swallows the error.
+ * Without Redis, tries Brevo HTTP API first (preferred — no SMTP port issues), then
+ * falls back to SMTP.
  */
 export async function sendEmail({ to, subject, html, slug }: SendEmailInput): Promise<void> {
   // If a slug is provided, check if an admin-customized DB override exists and use it.
@@ -55,10 +57,21 @@ export async function sendEmail({ to, subject, html, slug }: SendEmailInput): Pr
     return;
   }
 
-  // Synchronous fallback (no Redis)
+  // Prefer Brevo HTTP API (reliable from VPS — no SMTP port dependency)
+  if (isBrevoConfigured()) {
+    try {
+      await sendBrevoEmail({ to, subject: resolvedSubject, htmlContent: resolvedHtml });
+      return;
+    } catch (err) {
+      logger.warn("email.brevo_failed_fallback_smtp", { subject, to, err: String(err) });
+      // Fall through to SMTP
+    }
+  }
+
+  // SMTP fallback
   const client = getTransporter();
   if (!client) {
-    logger.warn("email.skipped", { reason: "smtp_not_configured", subject, to });
+    logger.warn("email.skipped", { reason: "no_transport_configured", subject, to });
     return;
   }
 
