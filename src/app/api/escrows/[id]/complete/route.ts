@@ -46,6 +46,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
     throw err;
   }
+  // The state machine also allows VERIFIED → COMPLETED, but only for the
+  // milestone-release path. A direct /complete requires the transfer to have
+  // started (the transaction below re-checks this) — say so here instead of
+  // falling through to a misleading "no longer completable" 409.
+  if (escrow.status !== "IN_TRANSFER") {
+    return NextResponse.json(
+      { error: "The transfer must be in progress before the escrow can be completed." },
+      { status: 400 },
+    );
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     // Re-check status inside the transaction to prevent double-release under concurrency.
@@ -130,10 +140,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           ? `Funds released for "${escrow.listing.title}". Payment is in your wallet.`
           : `"${escrow.listing.title}" is now yours. Trust score +5.`,
       link: `/dashboard/escrows/${escrow.id}`,
-    });
+    }).catch(() => null);
     emitToUser(user.id, "escrow_completed", { escrowId: escrow.id });
     const { subject, html } = escrowCompletedTemplate(user.name ?? "there", escrow.listing.title, escrow.id, formatCurrency(Number(escrow.amount)));
-    await sendEmail({ to: user.email, subject, html, slug: "escrow_completed" });
+    // Funds are already released — never let a mail failure surface as a 500.
+    await sendEmail({ to: user.email, subject, html, slug: "escrow_completed" }).catch(() => null);
   }
 
   // Award badges to the seller (non-fatal).

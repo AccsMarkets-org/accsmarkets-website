@@ -40,3 +40,6 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
   return NextResponse.json({ evidence }, { status: 201 });
 }
+
+// DisputeEvidenceForm submits with PUT; accept it as the same handler.
+export { POST as PUT };

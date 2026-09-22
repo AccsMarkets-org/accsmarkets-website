@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { uploadBuffer, uploadImage } from "@/lib/cloudinary";
+import { dataUriHead, matchesDeclaredMime, uploadBuffer, uploadImage } from "@/lib/cloudinary";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +34,9 @@ export async function POST(req: Request) {
       if (approxBytes > MAX_SIZE) {
         return NextResponse.json({ error: "File too large. Maximum 10 MB." }, { status: 400 });
       }
+      if (!matchesDeclaredMime(dataUriHead(dataUri), mime)) {
+        return NextResponse.json({ error: "File content does not match its type." }, { status: 400 });
+      }
       const url = await uploadImage(dataUri, "listings");
       return NextResponse.json({ url });
     }
@@ -50,6 +53,9 @@ export async function POST(req: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    if (!matchesDeclaredMime(buffer, file.type)) {
+      return NextResponse.json({ error: "File content does not match its type." }, { status: 400 });
+    }
     const url = await uploadBuffer(buffer, file.type, "listings");
     return NextResponse.json({ url });
   } catch (err) {

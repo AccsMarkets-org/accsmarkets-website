@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const { accountUrl, code } = body ?? {};
 
-  if (!accountUrl || !code || !CODE_RE.test(code)) {
+  if (typeof accountUrl !== "string" || typeof code !== "string" || !accountUrl || !code || !CODE_RE.test(code)) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 

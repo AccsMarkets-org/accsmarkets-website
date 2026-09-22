@@ -136,7 +136,8 @@ export async function POST(req: Request) {
       link: "/dashboard/offers",
     });
     const { subject, html } = offerReceivedTemplate(seller.name ?? "there", listing.title, formatCurrency(amount));
-    await sendEmail({ to: seller.email, subject, html });
+    // Offer is already saved — a mail/queue failure must not become a 500.
+    await sendEmail({ to: seller.email, subject, html }).catch(() => null);
   }
 
   return NextResponse.json({ offer }, { status: 201 });

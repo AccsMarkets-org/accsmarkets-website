@@ -257,7 +257,7 @@ export default async function SellerProfilePage({ params }: { params: { username
                   />
                 )}
                 <Link
-                  href={`/dashboard/messages?to=${seller.username}`}
+                  href={`/dashboard/messages/${seller.id}`}
                   className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition shadow-sm"
                 >
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

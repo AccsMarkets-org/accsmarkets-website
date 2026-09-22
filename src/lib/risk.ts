@@ -158,10 +158,21 @@ export async function upsertRiskScore(userId: string): Promise<ComputeRiskResult
   try {
     const result = await computeRiskScore(userId);
     const { score, severity, factors } = result;
+    // Only un-dismiss when the picture actually changed. This runs on every
+    // login/fingerprint post, so unconditionally nulling dismissedAt put a
+    // reviewed-and-dismissed user straight back in the admin queue each time.
+    const previous = await prisma.riskScore.findUnique({
+      where: { userId },
+      select: { score: true, severity: true },
+    });
+    const changed = !previous || previous.score !== score || previous.severity !== severity;
     await prisma.riskScore.upsert({
       where: { userId },
       create: { userId, score, severity, factors: factors as object[], computedAt: new Date() },
-      update: { score, severity, factors: factors as object[], computedAt: new Date(), dismissedAt: null },
+      update: {
+        score, severity, factors: factors as object[], computedAt: new Date(),
+        ...(changed ? { dismissedAt: null } : {}),
+      },
     });
     if (severity === "HIGH" || severity === "CRITICAL") {
       const open = await prisma.securityFlag.findFirst({

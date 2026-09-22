@@ -15,8 +15,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { planId } = await req.json();
-  if (!planId) {
+  const body = await req.json().catch(() => null);
+  const planId = body && typeof body === "object" ? (body as { planId?: unknown }).planId : undefined;
+  if (typeof planId !== "string" || !planId) {
     return NextResponse.json({ error: "planId is required" }, { status: 400 });
   }
 
@@ -63,6 +64,9 @@ export async function POST(req: Request) {
         walletBalance: { decrement: price },
         subscriptionPlanId: plan.id,
         subscriptionExpiresAt: expiresAt,
+        // A fresh purchase supersedes an earlier "don't renew" choice — otherwise
+        // the UI keeps saying "moving to Free on <date>" for the new period.
+        subscriptionCancelAtPeriodEnd: false,
       },
     });
     if (debited.count === 0) return null;

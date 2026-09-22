@@ -306,7 +306,8 @@ export async function detectSuspiciousActivity(userId: string): Promise<RiskAnal
 
   const score = riskScore?.score ?? 0;
   const severity = riskScore?.severity ?? "LOW";
-  const factors = (riskScore?.factors as Array<{ rule: string; detail?: string }>) ?? [];
+  // RiskScore.factors rows are written by src/lib/risk.ts as { key, label, weight, detail }.
+  const factors = (riskScore?.factors as Array<{ key?: string; label?: string; detail?: string }>) ?? [];
 
   const riskLevel = severity === "CRITICAL" ? "critical"
     : severity === "HIGH" ? "high"
@@ -314,7 +315,7 @@ export async function detectSuspiciousActivity(userId: string): Promise<RiskAnal
     : "low";
 
   const flags = [
-    ...factors.map((f) => f.rule + (f.detail ? `: ${f.detail}` : "")),
+    ...factors.map((f) => (f.label ?? f.key ?? "Risk factor") + (f.detail ? `: ${f.detail}` : "")),
     ...securityFlags.map((f) => f.reason),
   ].slice(0, 8);
 

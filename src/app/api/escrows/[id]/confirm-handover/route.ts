@@ -119,10 +119,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           ? `Funds released for "${escrow.listing.title}". Payment is in your wallet.`
           : `"${escrow.listing.title}" is now yours. Trust score +5.`,
       link: `/dashboard/escrows/${escrow.id}`,
-    });
+    }).catch(() => null);
     emitToUser(user.id, "escrow_completed", { escrowId: escrow.id });
     const { subject, html } = escrowCompletedTemplate(user.name ?? "there", escrow.listing.title, escrow.id, formatCurrency(Number(escrow.amount)));
-    await sendEmail({ to: user.email, subject, html, slug: "escrow_completed" });
+    // Funds are already released — never let a mail failure surface as a 500.
+    await sendEmail({ to: user.email, subject, html, slug: "escrow_completed" }).catch(() => null);
   }
 
   await checkAndAwardBadges(escrow.sellerId).catch(() => null);

@@ -307,7 +307,7 @@ export default function BankTransferConfirmationPage() {
           <p className="text-xs text-muted">Our support team can assist with this transfer.</p>
         </div>
         <Link
-          href={`/dashboard/messages?context=deposit_${order.referenceId}`}
+          href={`/dashboard/support/new?category=PAYMENT`}
           className="rounded-xl border border-brand-300 px-4 py-2 text-sm font-medium text-brand-600 hover:bg-brand-50 transition"
         >
           Chat with support

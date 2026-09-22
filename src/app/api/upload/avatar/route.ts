@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { uploadImage } from "@/lib/cloudinary";
+import { dataUriHead, matchesDeclaredMime, uploadImage } from "@/lib/cloudinary";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +27,10 @@ export async function POST(req: Request) {
   const approxBytes = Math.floor((base64Payload.length * 3) / 4);
   if (approxBytes > MAX_SIZE) {
     return NextResponse.json({ error: "File too large. Maximum 10 MB." }, { status: 400 });
+  }
+
+  if (!matchesDeclaredMime(dataUriHead(dataUri), mime)) {
+    return NextResponse.json({ error: "File content does not match its type." }, { status: 400 });
   }
 
   const url = await uploadImage(dataUri, "avatars");

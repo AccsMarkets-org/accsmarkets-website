@@ -29,6 +29,10 @@ export async function GET(_req: NextRequest, { params }: { params: { file: strin
       headers: {
         "Content-Type": CONTENT_TYPES[ext] ?? "application/octet-stream",
         "Cache-Control": "public, max-age=604800, s-maxage=604800",
+        "X-Content-Type-Options": "nosniff",
+        // SVG is served same-origin here; a script inside one would run with
+        // this site's origin (session cookies) if opened directly. Sandbox it.
+        ...(ext === "svg" ? { "Content-Security-Policy": "sandbox; script-src 'none'" } : {}),
       },
     });
   } catch {

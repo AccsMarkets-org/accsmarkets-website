@@ -4,7 +4,7 @@ import { verifyIpnSignature } from "@/lib/nowpayments";
 import { createNotification } from "@/lib/notifications";
 import { sendEmail } from "@/lib/email";
 import { depositConfirmedTemplate } from "@/lib/email-templates";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, round2 } from "@/lib/utils";
 
 const CREDIT_STATUSES = new Set(["finished", "confirmed", "partially_paid"]);
 
@@ -45,14 +45,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true, alreadyProcessed: true });
   }
 
-  // For partially_paid, credit the actually-paid USD amount rather than the full request.
-  const creditUsd =
+  // For partially_paid, credit the actually-paid USD amount rather than the full
+  // request. Rounded to cents: the ledger amount, balanceAfter and the balance
+  // increment must all be the same 2dp figure.
+  const creditUsd = round2(
     payload.payment_status === "partially_paid" &&
     typeof payload.actually_paid === "number" &&
     typeof payload.price_amount === "number" &&
     payload.price_amount > 0
       ? Math.min(Number(wallet.amountUsd), (payload.actually_paid / payload.price_amount) * Number(wallet.amountUsd))
-      : Number(wallet.amountUsd);
+      : Number(wallet.amountUsd),
+  );
 
   const result = await prisma.$transaction(async (tx) => {
     const freshWallet = await tx.cryptoWallet.findUniqueOrThrow({ where: { id: wallet.id } });
@@ -63,32 +66,52 @@ export async function POST(req: Request) {
     });
     if (!transaction) return null;
 
+    // A plan purchase (POST /api/payments/subscribe) is paid for by this IPN —
+    // it is NOT also wallet credit. Previously the price was credited to the
+    // wallet AND the plan activated, i.e. the plan was effectively free.
+    const txMeta = transaction.metadata as Record<string, unknown> | null;
+    const planId = typeof txMeta?.planId === "string" ? txMeta.planId : null;
+    const isSubscription = transaction.type === "SUBSCRIPTION" || planId !== null;
+
+    if (isSubscription && payload.payment_status === "partially_paid") {
+      // Can't activate a plan on a partial payment; leave the row pending —
+      // NOWPayments sends another IPN once the remainder arrives.
+      await tx.cryptoWallet.update({ where: { id: freshWallet.id }, data: { status: "partially_paid" } });
+      return null;
+    }
+
     const user = await tx.user.findUniqueOrThrow({ where: { id: freshWallet.userId } });
-    const newBalance = Number(user.walletBalance) + creditUsd;
 
     await tx.cryptoWallet.update({
       where: { id: freshWallet.id },
       data: { status: "confirmed", confirmedAt: new Date() },
     });
+
+    if (isSubscription && planId) {
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      await tx.user.update({
+        where: { id: user.id },
+        data: { subscriptionPlanId: planId, subscriptionExpiresAt: expiresAt, subscriptionCancelAtPeriodEnd: false },
+      });
+      await tx.transaction.update({
+        where: { id: transaction.id },
+        data: { status: "COMPLETED", balanceAfter: user.walletBalance },
+      });
+      return { user, amountUsd: creditUsd, transaction, subscription: true };
+    }
+
+    const newBalance = round2(Number(user.walletBalance) + creditUsd);
     await tx.transaction.update({
       where: { id: transaction.id },
       data: { status: "COMPLETED", amount: creditUsd, balanceAfter: newBalance },
     });
     await tx.user.update({ where: { id: user.id }, data: { walletBalance: { increment: creditUsd } } });
 
-    return { user, amountUsd: creditUsd, transaction };
+    return { user, amountUsd: creditUsd, transaction, subscription: false };
   });
 
   if (result) {
-    // Check if this is a subscription payment (metadata.planId present)
-    const txMeta = result.transaction?.metadata as Record<string, unknown> | null | undefined;
-    if (txMeta?.planId) {
-      // Activate subscription: set plan + 30-day expiry
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      await prisma.user.update({
-        where: { id: result.user.id },
-        data: { subscriptionPlanId: txMeta.planId as string, subscriptionExpiresAt: expiresAt },
-      });
+    if (result.subscription) {
       await createNotification({
         userId: result.user.id,
         type: "SYSTEM",
@@ -111,7 +134,8 @@ export async function POST(req: Request) {
         "Crypto",
         result.transaction.id,
       );
-      await sendEmail({ to: result.user.email, subject, html, slug: "deposit_confirmed" });
+      // Credited already — a mail failure must not 500 (NOWPayments would retry a no-op).
+      await sendEmail({ to: result.user.email, subject, html, slug: "deposit_confirmed" }).catch(() => null);
     }
   }
 

@@ -55,6 +55,9 @@ function initSocketServer(httpServer) {
         secret: process.env.NEXTAUTH_SECRET,
       });
       if (!token?.id && !token?.sub) return next(new Error("unauthorized"));
+      // A token the jwt callback marked invalid (ban / password reset /
+      // "sign out everywhere") must not keep receiving DMs and notifications.
+      if (token.invalid) return next(new Error("unauthorized"));
       socket.data.userId = token.id || token.sub;
       // Store role so the connection handler can join admin-only rooms.
       socket.data.role = token.role ?? "USER";
@@ -95,7 +98,12 @@ function initSocketServer(httpServer) {
       }
     });
 
-    socket.on("typing_start", ({ conversationId, recipientId }) => {
+    // Destructuring a non-object payload (`socket.emit("typing_start", null)`)
+    // throws inside the handler; socket.io dispatches handlers via nextTick, so
+    // that became an uncaughtException that took the whole server down.
+    socket.on("typing_start", (payload) => {
+      if (!payload || typeof payload !== "object") return;
+      const { conversationId, recipientId } = payload;
       if (typeof recipientId !== "string" || typeof conversationId !== "string") return;
       socket.to(`user:${recipientId}`).emit("user_typing", { userId, conversationId });
 
@@ -111,7 +119,9 @@ function initSocketServer(httpServer) {
       typingTimers.set(key, { tid, recipientId });
     });
 
-    socket.on("typing_stop", ({ conversationId, recipientId }) => {
+    socket.on("typing_stop", (payload) => {
+      if (!payload || typeof payload !== "object") return;
+      const { conversationId, recipientId } = payload;
       if (typeof recipientId !== "string" || typeof conversationId !== "string") return;
       const key = `${userId}:${conversationId}`;
       const entry = typingTimers.get(key);

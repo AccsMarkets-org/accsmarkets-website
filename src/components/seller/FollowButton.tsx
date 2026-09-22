@@ -47,7 +47,7 @@ export function FollowButton({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data?.message ?? "Something went wrong");
+        throw new Error(data?.error ?? data?.message ?? "Something went wrong");
       }
     } catch (err) {
       // Revert optimistic update

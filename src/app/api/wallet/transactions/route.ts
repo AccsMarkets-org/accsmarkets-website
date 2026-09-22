@@ -10,8 +10,9 @@ export async function GET(req: Request) {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const url = new URL(req.url);
-  const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));
-  const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit") ?? 20)));
+  // `Math.max(1, NaN)` is NaN, which Prisma rejects as a skip/take — fall back on garbage input.
+  const page = Math.max(1, Math.floor(Number(url.searchParams.get("page") ?? 1)) || 1);
+  const limit = Math.min(50, Math.max(1, Math.floor(Number(url.searchParams.get("limit") ?? 20)) || 20));
   const skip = (page - 1) * limit;
 
   const [user, transactions, total] = await Promise.all([

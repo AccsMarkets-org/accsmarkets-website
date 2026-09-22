@@ -41,15 +41,26 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         where: { id: available.id },
         data: { status: "IN_USE" },
       });
-      await tx.escrow.update({
-        where: { id: escrow.id },
+      // Guarded: two concurrent loads of the escrow page must not each allocate
+      // a pool email (the loser's would stay IN_USE forever, attached to nothing).
+      const claimed = await tx.escrow.updateMany({
+        where: { id: escrow.id, managerEmailId: null },
         data: { managerEmailId: available.id, status: "AWAITING_MANAGER_ADD" },
       });
+      if (claimed.count === 0) throw new Error("ALREADY_ALLOCATED");
       return { id: available.id, address: available.address, platform: available.platform };
     });
 
     return NextResponse.json({ email: allocated });
   } catch (err) {
+    if (err instanceof Error && err.message === "ALREADY_ALLOCATED") {
+      const current = await prisma.escrow.findUnique({
+        where: { id: escrow.id },
+        select: { managerEmail: { select: { id: true, address: true, platform: true } } },
+      });
+      if (current?.managerEmail) return NextResponse.json({ email: current.managerEmail });
+      return NextResponse.json({ error: "Escrow email allocation is in progress. Retry." }, { status: 409 });
+    }
     if (err instanceof Error && err.message === "NO_POOL_EMAIL") {
       return NextResponse.json(
         { error: "No escrow emails are available for this platform. Please contact support." },

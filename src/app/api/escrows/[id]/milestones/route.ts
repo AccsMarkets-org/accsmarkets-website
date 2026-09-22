@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { round2 } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -42,14 +43,21 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
 
-  const { milestones } = parsed.data;
-  const totalMilestone = milestones.reduce((s, m) => s + m.amount, 0);
+  // Amounts are stored as Decimal(12,2); round here so what is validated is
+  // exactly what gets released later (a 0.005 could otherwise slip past the
+  // sum check and be rounded up by the database).
+  const milestones = parsed.data.milestones.map((m) => ({ ...m, amount: round2(m.amount) }));
+  if (milestones.some((m) => m.amount < 0.01)) {
+    return NextResponse.json({ error: "Each milestone must be at least $0.01" }, { status: 400 });
+  }
+  const totalMilestone = round2(milestones.reduce((s, m) => s + m.amount, 0));
   const escrowAmount = Number(escrow.amount);
 
-  // Allow ±1 cent rounding tolerance
-  if (Math.abs(totalMilestone - escrowAmount) > 0.01) {
+  // Must match exactly — the ±1 cent tolerance used here before let the
+  // released total exceed what the buyer actually paid.
+  if (totalMilestone !== escrowAmount) {
     return NextResponse.json(
-      { error: `Milestone amounts must sum to the escrow amount (${escrowAmount})` },
+      { error: `Milestone amounts must sum to the escrow amount (${escrowAmount.toFixed(2)})` },
       { status: 400 },
     );
   }

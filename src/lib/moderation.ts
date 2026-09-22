@@ -29,10 +29,13 @@ const PROFANITY_PATTERNS: RegExp[] = [
   /\bcunt\w*\b/i,
 ];
 
-const LINK_PATTERN = /https?:\/\/[^\s]+/gi;
+// No `g` flag: these are shared module-level regexes used with .test(), and a
+// global regex keeps `lastIndex` between calls — after one match the next
+// message's scan started mid-string and links slipped through every other call.
+const LINK_PATTERN = /https?:\/\/[^\s]+/i;
 
 // Plain-text URLs without a scheme (e.g. "google.com", "t.me/xyz")
-const PLAIN_URL_PATTERN = /(?<!\w)([\w-]+\.(?:com|org|net|io|co|me|gg|tv|app|xyz|info|shop|ly|link|cc|to|ru|cn|uk|de|fr|es|br|in|pk))(?=[/\s?#]|$)/gi;
+const PLAIN_URL_PATTERN = /(?<!\w)([\w-]+\.(?:com|org|net|io|co|me|gg|tv|app|xyz|info|shop|ly|link|cc|to|ru|cn|uk|de|fr|es|br|in|pk))(?=[/\s?#]|$)/i;
 
 export function scoreContent(text: string, context: "listing" | "message"): ModerationResult {
   const flags: string[] = [];

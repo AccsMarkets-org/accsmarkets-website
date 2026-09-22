@@ -470,6 +470,13 @@ export async function POST(req: Request) {
     let remindersSent = 0;
     for (const u of upcomingExpiryUsers) {
       // Dedup: skip if a renewal-reminder notification was already sent in the last 24h.
+      // The row lookup alone misses users who turned SYSTEM in-app off
+      // (createNotification writes nothing for them), which re-sent the
+      // renewal EMAIL every 15-minute run — same gap steps 10-13 cover with
+      // the in-memory map, so use it here too.
+      const memKey = `renewal:${u.id}`;
+      const memAt = warnedAt.get(memKey);
+      if (memAt !== undefined && now.getTime() - memAt < DAY_MS) continue;
       const recentReminder = await prisma.notification.findFirst({
         where: {
           userId: u.id,
@@ -480,6 +487,7 @@ export async function POST(req: Request) {
         },
       });
       if (recentReminder) continue;
+      markWarned(memKey, now);
 
       const planName = u.subscriptionPlan?.name ?? "paid";
       const expiresAt = u.subscriptionExpiresAt!;

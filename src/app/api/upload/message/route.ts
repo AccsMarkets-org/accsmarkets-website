@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { uploadBuffer } from "@/lib/cloudinary";
+import { matchesDeclaredMime, uploadBuffer } from "@/lib/cloudinary";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +24,9 @@ export async function POST(req: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    if (!matchesDeclaredMime(buffer, file.type)) {
+      return NextResponse.json({ error: "File content does not match its type." }, { status: 400 });
+    }
     const url = await uploadBuffer(buffer, file.type, "messages");
     return NextResponse.json({ url, name: file.name });
   } catch {

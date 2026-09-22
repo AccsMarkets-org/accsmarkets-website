@@ -38,7 +38,7 @@ function daysLeft(until: string | null): number | null {
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function DaysPill({ days }: { days: number | null }) {
@@ -149,12 +149,12 @@ export function PromotionsClient({ rows }: Props) {
                         {b.icon}
                         {b.label}
                       </span>
-                      <DaysPill days={daysLeft(b.until)} />
-                      <span className="text-muted">expires {fmtDate(b.until)}</span>
+                      <span suppressHydrationWarning><DaysPill days={daysLeft(b.until)} /></span>
+                      <span className="text-muted" suppressHydrationWarning>expires {fmtDate(b.until)}</span>
                     </div>
                   ))}
                   {row.lastBumpedAt && (
-                    <div className="flex items-center gap-1.5 text-xs text-muted">
+                    <div className="flex items-center gap-1.5 text-xs text-muted" suppressHydrationWarning>
                       <ArrowUpCircle className="h-3.5 w-3.5" aria-hidden />
                       Last bumped {fmtDate(row.lastBumpedAt)}
                     </div>

@@ -26,7 +26,7 @@ function filtersLabel(filters: Record<string, string>) {
   if (filters.q) parts.push(`"${filters.q}"`);
   if (filters.platform) parts.push(filters.platform);
   if (filters.minPrice || filters.maxPrice) parts.push(`$${filters.minPrice ?? "0"}–${filters.maxPrice ?? "∞"}`);
-  if (filters.minFollowers) parts.push(`${Number(filters.minFollowers).toLocaleString()}+ followers`);
+  if (filters.minFollowers) parts.push(`${Number(filters.minFollowers).toLocaleString("en-US")}+ followers`);
   if (filters.monetized === "true") parts.push("Monetized");
   if (filters.verifiedOnly === "true") parts.push("Verified sellers");
   return parts.join(" · ") || "No filters";

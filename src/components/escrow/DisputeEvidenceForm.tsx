@@ -40,7 +40,7 @@ export function DisputeEvidenceForm({ escrowId, existingStatement }: Props) {
     setLoading(true);
     try {
       const res = await fetch(`/api/escrows/${escrowId}/dispute/evidence`, {
-        method: "PUT",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ statement }),
       });

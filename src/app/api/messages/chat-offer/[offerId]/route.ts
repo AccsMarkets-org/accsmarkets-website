@@ -31,7 +31,12 @@ export async function PATCH(req: Request, { params }: { params: { offerId: strin
   });
   if (!offer) return NextResponse.json({ error: "Offer not found." }, { status: 404 });
 
+  // Only offers that were sent as a chat card have a sender message. A regular
+  // /api/offers offer has none — without this check `senderId` is undefined,
+  // the recipient resolves to the buyer, and a buyer could accept their OWN
+  // offer here and check out at any price they named.
   const senderId = offer.chatOfferMessages[0]?.senderId;
+  if (!senderId) return NextResponse.json({ error: "Offer not found." }, { status: 404 });
   const recipientId = senderId === offer.buyerId ? offer.sellerId : offer.buyerId;
   if (session.user.id !== recipientId) {
     return NextResponse.json({ error: "Only the recipient of this offer can respond to it." }, { status: 403 });
@@ -49,7 +54,7 @@ export async function PATCH(req: Request, { params }: { params: { offerId: strin
   });
 
   // Notify whoever sent the offer.
-  const notifyUserId = senderId ?? offer.sellerId;
+  const notifyUserId = senderId;
   const amount = Number(offer.amount).toFixed(2);
   await createNotification({
     userId: notifyUserId,

@@ -3,12 +3,13 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { PLATFORMS } from "@/lib/validation/listing";
 
 export const dynamic = "force-dynamic";
 
 const updateSchema = z.object({
   title: z.string().min(3).max(120).optional(),
-  platform: z.string().optional(),
+  platform: z.enum(PLATFORMS).optional(),
   criteria: z.record(z.unknown()).optional(),
   budget: z.number().positive().optional(),
   status: z.enum(["OPEN", "FULFILLED", "CLOSED"]).optional(),

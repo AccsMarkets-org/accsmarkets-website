@@ -261,13 +261,16 @@ export async function POST(req: Request) {
       return created;
     });
 
+    // Everything past this point is best-effort: the escrow is created and the
+    // buyer debited, so a notification/email failure must not turn into a 500
+    // (which the client reads as "purchase failed" and retries into a 409).
     await createNotification({
       userId: listing.sellerId,
       type: "ESCROW",
       title: "Escrow funded — action required",
       body: `A buyer funded ${formatCurrency(amount)} for "${listing.title}". Submit transfer details.`,
       link: `/dashboard/escrows/${escrow.id}`,
-    });
+    }).catch(() => null);
     emitToUser(listing.sellerId, "escrow_funded", { escrowId: escrow.id });
     const { subject, html } = escrowFundedTemplate(
       listing.seller.name ?? "there",
@@ -275,7 +278,7 @@ export async function POST(req: Request) {
       formatCurrency(amount),
       escrow.id,
     );
-    await sendEmail({ to: listing.seller.email, subject, html, slug: "escrow_funded" });
+    await sendEmail({ to: listing.seller.email, subject, html, slug: "escrow_funded" }).catch(() => null);
 
     // Buyer's confirmation — previously only the seller was emailed, so the
     // party who just paid got no receipt of the escrow being opened.

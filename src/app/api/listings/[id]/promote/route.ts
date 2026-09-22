@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { createNotification } from "@/lib/notifications";
+import { round2 } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -75,11 +76,16 @@ export async function POST(
       await prisma.$transaction(async (tx) => {
         // Re-fetch inside tx and guard against concurrent depletion
         const user = await tx.user.findUniqueOrThrow({ where: { id: session.user.id } });
-        if (Number(user.walletBalance) < BUMP_PRICE_USD)
+        // Guarded debit: the balance condition and the decrement are one UPDATE,
+        // so two concurrent purchases can't both pass a snapshot read and overdraw.
+        const debited = await tx.user.updateMany({
+          where: { id: user.id, walletBalance: { gte: BUMP_PRICE_USD } },
+          data: { walletBalance: { decrement: BUMP_PRICE_USD } },
+        });
+        if (debited.count === 0)
           throw Object.assign(new Error("INSUFFICIENT"), { code: "INSUFFICIENT" });
-        const newBalance = Number(user.walletBalance) - BUMP_PRICE_USD;
+        const newBalance = round2(Number(user.walletBalance) - BUMP_PRICE_USD);
         bumpBalanceAfter = newBalance;
-        await tx.user.update({ where: { id: user.id }, data: { walletBalance: { decrement: BUMP_PRICE_USD } } });
         await tx.listing.update({
           where: { id: listing.id },
           data: { lastBumpedAt: new Date(), updatedAt: new Date() },
@@ -123,11 +129,15 @@ export async function POST(
     await prisma.$transaction(async (tx) => {
       // Re-fetch inside tx and guard against concurrent depletion
       const user = await tx.user.findUniqueOrThrow({ where: { id: session.user.id } });
-      if (Number(user.walletBalance) < promo.usd)
+      // Guarded debit (see BUMP above).
+      const debited = await tx.user.updateMany({
+        where: { id: user.id, walletBalance: { gte: promo.usd } },
+        data: { walletBalance: { decrement: promo.usd } },
+      });
+      if (debited.count === 0)
         throw Object.assign(new Error("INSUFFICIENT"), { code: "INSUFFICIENT" });
-      const newBalance = Number(user.walletBalance) - promo.usd;
+      const newBalance = round2(Number(user.walletBalance) - promo.usd);
       promoBalanceAfter = newBalance;
-      await tx.user.update({ where: { id: user.id }, data: { walletBalance: { decrement: promo.usd } } });
       await tx.listing.update({
         where: { id: listing.id },
         data: {

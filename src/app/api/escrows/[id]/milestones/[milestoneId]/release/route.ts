@@ -45,6 +45,10 @@ export async function POST(
     // Re-fetch inside tx to guard against concurrent double-release
     const fresh = await tx.escrowMilestone.findUniqueOrThrow({ where: { id: milestone.id } });
     if (fresh.status === "RELEASED") throw Object.assign(new Error("ALREADY_RELEASED"), { code: "ALREADY_RELEASED" });
+    // The outer VERIFIED check is a snapshot; a dispute opened in between must
+    // block every release, not just the final one.
+    const liveEscrow = await tx.escrow.findUniqueOrThrow({ where: { id: params.id }, select: { status: true } });
+    if (liveEscrow.status !== "VERIFIED") throw Object.assign(new Error("NOT_VERIFIED"), { code: "NOT_VERIFIED" });
 
     const releaseAmount = Number(fresh.amount);
 
@@ -93,6 +97,9 @@ export async function POST(
   } catch (err) {
     if (err instanceof Error && (err as NodeJS.ErrnoException & { code?: string }).code === "ALREADY_RELEASED") {
       return NextResponse.json({ error: "Milestone already released" }, { status: 409 });
+    }
+    if (err instanceof Error && (err as NodeJS.ErrnoException & { code?: string }).code === "NOT_VERIFIED") {
+      return NextResponse.json({ error: "Escrow is no longer in VERIFIED status" }, { status: 409 });
     }
     if (err instanceof EscrowTransitionError) {
       return NextResponse.json({ error: err.message }, { status: 409 });

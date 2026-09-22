@@ -40,7 +40,7 @@ export async function GET(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid filters" }, { status: 400 });
   }
-  const { platform, minPrice, maxPrice, minFollowers, monetized, verifiedOnly, sort, page } = parsed.data;
+  const { platform, minPrice, maxPrice, minFollowers, maxFollowers, monetized, verifiedOnly, sort, page } = parsed.data;
 
   const where: Prisma.ListingWhereInput = {
     status: "ACTIVE",
@@ -49,7 +49,12 @@ export async function GET(req: Request) {
     isPrivate: false,
     ...(platform && { platform }),
     ...(monetized !== undefined && { monetized }),
-    ...(minFollowers !== undefined && { followers: { gte: minFollowers } }),
+    ...((minFollowers !== undefined || maxFollowers !== undefined) && {
+      followers: {
+        ...(minFollowers !== undefined && { gte: minFollowers }),
+        ...(maxFollowers !== undefined && { lte: maxFollowers }),
+      },
+    }),
     ...((minPrice !== undefined || maxPrice !== undefined) && {
       price: {
         ...(minPrice !== undefined && { gte: minPrice }),
@@ -148,6 +153,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
   const data = parsed.data;
+
+  // Dates arrive as strings; an unparseable one becomes an Invalid Date that
+  // Prisma rejects (500). Auctions additionally need an end time in the future,
+  // or the bids route refuses every bid ("Auction has ended" / "no end date").
+  if (data.channelCreationDate && Number.isNaN(new Date(data.channelCreationDate).getTime())) {
+    return NextResponse.json({ error: "Invalid channel creation date." }, { status: 400 });
+  }
+  if (data.saleType === "AUCTION") {
+    const ends = data.auctionEndsAt ? new Date(data.auctionEndsAt) : null;
+    if (!ends || Number.isNaN(ends.getTime()) || ends.getTime() <= Date.now()) {
+      return NextResponse.json({ error: "Auctions need an end date in the future." }, { status: 400 });
+    }
+  }
 
   const title = sanitizeText(data.title);
   const description = sanitizeText(data.description);

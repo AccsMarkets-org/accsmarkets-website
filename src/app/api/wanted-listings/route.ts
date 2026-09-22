@@ -3,12 +3,15 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { PLATFORMS } from "@/lib/validation/listing";
 
 export const dynamic = "force-dynamic";
 
 const createSchema = z.object({
   title: z.string().min(3).max(120),
-  platform: z.string().optional(),
+  // Must be a real Platform enum value — an arbitrary string was cast straight
+  // into the Prisma enum column and 500'd.
+  platform: z.enum(PLATFORMS).optional(),
   criteria: z.record(z.unknown()).optional().default({}),
   budget: z.number().positive().optional(),
 });
@@ -16,13 +19,19 @@ const createSchema = z.object({
 // GET /api/wanted-listings — list open wanted listings (public)
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const platform = searchParams.get("platform");
-  const page = Math.max(0, Number(searchParams.get("page") ?? 0));
+  const platformParam = searchParams.get("platform");
+  const platform = platformParam && (PLATFORMS as readonly string[]).includes(platformParam)
+    ? (platformParam as (typeof PLATFORMS)[number])
+    : null;
+  if (platformParam && !platform) {
+    return NextResponse.json({ error: "Unknown platform" }, { status: 400 });
+  }
+  const page = Math.max(0, Math.floor(Number(searchParams.get("page") ?? 0)) || 0);
   const PAGE_SIZE = 20;
 
   const where = {
     status: "OPEN" as const,
-    ...(platform ? { platform: platform as never } : {}),
+    ...(platform ? { platform } : {}),
   };
 
   const [items, total] = await Promise.all([

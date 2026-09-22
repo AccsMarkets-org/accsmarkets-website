@@ -33,17 +33,54 @@ function getTransporter() {
   return transporter;
 }
 
+// Same Brevo HTTP path as src/lib/brevo.ts. src/lib/email.ts prefers Brevo
+// over SMTP when sending directly, but once REDIS_URL is set EVERY email is
+// queued to this worker — which previously knew only SMTP, so a Brevo-only
+// deployment silently dropped all mail ("email.skipped") while the app
+// reported it as sent.
+async function sendViaBrevo({ to, subject, html }) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) return false;
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json", "api-key": apiKey },
+    body: JSON.stringify({
+      sender: {
+        name: process.env.BREVO_SENDER_NAME || "AccsMarkets",
+        email: process.env.BREVO_SENDER_EMAIL || "noreply@accsmarkets.org",
+      },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Brevo API error ${res.status}: ${body.slice(0, 200)}`);
+  }
+  return true;
+}
+
 const emailWorker = new Worker(
   "email",
   async (job) => {
     const { to, subject, html } = job.data;
+    try {
+      if (await sendViaBrevo({ to, subject, html })) {
+        log("info", "email.sent", { via: "brevo", subject, to });
+        return;
+      }
+    } catch (err) {
+      log("warn", "email.brevo_failed_fallback_smtp", { subject, to, err: String(err) });
+    }
     const client = getTransporter();
     if (!client) {
-      log("warn", "email.skipped", { reason: "smtp_not_configured", subject, to });
+      log("warn", "email.skipped", { reason: "no_transport_configured", subject, to });
       return;
     }
     await client.sendMail({ from: process.env.SMTP_FROM ?? "noreply@accsmarkets.org", to, subject, html });
-    log("info", "email.sent", { subject, to });
+    log("info", "email.sent", { via: "smtp", subject, to });
   },
   { connection: makeConnection(), concurrency: 4 },
 );

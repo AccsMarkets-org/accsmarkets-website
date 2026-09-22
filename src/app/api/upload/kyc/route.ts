@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { uploadBuffer } from "@/lib/cloudinary";
+import { matchesDeclaredMime, uploadBuffer } from "@/lib/cloudinary";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { signKycUpload } from "@/lib/kyc-encrypt";
 
@@ -36,6 +36,9 @@ export async function POST(req: Request) {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
+    if (!matchesDeclaredMime(buffer, file.type)) {
+      return NextResponse.json({ error: "File content does not match its type. Upload a real JPG, PNG or WEBP photo." }, { status: 400 });
+    }
     // Private (authenticated) storage — never public, never Drive. Folder is
     // per-user so /api/kyc/verify can additionally check path ownership.
     const url = await uploadBuffer(buffer, file.type, `kyc/${session.user.id}`, undefined, { privateAccess: true });

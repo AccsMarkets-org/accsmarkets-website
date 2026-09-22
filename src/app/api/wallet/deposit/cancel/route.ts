@@ -9,8 +9,8 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { walletId } = await req.json().catch(() => ({}));
-  if (!walletId) return NextResponse.json({ error: "walletId required" }, { status: 400 });
+  const { walletId } = (await req.json().catch(() => ({}))) as { walletId?: unknown };
+  if (typeof walletId !== "string" || !walletId) return NextResponse.json({ error: "walletId required" }, { status: 400 });
 
   const wallet = await prisma.cryptoWallet.findUnique({ where: { id: walletId } });
   if (!wallet || wallet.userId !== session.user.id) {

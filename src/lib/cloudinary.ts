@@ -65,6 +65,35 @@ export async function uploadImage(
   return result.secure_url;
 }
 
+/**
+ * Magic-byte sniff for the upload routes. The declared MIME (file.type or the
+ * data-URI prefix) is client-controlled; this is what the bytes actually are.
+ * Returns null for anything that isn't one of the supported formats.
+ */
+export function sniffUploadMime(buf: Buffer): string | null {
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  if (buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "image/png";
+  if (buf.length >= 12 && buf.subarray(0, 4).toString("ascii") === "RIFF" && buf.subarray(8, 12).toString("ascii") === "WEBP") return "image/webp";
+  if (buf.length >= 6 && (buf.subarray(0, 6).toString("ascii") === "GIF87a" || buf.subarray(0, 6).toString("ascii") === "GIF89a")) return "image/gif";
+  if (buf.length >= 12 && buf.subarray(4, 8).toString("ascii") === "ftyp" && /^(avif|avis)/.test(buf.subarray(8, 12).toString("ascii"))) return "image/avif";
+  if (buf.length >= 5 && buf.subarray(0, 5).toString("ascii") === "%PDF-") return "application/pdf";
+  return null;
+}
+
+/** True when the bytes match the declared type ("image/jpg" is accepted as JPEG). */
+export function matchesDeclaredMime(buf: Buffer, declared: string): boolean {
+  const actual = sniffUploadMime(buf);
+  if (!actual) return false;
+  const norm = declared.toLowerCase() === "image/jpg" ? "image/jpeg" : declared.toLowerCase();
+  return actual === norm;
+}
+
+/** Decodes just enough of a base64 data URI to sniff its magic bytes. */
+export function dataUriHead(dataUri: string): Buffer {
+  const comma = dataUri.indexOf(",");
+  return Buffer.from(dataUri.slice(comma + 1, comma + 1 + 64), "base64");
+}
+
 export interface UploadBufferOptions {
   /**
    * Private-access mode (used for KYC documents): the file is NOT made public.

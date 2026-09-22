@@ -24,7 +24,7 @@ interface ListingRequiredSectionsProps {
 function formatFollowers(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
-  return n.toLocaleString();
+  return n.toLocaleString("en-US");
 }
 
 function formatAge(days: number): string {
@@ -39,7 +39,7 @@ function formatAge(days: number): string {
 
 function formatRevenue(amount: number): string {
   if (amount >= 1_000) return "$" + (amount / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
-  return "$" + amount.toLocaleString();
+  return "$" + amount.toLocaleString("en-US");
 }
 
 // Platform-specific tips shown in the "Why Buy" section

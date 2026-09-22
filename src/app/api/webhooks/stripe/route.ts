@@ -31,9 +31,9 @@ export async function POST(req: NextRequest) {
 
     const amountUsd = intent.amount / 100;
 
-    await prisma.$transaction(async (tx) => {
+    const credited = await prisma.$transaction(async (tx) => {
       const fiat = await tx.fiatPayment.findUnique({ where: { providerPaymentId: intent.id } });
-      if (!fiat || fiat.status !== "PENDING") return; // idempotent
+      if (!fiat || fiat.status !== "PENDING") return false; // idempotent
 
       await tx.fiatPayment.update({
         where: { id: fiat.id },
@@ -54,15 +54,20 @@ export async function POST(req: NextRequest) {
           balanceAfter: newBalance,
         },
       });
+      return true;
     });
 
-    await createNotification({
-      userId,
-      type: "PAYMENT",
-      title: "Card deposit successful",
-      body: `${formatCurrency(amountUsd)} has been added to your wallet.`,
-      link: "/dashboard/wallet",
-    });
+    // Only on the first delivery — Stripe retries would otherwise re-notify
+    // "deposit successful" for a payment that was credited once already.
+    if (credited) {
+      await createNotification({
+        userId,
+        type: "PAYMENT",
+        title: "Card deposit successful",
+        body: `${formatCurrency(amountUsd)} has been added to your wallet.`,
+        link: "/dashboard/wallet",
+      }).catch(() => null);
+    }
   }
 
   if (event.type === "payment_intent.payment_failed") {

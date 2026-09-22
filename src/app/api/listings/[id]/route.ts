@@ -7,6 +7,9 @@ import { updateListingSchema } from "@/lib/validation/listing";
 import { scoreContent } from "@/lib/moderation";
 import { sanitizeText } from "@/lib/sanitize";
 import { createNotification } from "@/lib/notifications";
+import { verifyOwnershipToken } from "@/lib/ownership-token";
+import { platformRequiresToken } from "@/lib/ownership-platforms";
+import type { Prisma } from "@prisma/client";
 import {
   deleteBlockReason,
   deleteListingCascade,
@@ -111,13 +114,45 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const descriptionForModeration = description ?? listing.description;
   const moderation = scoreContent(`${titleForModeration} ${descriptionForModeration}`, "listing");
 
+  // Ownership on edit: a signed token (from /api/listings/verify/*) re-verifies
+  // the (possibly new) URL; changing the account URL without one drops the old
+  // verification since it was for a different account; a bare client flag is
+  // honoured only for manual-review platforms, exactly as on create. Note
+  // `ownershipToken` is not a column — it used to reach Prisma through the
+  // spread below and 500 every save that included it.
+  const ownershipData: Prisma.ListingUpdateInput = {};
+  if (data.ownershipToken) {
+    const claim = verifyOwnershipToken(data.ownershipToken, session.user.id, data.accountUrl ?? listing.accountUrl);
+    if (claim) {
+      Object.assign(ownershipData, {
+        ownershipVerified: true,
+        ownershipMethod: claim.method,
+        verifiedPlatformId: claim.platformId ?? null,
+        ownershipVerifiedAt: new Date(),
+      });
+    }
+  } else {
+    if (data.accountUrl !== undefined && data.accountUrl !== listing.accountUrl) {
+      Object.assign(ownershipData, {
+        ownershipVerified: false,
+        ownershipMethod: null,
+        verifiedPlatformId: null,
+        ownershipVerifiedAt: null,
+      });
+    }
+    if (data.ownershipVerified !== undefined && !platformRequiresToken(listing.platform)) {
+      ownershipData.ownershipVerified = data.ownershipVerified;
+    }
+  }
+
   let updated;
   try {
-    const { logoUrl, channelCreationDate, ...restData } = data as any;
+    const { logoUrl, channelCreationDate, ownershipToken: _token, ownershipVerified: _flag, ...restData } = data as any;
     updated = await prisma.listing.update({
       where: { id: listing.id },
       data: {
         ...restData,
+        ...ownershipData,
         ...(title !== undefined && { title }),
         ...(description !== undefined && { description }),
         ...(logoUrl !== undefined && { accountLogo: logoUrl }),

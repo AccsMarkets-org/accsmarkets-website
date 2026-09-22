@@ -55,8 +55,15 @@ export async function sendEmail({ to, subject, html, slug }: SendEmailInput): Pr
   // Off-request-path delivery when queue is available
   const q = getEmailQueue();
   if (q) {
-    await q.add("send", { to, subject: resolvedSubject, html: resolvedHtml }, { attempts: 3, backoff: { type: "exponential", delay: 2000 } });
-    return true;
+    try {
+      await q.add("send", { to, subject: resolvedSubject, html: resolvedHtml }, { attempts: 3, backoff: { type: "exponential", delay: 2000 } });
+      return true;
+    } catch (err) {
+      // Redis down / queue add rejected — this function is documented as
+      // non-throwing (callers like /api/auth/register await it unguarded
+      // right after creating the user), so fall through to direct delivery.
+      logger.warn("email.queue_failed_fallback_direct", { subject, to, err: String(err) });
+    }
   }
 
   // Prefer Brevo HTTP API (reliable from VPS — no SMTP port dependency)

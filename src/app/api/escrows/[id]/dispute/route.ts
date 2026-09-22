@@ -47,16 +47,26 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
   let dispute;
   try {
-    [, dispute] = await prisma.$transaction([
-      prisma.escrow.update({ where: { id: escrow.id }, data: { status: "DISPUTED" } }),
-      prisma.dispute.create({
+    dispute = await prisma.$transaction(async (tx) => {
+      // Guard on the status the transition was validated against: a concurrent
+      // complete/cancel (which already moved the funds) must not be overwritten
+      // with DISPUTED after the fact.
+      const moved = await tx.escrow.updateMany({
+        where: { id: escrow.id, status: escrow.status },
+        data: { status: "DISPUTED" },
+      });
+      if (moved.count === 0) throw Object.assign(new Error("STATE_CHANGED"), { code: "STATE_CHANGED" });
+      return tx.dispute.create({
         data: { escrowId: escrow.id, openedById: session.user.id, reason: parsed.data.reason },
-      }),
-    ]);
+      });
+    });
   } catch (err: unknown) {
     const prismaErr = err as { code?: string };
     if (prismaErr?.code === "P2002") {
       return NextResponse.json({ error: "A dispute is already open for this escrow." }, { status: 409 });
+    }
+    if (prismaErr?.code === "STATE_CHANGED") {
+      return NextResponse.json({ error: "The escrow status changed. Refresh and try again." }, { status: 409 });
     }
     return NextResponse.json({ error: "Failed to open dispute" }, { status: 500 });
   }

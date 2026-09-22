@@ -38,8 +38,10 @@ export async function POST(req: Request) {
       where: { userId: session.user.id },
       data: { verifiedAt: new Date() },
     }),
-    prisma.user.update({
-      where: { id: session.user.id },
+    // Only step UP the ladder: an unconditional write downgraded an
+    // ID_VERIFIED user back to PHONE if they re-ran the email OTP.
+    prisma.user.updateMany({
+      where: { id: session.user.id, kycLevel: { in: ["NONE", "EMAIL"] } },
       data: { kycLevel: "PHONE" },
     }),
   ]);

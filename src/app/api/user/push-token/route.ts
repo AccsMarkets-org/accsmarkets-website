@@ -9,7 +9,7 @@ export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { pushToken } = await req.json();
+  const { pushToken } = (await req.json().catch(() => ({}))) as { pushToken?: unknown };
   if (!pushToken || typeof pushToken !== 'string') {
     return NextResponse.json({ error: 'pushToken required' }, { status: 400 });
   }
