@@ -6,7 +6,10 @@ const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 const nextConfig = {
   poweredByHeader: false,
   compress: true,
-  typescript: { ignoreBuildErrors: true },
+  // Type errors must fail the build. This was previously ignored, which is how
+  // a sweep step referencing a non-existent Prisma field reached production and
+  // failed on every run for days. eslint is not installed here, so it stays off.
+  typescript: { ignoreBuildErrors: false },
   eslint: { ignoreDuringBuilds: true },
   // This box has 2 logical CPUs and ~8GB RAM shared with MySQL + the tunnel.
   // Reverted to 1 (from 2) on 2026-09-09: free memory is now consistently
