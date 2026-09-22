@@ -1,5 +1,7 @@
 ﻿import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -36,6 +38,9 @@ const STATUS_STYLE: Record<string, { label: string; className: string }> = {
 };
 
 export default async function AdminBlogPage() {
+  const session = await requireAdmin("MANAGE_BLOG");
+  if (!session) redirect("/admin?denied=1");
+
   const [posts, queue, logs, rawAutoSeo] = await Promise.all([
     prisma.blogPost.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
     prisma.blogTopicQueue.findMany({ orderBy: { createdAt: "desc" }, take: 10 }),

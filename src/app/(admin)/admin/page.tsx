@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShieldAlert } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { getAdminSidebarCounts } from "@/lib/admin-cache";
 import { Card } from "@/components/ui/Card";
@@ -46,7 +47,55 @@ function groupRevenueByDay(txs: { createdAt: Date; amount: { toNumber(): number 
   return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([date, count]) => ({ date, count }));
 }
 
-export default async function AdminDashboardPage() {
+/** Shown at the top of the dashboard after a permission-gated page bounced
+ *  the viewer here with ?denied=1 (see requireAdmin usage in each page). */
+function AccessDeniedBanner() {
+  return (
+    <div
+      role="alert"
+      className="flex items-start gap-3 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-foreground"
+    >
+      <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden />
+      <div>
+        <p className="font-semibold">You don&apos;t have access to that section</p>
+        <p className="text-muted">
+          Your staff role doesn&apos;t include the permission it requires. Ask an owner to update your role if you need it.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: { denied?: string };
+}) {
+  const denied = searchParams.denied === "1";
+
+  // The dashboard itself needs VIEW_ANALYTICS. Staff without it can't be
+  // redirected here (that would loop), so render a small landing panel
+  // instead — the sidebar still shows whichever sections they can open.
+  const session = await requireAdmin("VIEW_ANALYTICS");
+  if (!session) {
+    return (
+      <div className="flex flex-col gap-6 pb-8">
+        {denied && <AccessDeniedBanner />}
+        <Card>
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
+            <div>
+              <h1 className="text-lg font-bold text-foreground">Admin</h1>
+              <p className="mt-1 text-sm text-muted">
+                Your staff role doesn&apos;t include the overview dashboard. Use the sidebar to open the sections available to you.
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
@@ -191,6 +240,8 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 pb-8">
+      {denied && <AccessDeniedBanner />}
+
       {/* Header */}
       <AdminSection delay={0}>
         <div className="flex flex-wrap items-center justify-between gap-4">

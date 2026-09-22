@@ -31,7 +31,10 @@ export default withAuth(
     const onAdminSubdomain = isAdminHost(host);
     const onMaintenanceSubdomain = isMaintenanceHost(host);
     const { pathname } = req.nextUrl;
-    const role = req.nextauth.token?.role;
+    // A token marked `invalid` by the jwt callback (ban / password reset /
+    // sign-out-everywhere) carries no authority — treat it as anonymous.
+    const token = req.nextauth.token?.invalid ? null : req.nextauth.token;
+    const role = token?.role;
 
     // maintenance.accsmarkets.org always serves the maintenance page
     if (onMaintenanceSubdomain) {
@@ -128,7 +131,7 @@ export default withAuth(
           return true;
         }
 
-        return !!token;
+        return !!token && !token.invalid;
       },
     },
   },

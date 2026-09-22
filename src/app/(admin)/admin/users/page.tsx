@@ -1,6 +1,8 @@
 ﻿import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { ArrowRight, X } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -25,6 +27,9 @@ export default async function AdminUsersPage({
 }: {
   searchParams: { q?: string; page?: string; role?: string; status?: string; kyc?: string };
 }) {
+  const session = await requireAdmin("MANAGE_USERS");
+  if (!session) redirect("/admin?denied=1");
+
   const q = searchParams.q?.trim() ?? "";
   const page = Math.max(0, Number(searchParams.page ?? 0));
   const roleFilter = (["ADMIN", "USER"].includes(searchParams.role ?? "") ? searchParams.role as Role : undefined);

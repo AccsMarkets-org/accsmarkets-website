@@ -1,9 +1,14 @@
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminErasureQueue } from "@/components/admin/AdminErasureQueue";
 
 export const metadata = { title: "Legal" };
 
 export default async function AdminLegalPage() {
+  const session = await requireAdmin("MANAGE_USERS");
+  if (!session) redirect("/admin?denied=1");
+
   const requests = await prisma.dataErasureRequest.findMany({
     where: { status: { in: ["PENDING", "REVIEWING"] } },
     orderBy: { requestedAt: "asc" },

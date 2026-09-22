@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { PLATFORM_LABEL } from "@/lib/constants";
@@ -5,6 +7,9 @@ import { EscrowEmailPool } from "@/components/admin/EscrowEmailPool";
 import type { Platform } from "@prisma/client";
 
 export default async function EscrowEmailsPage() {
+  const session = await requireAdmin("MANAGE_ESCROWS");
+  if (!session) redirect("/admin?denied=1");
+
   const emails = await prisma.escrowManagerEmail.findMany({
     orderBy: { createdAt: "desc" },
     include: {

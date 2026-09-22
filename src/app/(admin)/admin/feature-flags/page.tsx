@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { FeatureFlagManager } from "@/components/admin/FeatureFlagManager";
@@ -5,6 +7,9 @@ import { FeatureFlagManager } from "@/components/admin/FeatureFlagManager";
 export const metadata = { title: "Feature Flags" };
 
 export default async function FeatureFlagsPage() {
+  const session = await requireAdmin("MANAGE_SETTINGS");
+  if (!session) redirect("/admin?denied=1");
+
   const flags = await prisma.featureFlag.findMany({ orderBy: { key: "asc" } });
 
   return (

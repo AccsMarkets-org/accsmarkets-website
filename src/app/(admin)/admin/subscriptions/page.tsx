@@ -1,5 +1,7 @@
-﻿import { ArrowRight, Infinity as InfinityIcon, TriangleAlert, X } from "lucide-react";
+﻿import { redirect } from "next/navigation";
+import { ArrowRight, Infinity as InfinityIcon, TriangleAlert, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -31,6 +33,9 @@ export default async function AdminSubscriptionsPage({
 }: {
   searchParams: { plan?: string };
 }) {
+  const session = await requireAdmin("MANAGE_USERS");
+  if (!session) redirect("/admin?denied=1");
+
   const planFilter = searchParams.plan?.toUpperCase();
 
   const [users, plans, planCounts] = await Promise.all([

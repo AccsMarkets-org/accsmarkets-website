@@ -35,6 +35,20 @@ export async function requireAdmin(permission?: Permission | Permission[]) {
   return hasAll ? session : null;
 }
 
+/** Resolves the effective permission set for an admin user — "ALL" for
+ *  owner-level admins (ADMIN role, no staffRoleId), the staff role's list
+ *  otherwise, or [] for non-admins. Mirrors requireAdmin's rules; used by the
+ *  admin layout to filter the sidebar so staff only see sections they can open. */
+export async function getAdminPermissions(userId: string): Promise<Permission[] | "ALL"> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, staffRoleId: true, staffRole: { select: { permissions: true } } },
+  });
+  if (!user || user.role !== "ADMIN") return [];
+  if (!user.staffRoleId) return "ALL";
+  return ((user.staffRole?.permissions as string[]) ?? []) as Permission[];
+}
+
 /** Check if a specific user has a permission. Used in non-session contexts. */
 export async function checkPermission(userId: string, permission: Permission): Promise<boolean> {
   const user = await prisma.user.findUnique({

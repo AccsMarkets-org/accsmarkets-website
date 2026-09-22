@@ -3,15 +3,16 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { ListingManageCard } from "@/components/listings/ListingManageCard";
+import { ManageListingsClient } from "@/components/listings/ManageListingsClient";
 import { ListingsSortSelect } from "@/components/listings/ListingsSortSelect";
 import { formatNumber } from "@/lib/utils";
 import type { ListingStatus } from "@prisma/client";
-import { Clipboard, Plus } from "lucide-react";
+import { Clipboard, Plus, Zap } from "lucide-react";
 
 const STATUS_TABS: { key: string; label: string }[] = [
   { key: "ALL",      label: "All" },
   { key: "ACTIVE",   label: "Active" },
+  { key: "PAUSED",   label: "Paused" },
   { key: "PENDING",  label: "In Review" },
   { key: "DRAFT",    label: "Draft" },
   { key: "REJECTED", label: "Rejected" },
@@ -50,7 +51,7 @@ export default async function ManageListingsPage({
       ? whereBase
       : { ...whereBase, status: statusFilter as ListingStatus };
 
-  const [listings, counts, totalViews] = await Promise.all([
+  const [listings, counts, totalViews, boostedCount] = await Promise.all([
     prisma.listing.findMany({
       where: whereFiltered,
       orderBy,
@@ -68,6 +69,9 @@ export default async function ManageListingsPage({
       where: whereBase,
       _sum: { viewCount: true },
     }),
+    prisma.listing.count({
+      where: { ...whereBase, OR: [{ isFeatured: true }, { isPremiumFeatured: true }, { isPinned: true }] },
+    }),
   ]);
 
   const countMap: Record<string, number> = { ALL: 0 };
@@ -78,6 +82,7 @@ export default async function ManageListingsPage({
 
   const totalViewCount = totalViews._sum.viewCount ?? 0;
   const activeCount = countMap.ACTIVE ?? 0;
+  const pausedCount = countMap.PAUSED ?? 0;
   const pendingCount = countMap.PENDING ?? 0;
 
   return (
@@ -90,19 +95,34 @@ export default async function ManageListingsPage({
             {countMap.ALL ?? 0} total &middot; {formatNumber(totalViewCount)} views
           </p>
         </div>
-        <Link
-          href="/dashboard/listings/new"
-          className="flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition"
-        >
-          <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
-          New listing
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard/promotions"
+            className="flex items-center gap-2 rounded-xl border border-brand-300 bg-brand-50 px-4 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-100 transition dark:border-brand-700 dark:bg-brand-950/30 dark:text-brand-300 dark:hover:bg-brand-950/50"
+          >
+            <Zap className="h-4 w-4" aria-hidden />
+            Promotions
+            {boostedCount > 0 && (
+              <span className="rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                {boostedCount}
+              </span>
+            )}
+          </Link>
+          <Link
+            href="/dashboard/listings/new"
+            className="flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition"
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+            New listing
+          </Link>
+        </div>
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Active", value: activeCount, color: "text-success", bg: "bg-success/10" },
+          { label: "Paused", value: pausedCount, color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-500/10" },
           { label: "In Review", value: pendingCount, color: "text-warning", bg: "bg-warning/10" },
           { label: "Total views", value: formatNumber(totalViewCount), color: "text-brand-600", bg: "bg-brand-50" },
         ].map((s) => (
@@ -182,16 +202,7 @@ export default async function ManageListingsPage({
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {listings.map((listing) => (
-            <ListingManageCard
-              key={listing.id}
-              listing={listing}
-              pendingOfferCount={listing._count.offers}
-              bidCount={listing._count.bids}
-            />
-          ))}
-        </div>
+        <ManageListingsClient listings={listings} />
       )}
     </div>
   );

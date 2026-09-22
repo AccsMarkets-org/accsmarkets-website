@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { PartnerProfilePanel } from "@/components/messages/PartnerProfilePanel";
 
@@ -13,6 +15,9 @@ export default async function AdminMessageThreadPage({
 }: {
   params: { userId: string };
 }) {
+  const session = await requireAdmin("MANAGE_USERS");
+  if (!session) redirect("/admin?denied=1");
+
   const settings = await prisma.platformSettings.findUnique({
     where: { id: "singleton" },
     select: { officialSupportUserId: true },

@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import nextDynamic from "next/dynamic";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +11,9 @@ const RiskManagementPanel = nextDynamic(
 );
 
 export default async function AdminRiskPage() {
+  const session = await requireAdmin("MANAGE_USERS");
+  if (!session) redirect("/admin?denied=1");
+
   const riskScores = await prisma.riskScore.findMany({
     where: { score: { gt: 0 }, dismissedAt: null },
     orderBy: { score: "desc" },

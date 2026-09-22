@@ -813,3 +813,54 @@ export function offerAbandonedTemplate(name: string, listingTitle: string, offer
     }),
   };
 }
+
+// ─── Support tickets ──────────────────────────────────────────────────────────
+
+function escapeEmailText(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+export function supportTicketCreatedTemplate(name: string, ticketNumber: number, subject: string, ticketId: string): EmailContent {
+  const safeSubject = escapeEmailText(subject);
+  return {
+    subject: `[Ticket #${ticketNumber}] We received your request — AccsMarkets`,
+    html: baseLayout({
+      preheaderText: `Ticket #${ticketNumber} is open. Our team will reply within 24–48 hours.`,
+      emoji: "🎫",
+      tone: "info",
+      heading: `Ticket #${ticketNumber} opened`,
+      subheading: "We're on it.",
+      body: `<p>Hi ${name},</p>
+<p>Thanks for contacting AccsMarkets support. We've opened a ticket for <strong>"${safeSubject}"</strong> and our team will reply within <strong>24–48 hours</strong>.</p>
+<p>You can follow the conversation, add details, or attach screenshots at any time from your support centre. Replies are sent there — not by email — so please keep the ticket page handy.</p>`,
+      details: [
+        ["Ticket number", `#${ticketNumber}`],
+        ["Subject", safeSubject],
+        ["Status", "Open"],
+      ],
+      ctaText: "View ticket",
+      ctaUrl: `${appUrl()}/dashboard/support/${encodeURIComponent(ticketId)}`,
+    }),
+  };
+}
+
+export function supportTicketReplyTemplate(name: string, ticketNumber: number, subject: string, replyBody: string, ticketId: string): EmailContent {
+  const safeSubject = escapeEmailText(subject);
+  const escaped = escapeEmailText(replyBody).replace(/\n/g, "<br/>");
+  return {
+    subject: `[Ticket #${ticketNumber}] Re: ${subject}`,
+    html: baseLayout({
+      preheaderText: replyBody.substring(0, 100),
+      emoji: "💬",
+      tone: "info",
+      heading: "Support replied to your ticket",
+      subheading: `Ticket #${ticketNumber} · ${safeSubject}`,
+      body: `<p>Hi ${name},</p>
+<div class="panel" style="margin:12px 0 0;padding:14px 18px;background:#fafaf9;border:1px solid #e7e5e4;border-radius:12px;">${escaped}</div>
+<p style="margin-top:16px;font-size:13px;color:#6b7280;">— AccsMarkets Support Team</p>
+<p>To continue the conversation, reply from the ticket page below. Replies to this email are not monitored.</p>`,
+      ctaText: "Reply to ticket",
+      ctaUrl: `${appUrl()}/dashboard/support/${encodeURIComponent(ticketId)}`,
+    }),
+  };
+}

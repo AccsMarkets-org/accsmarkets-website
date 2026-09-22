@@ -4,7 +4,7 @@ import { ReferralsAdminClient } from "@/components/admin/ReferralsAdminClient";
 
 export default async function AdminReferralsPage() {
   const session = await requireAdmin("MANAGE_REFERRALS");
-  if (!session) redirect("/admin");
+  if (!session) redirect("/admin?denied=1");
 
   return <ReferralsAdminClient />;
 }

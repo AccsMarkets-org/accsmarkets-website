@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { uploadBuffer } from "@/lib/cloudinary";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { signKycUpload } from "@/lib/kyc-encrypt";
 
 export const dynamic = "force-dynamic";
 
@@ -35,8 +36,12 @@ export async function POST(req: Request) {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const url = await uploadBuffer(buffer, file.type, `kyc/${session.user.id}`);
-    return NextResponse.json({ url });
+    // Private (authenticated) storage — never public, never Drive. Folder is
+    // per-user so /api/kyc/verify can additionally check path ownership.
+    const url = await uploadBuffer(buffer, file.type, `kyc/${session.user.id}`, undefined, { privateAccess: true });
+    // Short-lived HMAC binding this URL to this user; /api/kyc/verify requires it.
+    const sig = signKycUpload(session.user.id, url);
+    return NextResponse.json({ url, sig });
   } catch (err) {
     console.error("KYC upload error:", err);
     return NextResponse.json({ error: "Upload failed. Try again." }, { status: 500 });

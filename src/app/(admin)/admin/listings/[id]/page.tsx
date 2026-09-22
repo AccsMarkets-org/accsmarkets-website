@@ -1,6 +1,7 @@
 ﻿import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, ExternalLink, Hourglass, Star } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -29,6 +30,9 @@ export default async function AdminListingDetailPage({
   params: { id: string };
   searchParams: { tab?: string };
 }) {
+  const session = await requireAdmin("MANAGE_LISTINGS");
+  if (!session) redirect("/admin?denied=1");
+
   const tab = (TABS.includes(searchParams.tab as Tab) ? searchParams.tab : "overview") as Tab;
 
   const listing = await prisma.listing.findUnique({

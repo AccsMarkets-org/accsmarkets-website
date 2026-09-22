@@ -59,9 +59,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   switch (action) {
     case "ban": {
       const updated = await prisma.$transaction(async (tx) => {
+        // tokenVersion bump invalidates every live JWT for this account within
+        // ~60s (see the jwt callback in src/lib/auth.ts) instead of at expiry.
         const u = await tx.user.update({
           where: { id: user.id },
-          data: { isBanned: true, bannedReason: reason ?? "Banned by admin." },
+          data: { isBanned: true, bannedReason: reason ?? "Banned by admin.", tokenVersion: { increment: 1 } },
         });
         await auditLog(tx, session.user.id, "user.ban", "User", user.id, { reason });
         return u;

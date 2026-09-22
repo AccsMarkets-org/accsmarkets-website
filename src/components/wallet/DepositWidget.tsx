@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/hooks/useConfirm";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, Tag } from "lucide-react";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -593,7 +593,107 @@ export function DepositWidget() {
             </form>
           )
         )}
+
+        {/* ── Promo code (all methods) ───────────────────────────────────── */}
+        <PromoCodeEntry onCredited={() => router.refresh()} />
       </div>
+    </div>
+  );
+}
+
+// ── Promo code entry ───────────────────────────────────────────────────────────
+
+/**
+ * "Have a promo code?" — redeems via POST /api/promo. FLAT_CREDIT codes land in
+ * the wallet immediately; PERCENT_OFF_FEE codes are held and applied to the
+ * user's next escrow checkout automatically.
+ */
+function PromoCodeEntry({ onCredited }: { onCredited: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [applied, setApplied] = useState<{ code: string; type: string; value: number; message: string } | null>(null);
+
+  async function apply() {
+    const c = code.trim();
+    if (!c) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/promo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: c }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not apply promo code");
+      setApplied({ code: data.code ?? c.toUpperCase(), type: data.type, value: Number(data.value), message: data.message });
+      setCode("");
+      toast.success(data.message ?? "Promo code applied");
+      if (data.type === "FLAT_CREDIT") onCredited();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not apply promo code");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="mt-6 border-t border-surface-border pt-4">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-2 text-sm font-medium text-foreground"
+      >
+        <span className="inline-flex items-center gap-2">
+          <Tag className="h-4 w-4 text-brand-500" aria-hidden />
+          Have a promo code?
+        </span>
+        <ChevronDown className={cn("h-4 w-4 text-muted transition", open && "rotate-180")} aria-hidden />
+      </button>
+      {open && (
+        <div className="mt-3 flex flex-col gap-2">
+          {applied && (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-success/40 bg-success/5 px-3 py-2 text-sm">
+              <span>
+                <span className="font-mono font-semibold">{applied.code}</span>{" "}
+                <span className="text-muted">— {applied.message}</span>
+              </span>
+              <span className="shrink-0 font-semibold text-success">
+                {applied.type === "FLAT_CREDIT" ? `+$${applied.value.toFixed(2)}` : `${applied.value.toFixed(0)}% off fee`}
+              </span>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <div
+                className={cn(
+                  "flex items-center gap-2 rounded-xl border bg-background px-3 py-2.5 transition focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-400/20",
+                  error ? "border-danger" : "border-surface-border",
+                )}
+              >
+                <input
+                  value={code}
+                  onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(null); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); apply(); } }}
+                  placeholder="Enter code"
+                  aria-label="Promo code"
+                  className="flex-1 bg-transparent font-mono text-sm uppercase text-foreground placeholder:text-muted focus:outline-none"
+                />
+              </div>
+              {error && <p className="mt-1 text-xs text-danger">{error}</p>}
+            </div>
+            <Button type="button" variant="secondary" onClick={apply} isLoading={loading} disabled={!code.trim()} className="shrink-0 self-start">
+              Apply
+            </Button>
+          </div>
+          <p className="text-xs text-muted">
+            Wallet-credit codes are added to your balance instantly. Fee-discount codes are applied at your next escrow checkout.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

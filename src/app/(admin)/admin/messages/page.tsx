@@ -1,6 +1,11 @@
+import { redirect } from "next/navigation";
 import { MessageSquare } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 
-export default function AdminMessagesPage() {
+export default async function AdminMessagesPage() {
+  const session = await requireAdmin("MANAGE_USERS");
+  if (!session) redirect("/admin?denied=1");
+
   return (
     <div className="flex flex-1 items-center justify-center bg-background">
       <div className="text-center">

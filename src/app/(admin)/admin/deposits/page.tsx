@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -10,6 +12,9 @@ export default async function AdminDepositsPage({
 }: {
   searchParams: { tab?: string };
 }) {
+  const session = await requireAdmin("MANAGE_FINANCE");
+  if (!session) redirect("/admin?denied=1");
+
   const tab = searchParams.tab === "bank" ? "bank" : "crypto";
 
   const [cryptoDeposits, bankTransfers, pendingCrypto, pendingBank] = await Promise.all([

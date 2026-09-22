@@ -1,4 +1,6 @@
-﻿import { ArrowLeft, ArrowRight } from "lucide-react";
+﻿import { redirect } from "next/navigation";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { formatDate } from "@/lib/utils";
@@ -8,6 +10,9 @@ export default async function AdminAuditLogPage({
 }: {
   searchParams: { page?: string; action?: string };
 }) {
+  const session = await requireAdmin("VIEW_AUDIT_LOG");
+  if (!session) redirect("/admin?denied=1");
+
   const page = Math.max(1, Number(searchParams.page) || 1);
   const perPage = 50;
   const actionFilter = searchParams.action?.trim() || undefined;

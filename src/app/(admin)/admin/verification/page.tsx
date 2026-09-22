@@ -1,5 +1,7 @@
 ﻿import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Check, ExternalLink, X } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -7,6 +9,8 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { formatDate } from "@/lib/utils";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { decryptKycField, isEncryptedKycField } from "@/lib/kyc-encrypt";
+import { resignKycUrl } from "@/lib/cloudinary";
+import { isVisionAvailable } from "@/lib/ai";
 
 // Rows written before KYC-at-rest encryption hold plain URLs; newer rows hold iv:tag:ct.
 function readKycField(value: string | null): string | null {
@@ -17,6 +21,13 @@ function readKycField(value: string | null): string | null {
   } catch {
     return null;
   }
+}
+
+// Document images live as authenticated Cloudinary assets behind 24h signed
+// links; re-sign at render time so an old submission still opens.
+function readKycUrl(value: string | null): string | null {
+  const url = readKycField(value);
+  return url ? resignKycUrl(url) : null;
 }
 
 const STATUS_STYLE: Record<string, { label: string; className: string }> = {
@@ -32,6 +43,9 @@ export default async function AdminVerificationPage({
 }: {
   searchParams: Record<string, string | undefined>;
 }) {
+  const session = await requireAdmin("MANAGE_KYC");
+  if (!session) redirect("/admin?denied=1");
+
   const tab = searchParams.tab ?? "kyc";
 
   const [kycSubmissions, kybSubmissions, kycCount, kybCount] = await Promise.all([
@@ -58,6 +72,7 @@ export default async function AdminVerificationPage({
   ]);
 
   const totalPending = kycCount + kybCount;
+  const aiEnabled = isVisionAvailable();
 
   return (
     <div className="flex flex-col gap-5">
@@ -110,57 +125,74 @@ export default async function AdminVerificationPage({
                   <StatusPill label={style.label} className={style.className} />
                 </div>
 
-                {/* Score meters */}
-                {s.kycScore !== null && (
+                {/* AI pre-check (phase 1: OCR + quality + tamper hints — no face match / liveness yet) */}
+                {s.kycScore === null ? (
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-xl border border-dashed border-surface-border px-3 py-1.5 text-xs text-muted">
+                    <span className="h-1.5 w-1.5 rounded-full bg-surface-border" aria-hidden />
+                    {aiEnabled ? "AI check not run yet" : "AI check not run (no vision provider configured)"}
+                  </div>
+                ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                     <div>
-                      <p className="text-xs text-muted mb-1">KYC Score</p>
+                      <p className="text-xs text-muted mb-1">
+                        AI Score
+                        {s.kycScore >= 80 && <span className="ml-1.5 rounded-full bg-success/10 px-1.5 py-0.5 text-[10px] font-bold text-success">AI: looks good</span>}
+                        {s.kycScore < 30 && <span className="ml-1.5 rounded-full bg-danger/10 px-1.5 py-0.5 text-[10px] font-bold text-danger">Needs attention</span>}
+                      </p>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-2 rounded-full bg-surface-border overflow-hidden">
                           <div
                             className={`h-full rounded-full ${s.kycScore >= 70 ? "bg-success" : s.kycScore >= 40 ? "bg-warning" : "bg-danger"}`}
-                            style={{ width: `${s.kycScore}%` }}
+                            style={{ width: `${Math.round(s.kycScore)}%` }}
                           />
                         </div>
-                        <span className="text-xs font-semibold w-8">{s.kycScore}</span>
+                        <span className="text-xs font-semibold w-8">{Math.round(s.kycScore)}</span>
                       </div>
                     </div>
-                    {s.faceSimilarity !== null && (
-                      <div>
-                        <p className="text-xs text-muted mb-1">Face Similarity</p>
+                    <div>
+                      <p className="text-xs text-muted mb-1">Face Similarity</p>
+                      {s.faceSimilarity === null ? (
+                        <span className="text-xs text-muted">Not checked (manual compare)</span>
+                      ) : (
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-2 rounded-full bg-surface-border overflow-hidden">
                             <div
-                              className={`h-full rounded-full ${(s.faceSimilarity ?? 0) >= 70 ? "bg-success" : (s.faceSimilarity ?? 0) >= 40 ? "bg-warning" : "bg-danger"}`}
-                              style={{ width: `${s.faceSimilarity ?? 0}%` }}
+                              className={`h-full rounded-full ${s.faceSimilarity >= 70 ? "bg-success" : s.faceSimilarity >= 40 ? "bg-warning" : "bg-danger"}`}
+                              style={{ width: `${Math.round(s.faceSimilarity)}%` }}
                             />
                           </div>
-                          <span className="text-xs font-semibold w-8">{s.faceSimilarity}</span>
+                          <span className="text-xs font-semibold w-8">{Math.round(s.faceSimilarity)}</span>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                     <div>
                       <p className="text-xs text-muted mb-1">Liveness</p>
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${s.isLive ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
-                        {s.isLive ? <Check className="h-3.5 w-3.5" aria-hidden /> : <X className="h-3.5 w-3.5" aria-hidden />}
-                        {s.isLive ? "Live" : "Not live"}
-                      </span>
+                      {s.isLive === null ? (
+                        <span className="text-xs text-muted">Not checked</span>
+                      ) : (
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${s.isLive ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+                          {s.isLive ? <Check className="h-3.5 w-3.5" aria-hidden /> : <X className="h-3.5 w-3.5" aria-hidden />}
+                          {s.isLive ? "Live" : "Not live"}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
 
                 {/* OCR data */}
-                {(s.ocrName || s.ocrDob || s.ocrDocNumber) && (
+                {(s.ocrName || s.ocrDob || s.ocrDocNumber || s.ocrExpiry) && (
                   <div className="rounded-xl bg-surface-muted border border-surface-border px-3 py-2 mb-3 text-xs text-muted flex flex-wrap gap-x-4 gap-y-1">
                     {s.ocrName && <span><span className="font-medium text-foreground">Name:</span> {readKycField(s.ocrName)}</span>}
                     {s.ocrDob && <span><span className="font-medium text-foreground">DOB:</span> {readKycField(s.ocrDob)}</span>}
                     {s.ocrDocNumber && <span><span className="font-medium text-foreground">Doc #:</span> {readKycField(s.ocrDocNumber)}</span>}
+                    {s.ocrExpiry && <span><span className="font-medium text-foreground">Expires:</span> {readKycField(s.ocrExpiry)}</span>}
+                    <span className="text-[10px] italic">OCR by AI — verify against the document image</span>
                   </div>
                 )}
 
                 {/* Document thumbnails */}
                 <div className="flex flex-wrap gap-3 mb-3">
-                  {([["ID Front", readKycField(s.idFrontUrl)], ["ID Back", readKycField(s.idBackUrl)], ["Selfie", readKycField(s.selfieUrl)]] as const).map(([label, url]) => (
+                  {([["ID Front", readKycUrl(s.idFrontUrl)], ["ID Back", readKycUrl(s.idBackUrl)], ["Selfie", readKycUrl(s.selfieUrl)]] as const).map(([label, url]) => (
                     url && (
                       <a key={label} href={url} target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-1">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -171,13 +203,23 @@ export default async function AdminVerificationPage({
                   ))}
                 </div>
 
-                <AdminActionButtons
-                  endpoint={`/api/admin/verification/${s.id}`}
-                  actions={[
-                    { label: "Approve", action: "approve", variant: "primary" as const, method: "PATCH" as const },
-                    { label: "Reject", action: "reject", variant: "danger" as const, promptReason: true, method: "PATCH" as const },
-                  ]}
-                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <AdminActionButtons
+                    endpoint={`/api/admin/verification/${s.id}`}
+                    actions={[
+                      { label: "Approve", action: "approve", variant: "primary" as const, method: "PATCH" as const },
+                      { label: "Reject", action: "reject", variant: "danger" as const, promptReason: true, method: "PATCH" as const },
+                    ]}
+                  />
+                  {aiEnabled && (
+                    <AdminActionButtons
+                      endpoint={`/api/admin/verification/${s.id}/rerun-ai`}
+                      actions={[
+                        { label: s.kycScore === null ? "Run AI check" : "Re-run AI check", action: "rerun_ai", variant: "outline" as const, method: "PATCH" as const },
+                      ]}
+                    />
+                  )}
+                </div>
               </div>
             );
           })}

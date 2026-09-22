@@ -48,10 +48,36 @@ enum ListingStatus {
   DRAFT
   PENDING
   ACTIVE
+  PAUSED
   SOLD
   REJECTED
   SUSPENDED
   EXPIRED
+}
+
+enum SupportTicketStatus {
+  OPEN
+  AWAITING_USER
+  AWAITING_STAFF
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum SupportTicketCategory {
+  ACCOUNT
+  PAYMENT
+  ESCROW
+  LISTING
+  KYC
+  TECHNICAL
+  OTHER
 }
 
 enum AdsenseStatus {
@@ -274,22 +300,22 @@ model VerificationToken {
 // ---------- Core domain models ----------
 
 model User {
-  id                    String            @id @default(cuid())
-  email                 String            @unique
-  emailVerified         DateTime?
-  password              String? // null for OAuth-only accounts
-  name                  String?
-  username              String?           @unique
-  image                 String?
-  coverPhoto            String? // Cloudinary URL for profile cover banner
-  role                  Role              @default(USER)
-  kycLevel              KycLevel          @default(NONE)
-  verifiedBadge         VerifiedBadge     @default(NONE)
-  trustScore            Int               @default(0)
-  walletBalance         Decimal           @default(0) @db.Decimal(12, 2)
-  subscriptionPlanId    String?
-  subscriptionPlan      SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
-  subscriptionExpiresAt DateTime?
+  id                            String            @id @default(cuid())
+  email                         String            @unique
+  emailVerified                 DateTime?
+  password                      String? // null for OAuth-only accounts
+  name                          String?
+  username                      String?           @unique
+  image                         String?
+  coverPhoto                    String? // Cloudinary URL for profile cover banner
+  role                          Role              @default(USER)
+  kycLevel                      KycLevel          @default(NONE)
+  verifiedBadge                 VerifiedBadge     @default(NONE)
+  trustScore                    Int               @default(0)
+  walletBalance                 Decimal           @default(0) @db.Decimal(12, 2)
+  subscriptionPlanId            String?
+  subscriptionPlan              SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
+  subscriptionExpiresAt         DateTime?
   // Billing here is prepaid and non-recurring (a purchase buys a flat 30-day
   // period; nothing auto-charges again) — there is no subscription to
   // "cancel" in the Stripe-style sense. This flag records that the user has
@@ -298,15 +324,18 @@ model User {
   // to keep your benefits." It does not itself change entitlement: reverting
   // an expired plan to Free happens unconditionally once subscriptionExpiresAt
   // passes, whether or not the user ever set this flag (see api/internal/sweep).
-  subscriptionCancelAtPeriodEnd Boolean @default(false)
-  bio                   String?           @db.Text
-  socialLinks           Json? // { twitter?, instagram?, youtube?, website? }
-  isBanned              Boolean           @default(false)
-  bannedReason          String?
-  lastSeenAt            DateTime?
-  marketingOptOut       Boolean           @default(false)
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  subscriptionCancelAtPeriodEnd Boolean           @default(false)
+  bio                           String?           @db.Text
+  socialLinks                   Json? // { twitter?, instagram?, youtube?, website? }
+  isBanned                      Boolean           @default(false)
+  bannedReason                  String?
+  // Bumped on ban, password reset and "sign out everywhere"; JWTs carrying an
+  // older version are rejected on the next request instead of living 7 days.
+  tokenVersion                  Int               @default(0)
+  lastSeenAt                    DateTime?
+  marketingOptOut               Boolean           @default(false)
+  createdAt                     DateTime          @default(now())
+  updatedAt                     DateTime          @updatedAt
 
   accounts              Account[]
   sessions              Session[]
@@ -373,6 +402,9 @@ model User {
   staffRoleId           String?
   staffRole             StaffRole?             @relation(fields: [staffRoleId], references: [id], onDelete: SetNull)
   sentStaffInvites      StaffInvite[]          @relation("StaffInviter")
+  supportTickets        SupportTicket[]        @relation("TicketOwner")
+  assignedTickets       SupportTicket[]        @relation("TicketAssignee")
+  supportMessages       SupportTicketMessage[]
 
   @@index([role])
 }
@@ -1701,4 +1733,46 @@ model ContactMessage {
   createdAt DateTime  @default(now())
 
   @@index([isRead, createdAt])
+}
+
+// ---------- Support Tickets ----------
+
+model SupportTicket {
+  id          String                 @id @default(cuid())
+  number      Int                    @unique @default(autoincrement())
+  userId      String
+  user        User                   @relation("TicketOwner", fields: [userId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?                  @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  subject     String
+  category    SupportTicketCategory  @default(OTHER)
+  priority    SupportTicketPriority  @default(NORMAL)
+  status      SupportTicketStatus    @default(OPEN)
+  // Optional link to the thing the ticket is about.
+  escrowId    String?
+  listingId   String?
+  lastReplyAt DateTime               @default(now())
+  resolvedAt  DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  messages    SupportTicketMessage[]
+
+  @@index([userId, status])
+  @@index([status, lastReplyAt])
+  @@index([assigneeId])
+}
+
+model SupportTicketMessage {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  isStaff     Boolean       @default(false)
+  isInternal  Boolean       @default(false) // staff-only note, hidden from the user
+  body        String        @db.Text
+  attachments Json? // string[] of upload URLs
+  createdAt   DateTime      @default(now())
+
+  @@index([ticketId, createdAt])
 }

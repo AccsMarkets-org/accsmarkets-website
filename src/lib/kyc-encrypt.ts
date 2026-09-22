@@ -32,7 +32,50 @@
  *   2. Re-save each field encrypted.
  */
 
+import { createHmac, timingSafeEqual } from "crypto";
 import { encryptCredentials, decryptCredentials } from "@/lib/credentials-crypto";
+
+// ── Upload → submit binding ───────────────────────────────────────────────────
+// /api/upload/kyc returns { url, sig } and /api/kyc/verify only accepts a URL
+// whose sig verifies for the *same* user. This stops a submitter from pointing
+// their KYC record at an arbitrary image (or someone else's upload).
+
+const UPLOAD_SIG_TTL_MS = 6 * 60 * 60 * 1000; // 6h — must outlive an upload → submit session
+
+function hmacKey(): Buffer {
+  const hex = process.env.CREDENTIALS_ENCRYPTION_KEY;
+  if (!hex || hex.length !== 64) {
+    throw new Error("CREDENTIALS_ENCRYPTION_KEY must be a 32-byte hex string (64 chars)");
+  }
+  return Buffer.from(hex, "hex");
+}
+
+function uploadMac(userId: string, url: string, exp: number): string {
+  return createHmac("sha256", hmacKey()).update(`kyc-upload|${userId}|${url}|${exp}`).digest("hex");
+}
+
+/** Returns "<expiryMs>.<hmacHex>" binding this URL to this user for a limited time. */
+export function signKycUpload(userId: string, url: string): string {
+  const exp = Date.now() + UPLOAD_SIG_TTL_MS;
+  return `${exp}.${uploadMac(userId, url, exp)}`;
+}
+
+/** Verifies a signature produced by signKycUpload (constant-time, expiry-checked). */
+export function verifyKycUploadSig(userId: string, url: string, sig: string): boolean {
+  const dot = sig.indexOf(".");
+  if (dot <= 0) return false;
+  const exp = Number(sig.slice(0, dot));
+  const mac = sig.slice(dot + 1);
+  if (!Number.isFinite(exp) || exp < Date.now()) return false;
+  if (!/^[0-9a-f]{64}$/.test(mac)) return false;
+  try {
+    const expected = Buffer.from(uploadMac(userId, url, exp), "hex");
+    const given = Buffer.from(mac, "hex");
+    return expected.length === given.length && timingSafeEqual(expected, given);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Encrypts a plaintext KYC field value.

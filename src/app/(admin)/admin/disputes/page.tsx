@@ -1,5 +1,7 @@
 ﻿import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminPagination } from "@/components/ui/AdminPagination";
@@ -39,6 +41,9 @@ export default async function AdminDisputesPage({
 }: {
   searchParams: { status?: string; page?: string };
 }) {
+  const session = await requireAdmin("MANAGE_DISPUTES");
+  if (!session) redirect("/admin?denied=1");
+
   const status = (TABS.includes(searchParams.status as TabStatus) ? searchParams.status as TabStatus : "OPEN");
   const page = Math.max(0, Number(searchParams.page ?? 0));
 

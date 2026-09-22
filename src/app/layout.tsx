@@ -3,6 +3,7 @@ import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { Providers } from "./providers";
 import { PwaInit } from "@/components/pwa/PwaInit";
+import { DeviceFingerprint } from "@/components/security/DeviceFingerprint";
 import messages from "../../messages/en.json";
 import "./globals.css";
 
@@ -107,6 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Providers>
             {children}
             <PwaInit />
+            <DeviceFingerprint />
           </Providers>
         </NextIntlClientProvider>
       </body>

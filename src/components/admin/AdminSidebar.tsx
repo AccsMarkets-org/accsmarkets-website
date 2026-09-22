@@ -5,12 +5,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import type { Permission } from "@/lib/permissions";
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, BadgeCheck, Banknote, ChartLine,
   ChevronDown, ClipboardList, DollarSign, FileText, Flag, Inbox, Landmark, LayoutDashboard,
   LayoutGrid, LifeBuoy, Mail, Mails, Megaphone, Menu, MessageSquare, MessageSquareText,
   Monitor, Rocket, Scale, ScrollText, Settings, ShieldAlert, ShieldCheck, SquarePen, Star,
-  ToggleRight, TriangleAlert, UserCog, UserPlus, Users, Wrench, X,
+  Ticket, ToggleRight, TriangleAlert, UserCog, UserPlus, Users, Wrench, X, Zap,
 } from "lucide-react";
 
 // ── Icons (lucide) ────────────────────────────────────────────────────────────
@@ -41,6 +42,9 @@ const I = {
   legal:         <Scale {...NAV_ICON} />,
   system:        <Monitor {...NAV_ICON} />,
   policies:      <FileText {...NAV_ICON} />,
+  promotions:    <Zap {...NAV_ICON} />,
+  promoCodes:    <Ticket {...NAV_ICON} />,
+  support:       <LifeBuoy {...NAV_ICON} />,
   auditlog:      <ScrollText {...NAV_ICON} />,
   contact:       <Inbox {...NAV_ICON} />,
   emailpool:     <Mails {...NAV_ICON} />,
@@ -54,7 +58,7 @@ const I = {
   chevron:       <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />,
 };
 
-type CountKey = "pendingListings" | "pendingDeposits" | "pendingWithdrawals" | "openDisputes" | "pendingKyc" | "pendingBankTransfers" | "unreadContactMessages" | "unreadOwnMessages";
+type CountKey = "pendingListings" | "pendingDeposits" | "pendingWithdrawals" | "openDisputes" | "pendingKyc" | "pendingBankTransfers" | "unreadContactMessages" | "unreadOwnMessages" | "openSupportTickets";
 
 export interface AdminSidebarCounts {
   pendingListings: number;
@@ -65,6 +69,7 @@ export interface AdminSidebarCounts {
   pendingBankTransfers: number;
   unreadContactMessages: number;
   unreadOwnMessages: number;
+  openSupportTickets?: number;
 }
 
 interface NavItem {
@@ -72,6 +77,10 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   countKey?: CountKey;
+  /** Staff permission required to see this link. Must match the
+   *  requireAdmin(...) call in the target page — the page is the real gate,
+   *  this only hides links the viewer couldn't open anyway. */
+  permission?: Permission;
 }
 
 interface NavSection {
@@ -85,98 +94,119 @@ const NAV_SECTIONS: NavSection[] = [
     id: "platform",
     label: "Platform",
     items: [
-      { href: "/admin", label: "Overview", icon: I.overview },
-      { href: "/admin/messages", label: "Messages", icon: I.messages, countKey: "unreadOwnMessages" },
-      { href: "/admin/analytics", label: "Analytics", icon: I.analytics },
+      { href: "/admin", label: "Overview", icon: I.overview, permission: "VIEW_ANALYTICS" },
+      { href: "/admin/messages", label: "Messages", icon: I.messages, countKey: "unreadOwnMessages", permission: "MANAGE_USERS" },
+      { href: "/admin/analytics", label: "Analytics", icon: I.analytics, permission: "VIEW_ANALYTICS" },
     ],
   },
   {
     id: "content",
     label: "Content",
     items: [
-      { href: "/admin/listings", label: "Listings", icon: I.listings, countKey: "pendingListings" },
-      { href: "/admin/escrows", label: "Escrows", icon: I.escrows },
-      { href: "/admin/escrow-support", label: "Escrow Support", icon: I.escsupport },
-      { href: "/admin/disputes", label: "Disputes", icon: I.disputes, countKey: "openDisputes" },
-      { href: "/admin/reports", label: "Reports", icon: I.reports },
+      { href: "/admin/listings", label: "Listings", icon: I.listings, countKey: "pendingListings", permission: "MANAGE_LISTINGS" },
+      { href: "/admin/promotions", label: "Promotions", icon: I.promotions, permission: "MANAGE_LISTINGS" },
+      { href: "/admin/escrows", label: "Escrows", icon: I.escrows, permission: "MANAGE_ESCROWS" },
+      { href: "/admin/escrow-support", label: "Escrow Support", icon: I.escsupport, permission: "MANAGE_ESCROW_MESSAGES" },
+      { href: "/admin/disputes", label: "Disputes", icon: I.disputes, countKey: "openDisputes", permission: "MANAGE_DISPUTES" },
+      { href: "/admin/reports", label: "Reports", icon: I.reports, permission: "MANAGE_REPORTS" },
     ],
   },
   {
     id: "finance",
     label: "Finance",
     items: [
-      { href: "/admin/deposits", label: "Deposits", icon: I.deposits, countKey: "pendingDeposits" },
-      { href: "/admin/bank-transfers", label: "Bank Transfers", icon: I.banktransfer, countKey: "pendingBankTransfers" },
-      { href: "/admin/withdrawals", label: "Withdrawals", icon: I.withdrawals, countKey: "pendingWithdrawals" },
-      { href: "/admin/transactions", label: "Transactions", icon: I.transactions },
-      { href: "/admin/bank-accounts", label: "Bank Accounts", icon: I.bankaccounts },
-      { href: "/admin/pricing", label: "Pricing", icon: I.pricing },
+      { href: "/admin/deposits", label: "Deposits", icon: I.deposits, countKey: "pendingDeposits", permission: "MANAGE_FINANCE" },
+      { href: "/admin/bank-transfers", label: "Bank Transfers", icon: I.banktransfer, countKey: "pendingBankTransfers", permission: "MANAGE_FINANCE" },
+      { href: "/admin/withdrawals", label: "Withdrawals", icon: I.withdrawals, countKey: "pendingWithdrawals", permission: "MANAGE_FINANCE" },
+      { href: "/admin/transactions", label: "Transactions", icon: I.transactions, permission: "MANAGE_FINANCE" },
+      { href: "/admin/bank-accounts", label: "Bank Accounts", icon: I.bankaccounts, permission: "MANAGE_FINANCE" },
+      { href: "/admin/pricing", label: "Pricing", icon: I.pricing, permission: "MANAGE_PRICING" },
     ],
   },
   {
     id: "users",
     label: "Users",
     items: [
-      { href: "/admin/users", label: "Users", icon: I.users },
-      { href: "/admin/verification", label: "Verification", icon: I.verification, countKey: "pendingKyc" },
-      { href: "/admin/subscriptions", label: "Subscriptions", icon: I.subscriptions },
-      { href: "/admin/referrals", label: "Referrals", icon: I.referrals },
+      { href: "/admin/users", label: "Users", icon: I.users, permission: "MANAGE_USERS" },
+      { href: "/admin/verification", label: "Verification", icon: I.verification, countKey: "pendingKyc", permission: "MANAGE_KYC" },
+      { href: "/admin/subscriptions", label: "Subscriptions", icon: I.subscriptions, permission: "MANAGE_USERS" },
+      { href: "/admin/referrals", label: "Referrals", icon: I.referrals, permission: "MANAGE_REFERRALS" },
     ],
   },
   {
     id: "ops",
     label: "Ops",
     items: [
-      { href: "/admin/announcements", label: "Announcements", icon: I.announcements },
-      { href: "/admin/email-templates", label: "Email Templates", icon: I.email },
-      { href: "/admin/canned-responses", label: "Canned Responses", icon: I.canned },
-      { href: "/admin/blog", label: "Blog", icon: I.blog },
-      { href: "/admin/marketing", label: "Marketing", icon: I.marketing },
-      { href: "/admin/contact-messages", label: "Contact Inbox", icon: I.contact, countKey: "unreadContactMessages" },
+      { href: "/admin/announcements", label: "Announcements", icon: I.announcements, permission: "MANAGE_MARKETING" },
+      { href: "/admin/email-templates", label: "Email Templates", icon: I.email, permission: "MANAGE_MARKETING" },
+      { href: "/admin/canned-responses", label: "Canned Responses", icon: I.canned, permission: "MANAGE_USERS" },
+      { href: "/admin/blog", label: "Blog", icon: I.blog, permission: "MANAGE_BLOG" },
+      { href: "/admin/marketing", label: "Marketing", icon: I.marketing, permission: "MANAGE_MARKETING" },
+      { href: "/admin/promo-codes", label: "Promo codes", icon: I.promoCodes, permission: "MANAGE_MARKETING" },
+      { href: "/admin/support", label: "Support Tickets", icon: I.support, countKey: "openSupportTickets", permission: "MANAGE_USERS" },
+      { href: "/admin/contact-messages", label: "Contact Inbox", icon: I.contact, countKey: "unreadContactMessages", permission: "MANAGE_USERS" },
     ],
   },
   {
     id: "team",
     label: "Team",
     items: [
-      { href: "/admin/staff", label: "Staff & Roles", icon: I.staff },
+      { href: "/admin/staff", label: "Staff & Roles", icon: I.staff, permission: "MANAGE_STAFF" },
     ],
   },
   {
     id: "system",
     label: "System",
     items: [
-      { href: "/admin/settings", label: "Settings", icon: I.settings },
-      { href: "/admin/maintenance", label: "Maintenance Mode", icon: I.maintenance },
-      { href: "/admin/feature-flags", label: "Feature Flags", icon: I.featureflags },
-      { href: "/admin/risk", label: "Risk", icon: I.risk },
-      { href: "/admin/legal", label: "Legal", icon: I.legal },
-      { href: "/admin/audit-log", label: "Audit Log", icon: I.auditlog },
-      { href: "/admin/system", label: "System", icon: I.system },
+      { href: "/admin/settings", label: "Settings", icon: I.settings, permission: "MANAGE_SETTINGS" },
+      { href: "/admin/maintenance", label: "Maintenance Mode", icon: I.maintenance, permission: "MANAGE_SETTINGS" },
+      { href: "/admin/feature-flags", label: "Feature Flags", icon: I.featureflags, permission: "MANAGE_SETTINGS" },
+      { href: "/admin/risk", label: "Risk", icon: I.risk, permission: "MANAGE_USERS" },
+      { href: "/admin/legal", label: "Legal", icon: I.legal, permission: "MANAGE_USERS" },
+      { href: "/admin/audit-log", label: "Audit Log", icon: I.auditlog, permission: "VIEW_AUDIT_LOG" },
+      { href: "/admin/system", label: "System", icon: I.system, permission: "VIEW_ANALYTICS" },
     ],
   },
   {
     id: "developer",
     label: "Developer",
     items: [
-      { href: "/admin/transfer-policies", label: "Transfer Policies", icon: I.policies },
-      { href: "/admin/escrow-emails", label: "Escrow Email Pool", icon: I.emailpool },
-      { href: "/admin/apps", label: "App Directory", icon: I.apps },
+      { href: "/admin/transfer-policies", label: "Transfer Policies", icon: I.policies, permission: "MANAGE_LISTINGS" },
+      { href: "/admin/escrow-emails", label: "Escrow Email Pool", icon: I.emailpool, permission: "MANAGE_ESCROWS" },
+      { href: "/admin/apps", label: "App Directory", icon: I.apps, permission: "MANAGE_USERS" },
     ],
   },
 ];
+
+/** Effective permission set for the viewer: "ALL" for owner-level admins
+ *  (no staff role), otherwise the staff role's permission list. */
+export type AllowedPermissions = Permission[] | "ALL";
+
+function filterNavSections(allowed: AllowedPermissions): NavSection[] {
+  if (allowed === "ALL") return NAV_SECTIONS;
+  const set = new Set<string>(allowed);
+  return NAV_SECTIONS
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !item.permission || set.has(item.permission)),
+    }))
+    .filter((section) => section.items.length > 0);
+}
 
 const COLLAPSED_DEFAULT = new Set<string>();
 
 function AdminNavList({
   pathname,
   counts,
+  allowed,
   onNav,
 }: {
   pathname: string;
   counts: AdminSidebarCounts;
+  allowed: AllowedPermissions;
   onNav?: () => void;
 }) {
+  const sections = filterNavSections(allowed);
   const [collapsed, setCollapsed] = useState<Set<string>>(COLLAPSED_DEFAULT);
 
   useEffect(() => {
@@ -198,9 +228,9 @@ function AdminNavList({
 
   return (
     <nav className="flex flex-col gap-0.5 px-2 py-3 overflow-y-auto">
-      {NAV_SECTIONS.map((section) => {
+      {sections.map((section) => {
         const isCollapsed = collapsed.has(section.id);
-        const sectionHasUrgent = section.items.some((item) => item.countKey && counts[item.countKey] > 0);
+        const sectionHasUrgent = section.items.some((item) => item.countKey && (counts[item.countKey] ?? 0) > 0);
 
         return (
           <div key={section.id} className="mb-1">
@@ -225,7 +255,7 @@ function AdminNavList({
               <div className="flex flex-col gap-0.5">
                 {section.items.map((item) => {
                   const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href + "/"));
-                  const count = item.countKey ? counts[item.countKey] : 0;
+                  const count = item.countKey ? (counts[item.countKey] ?? 0) : 0;
                   return (
                     <Link
                       key={item.href}
@@ -273,6 +303,8 @@ const ADMIN_LOGO = (
 
 interface SidebarProps {
   counts?: AdminSidebarCounts;
+  /** Computed server-side in the admin layout from the viewer's staff role. */
+  allowed?: AllowedPermissions;
 }
 
 const EMPTY_COUNTS: AdminSidebarCounts = {
@@ -284,9 +316,10 @@ const EMPTY_COUNTS: AdminSidebarCounts = {
   pendingBankTransfers: 0,
   unreadContactMessages: 0,
   unreadOwnMessages: 0,
+  openSupportTickets: 0,
 };
 
-export function AdminSidebar({ counts = EMPTY_COUNTS }: SidebarProps) {
+export function AdminSidebar({ counts = EMPTY_COUNTS, allowed = "ALL" }: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -298,7 +331,7 @@ export function AdminSidebar({ counts = EMPTY_COUNTS }: SidebarProps) {
           {ADMIN_LOGO}
         </div>
         <div className="flex-1 overflow-y-auto">
-          <AdminNavList pathname={pathname} counts={counts} />
+          <AdminNavList pathname={pathname} counts={counts} allowed={allowed} />
         </div>
       </aside>
 
@@ -334,7 +367,7 @@ export function AdminSidebar({ counts = EMPTY_COUNTS }: SidebarProps) {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-              <AdminNavList pathname={pathname} counts={counts} onNav={() => setOpen(false)} />
+              <AdminNavList pathname={pathname} counts={counts} allowed={allowed} onNav={() => setOpen(false)} />
             </div>
           </aside>
         </>

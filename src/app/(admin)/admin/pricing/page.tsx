@@ -5,7 +5,7 @@ import { PricingAdminClient } from "@/components/admin/PricingAdminClient";
 
 export default async function AdminPricingPage() {
   const session = await requireAdmin("MANAGE_PRICING");
-  if (!session) redirect("/admin");
+  if (!session) redirect("/admin?denied=1");
 
   const [plans, counts] = await Promise.all([
     prisma.subscriptionPlan.findMany({

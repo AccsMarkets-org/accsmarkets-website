@@ -11,6 +11,7 @@ export const getAdminSidebarCounts = unstable_cache(
       pendingKyc,
       pendingBankTransfers,
       unreadContactMessages,
+      openSupportTickets,
     ] = await Promise.all([
       prisma.listing.count({ where: { status: "PENDING" } }),
       prisma.cryptoWallet.count({ where: { isManual: true, status: "waiting" } }),
@@ -19,6 +20,7 @@ export const getAdminSidebarCounts = unstable_cache(
       prisma.kycSubmission.count({ where: { status: { in: ["PENDING", "UNDER_REVIEW"] } } }),
       prisma.bankTransferOrder.count({ where: { status: "SENT" } }),
       prisma.contactMessage.count({ where: { isRead: false } }),
+      prisma.supportTicket.count({ where: { status: { in: ["OPEN", "AWAITING_STAFF"] } } }),
     ]);
     return {
       pendingListings,
@@ -28,6 +30,7 @@ export const getAdminSidebarCounts = unstable_cache(
       pendingKyc,
       pendingBankTransfers,
       unreadContactMessages,
+      openSupportTickets,
     };
   },
   ["admin-sidebar-counts"],

@@ -18,7 +18,7 @@ import {
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { PromoteModal } from "@/components/listings/PromoteModal";
 import type { Listing } from "@prisma/client";
-import { Check, ChevronDown, RotateCcw, Timer, Zap } from "lucide-react";
+import { BarChart3, Check, ChevronDown, Pause, Play, RotateCcw, Timer, Zap } from "lucide-react";
 
 type ListingWithCounts = Listing & {
   _count?: { offers: number; bids: number };
@@ -28,6 +28,27 @@ interface Props {
   listing: ListingWithCounts;
   pendingOfferCount?: number;
   bidCount?: number;
+  /** Render a selection checkbox (bulk tools). */
+  selectable?: boolean;
+  selected?: boolean;
+  onToggle?: (id: string) => void;
+}
+
+/** Active boost summary for a listing: which type and how many days remain. */
+export function activeBoost(listing: Pick<Listing, "isFeatured" | "isPremiumFeatured" | "isPinned" | "featuredUntil" | "pinnedUntil">) {
+  const now = Date.now();
+  const days = (until: Date | string | null) =>
+    until ? Math.max(0, Math.ceil((new Date(until).getTime() - now) / 86400_000)) : null;
+  if (listing.isPremiumFeatured) return { type: "PREMIUM_FEATURED" as const, label: "Premium", daysLeft: days(listing.featuredUntil) };
+  if (listing.isFeatured) return { type: "FEATURED_BOOST" as const, label: "Featured", daysLeft: days(listing.featuredUntil) };
+  if (listing.isPinned) return { type: "PINNED" as const, label: "Pinned", daysLeft: days(listing.pinnedUntil) };
+  return null;
+}
+
+export function boostEndsLabel(daysLeft: number | null): string {
+  if (daysLeft === null) return "";
+  if (daysLeft <= 0) return "ending today";
+  return `ends in ${daysLeft}d`;
 }
 
 function fileToDataUri(file: File): Promise<string> {
@@ -67,13 +88,21 @@ function CheckShieldIcon() {
 }
 
 // ── main component ────────────────────────────────────────────────────────────
-export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0 }: Props) {
+export function ListingManageCard({
+  listing,
+  pendingOfferCount = 0,
+  bidCount = 0,
+  selectable = false,
+  selected = false,
+  onToggle,
+}: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [markingSold, setMarkingSold] = useState(false);
   const [relisting, setRelisting] = useState(false);
+  const [pausing, setPausing] = useState(false);
   const [promoteOpen, setPromoteOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { confirm, ConfirmDialog } = useConfirm();
@@ -82,18 +111,16 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
     ? (listing.screenshots as string[])
     : [];
   const style = LISTING_STATUS_STYLE[listing.status];
-  const canEdit = ["DRAFT", "PENDING", "REJECTED", "ACTIVE"].includes(listing.status);
-  const canDelete = ["DRAFT", "PENDING", "REJECTED", "EXPIRED"].includes(listing.status);
+  const canEdit = ["DRAFT", "PENDING", "REJECTED", "ACTIVE", "PAUSED"].includes(listing.status);
+  const canDelete = ["DRAFT", "PENDING", "REJECTED", "EXPIRED", "ACTIVE", "PAUSED"].includes(listing.status);
   const canPromote = listing.status === "ACTIVE";
+  const canMarkSold = listing.status === "ACTIVE" || listing.status === "PAUSED";
   const isAuction = listing.saleType === "AUCTION";
   const platformColor = PLATFORM_COLOR[listing.platform];
   const platformLabel = PLATFORM_LABEL[listing.platform];
 
-  // Promo badges
-  const promoBadges: string[] = [];
-  if (listing.isPremiumFeatured) promoBadges.push("Premium");
-  else if (listing.isFeatured) promoBadges.push("Featured");
-  if (listing.isPinned) promoBadges.push("Pinned");
+  // Active boost (type + days remaining)
+  const boost = activeBoost(listing);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -174,10 +201,40 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
     }
   }
 
+  async function handlePauseToggle() {
+    const pausing_ = listing.status === "ACTIVE";
+    const ok = await confirm({
+      title: pausing_ ? "Pause this listing?" : "Resume this listing?",
+      description: pausing_
+        ? "It will be hidden from buyers until you resume it. No re-approval is needed to resume."
+        : "The listing goes live again immediately — no admin review needed.",
+      confirmLabel: pausing_ ? "Pause" : "Resume",
+      destructive: false,
+    });
+    if (!ok) return;
+    setPausing(true);
+    try {
+      const res = await fetch(`/api/listings/${listing.id}/${pausing_ ? "pause" : "unpause"}`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? (pausing_ ? "Failed to pause" : "Failed to resume"));
+      }
+      toast.success(pausing_ ? "Listing paused" : "Listing is live again");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setPausing(false);
+    }
+  }
+
   async function handleDelete() {
+    const live = listing.status === "ACTIVE" || listing.status === "PAUSED";
     const ok = await confirm({
       title: "Delete listing?",
-      description: "This cannot be undone.",
+      description: live
+        ? "This listing is live. Deleting removes it permanently along with any pending offers. This cannot be undone."
+        : "This cannot be undone.",
       confirmLabel: "Delete",
       destructive: true,
     });
@@ -185,7 +242,10 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
     setDeleting(true);
     try {
       const res = await fetch(`/api/listings/${listing.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Delete failed");
+      }
       toast.success("Listing deleted");
       router.refresh();
     } catch (err) {
@@ -209,8 +269,25 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
   }
 
   return (
-    <div className="rounded-2xl border border-surface-border bg-surface shadow-card overflow-hidden">
+    <div
+      className={`rounded-2xl border bg-surface shadow-card overflow-hidden transition ${
+        selected ? "border-brand-500 ring-2 ring-brand-500/20" : "border-surface-border"
+      }`}
+    >
       <div className="flex gap-0">
+        {/* Bulk-select checkbox */}
+        {selectable && (
+          <label className="flex shrink-0 items-start justify-center px-2 pt-3 sm:px-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={() => onToggle?.(listing.id)}
+              aria-label={`Select ${listing.title}`}
+              className="h-4 w-4 rounded border-surface-border text-brand-500 focus:ring-brand-500"
+            />
+          </label>
+        )}
+
         {/* Thumbnail */}
         <div
           className="relative shrink-0 w-[120px] sm:w-[160px] self-stretch flex items-center justify-center overflow-hidden"
@@ -240,10 +317,17 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
             {style.label}
           </span>
 
-          {/* Promo badge */}
-          {promoBadges.length > 0 && (
-            <span className="absolute bottom-2 left-2 rounded-lg bg-brand-500 px-2 py-0.5 text-[10px] font-bold text-white leading-none">
-              {promoBadges[0]}
+          {/* Promo badge: type + time remaining */}
+          {boost && (
+            <span
+              className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-lg bg-brand-500 px-2 py-0.5 text-[10px] font-bold text-white leading-none"
+              title={boost.daysLeft !== null ? `${boost.label} boost ${boostEndsLabel(boost.daysLeft)}` : `${boost.label} boost`}
+            >
+              <Zap className="h-2.5 w-2.5" aria-hidden />
+              {boost.label}
+              {boost.daysLeft !== null && (
+                <span className="font-medium opacity-80">· {boostEndsLabel(boost.daysLeft)}</span>
+              )}
             </span>
           )}
 
@@ -392,6 +476,13 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
               )}
             </Button>
 
+            <Link href={`/dashboard/listings/${listing.id}/analytics`}>
+              <Button variant="outline" size="sm" title="View analytics">
+                <BarChart3 className="h-4 w-4" aria-hidden />
+                Analytics
+              </Button>
+            </Link>
+
             {canPromote && (
               <Button
                 variant="outline"
@@ -400,11 +491,37 @@ export function ListingManageCard({ listing, pendingOfferCount = 0, bidCount = 0
                 className="border-brand-300 text-brand-600 hover:bg-brand-500/8"
               >
                 <Zap className="h-4 w-4" aria-hidden />
-                Boost
+                {boost ? "Extend" : "Boost"}
               </Button>
             )}
 
-            {listing.status === "ACTIVE" && (
+            {(listing.status === "ACTIVE" || listing.status === "PAUSED") && (
+              <Button
+                variant="outline"
+                size="sm"
+                isLoading={pausing}
+                onClick={handlePauseToggle}
+                className={
+                  listing.status === "ACTIVE"
+                    ? "border-amber-300 text-amber-700 hover:bg-amber-500/8 dark:text-amber-400"
+                    : "border-success/40 text-success hover:bg-success/8"
+                }
+              >
+                {listing.status === "ACTIVE" ? (
+                  <>
+                    <Pause className="h-4 w-4" aria-hidden />
+                    Pause
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" aria-hidden />
+                    Resume
+                  </>
+                )}
+              </Button>
+            )}
+
+            {canMarkSold && (
               <Button
                 variant="outline"
                 size="sm"

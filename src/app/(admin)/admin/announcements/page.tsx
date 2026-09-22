@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -6,6 +8,9 @@ import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
 import { CreateAnnouncementForm } from "@/components/admin/CreateAnnouncementForm";
 
 export default async function AdminAnnouncementsPage() {
+  const session = await requireAdmin("MANAGE_MARKETING");
+  if (!session) redirect("/admin?denied=1");
+
   const announcements = await prisma.announcement.findMany({
     orderBy: { createdAt: "desc" },
     take: 50,

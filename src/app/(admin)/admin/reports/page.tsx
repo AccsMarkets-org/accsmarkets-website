@@ -1,4 +1,6 @@
 ﻿import Link from "next/link";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -41,6 +43,9 @@ export default async function AdminReportsPage({
 }: {
   searchParams: { tab?: string; page?: string };
 }) {
+  const session = await requireAdmin("MANAGE_REPORTS");
+  if (!session) redirect("/admin?denied=1");
+
   const tab = (TABS.includes(searchParams.tab as TabKey) ? searchParams.tab as TabKey : "PENDING");
   const page = Math.max(0, Number(searchParams.page ?? 0));
 

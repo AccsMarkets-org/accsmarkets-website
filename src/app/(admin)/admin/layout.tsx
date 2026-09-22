@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getAdminSidebarCounts } from "@/lib/admin-cache";
+import { getAdminPermissions } from "@/lib/admin";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminUserMenu } from "@/components/admin/AdminUserMenu";
 import { AdminRealtimeUpdates } from "@/components/admin/AdminRealtimeUpdates";
@@ -53,13 +54,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (session.user.role !== "ADMIN") redirect("/dashboard");
 
-  const [counts, unreadOwnMessages] = await Promise.all([
+  const [counts, unreadOwnMessages, allowed] = await Promise.all([
     getAdminSidebarCounts(),
     // Per-viewer, not part of the shared 15s cache above (that cache has a
     // single global key, so a per-admin count doesn't belong in it — it
     // would just serve whichever admin's count happened to populate it
     // first to every other admin for the next 15 seconds).
     prisma.message.count({ where: { recipientId: session.user.id, isRead: false, escrowId: null } }),
+    // Staff-role permissions drive which sidebar links render. Each page
+    // still enforces its own requireAdmin(permission) — this is UX only.
+    getAdminPermissions(session.user.id),
   ]);
 
   return (
@@ -70,7 +74,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     // internal scroll pane) sent messages by jumping/scrolling the entire
     // page rather than smoothly auto-scrolling just the thread.
     <div className="flex h-screen">
-      <AdminSidebar counts={{ ...counts, unreadOwnMessages }} />
+      <AdminSidebar counts={{ ...counts, unreadOwnMessages }} allowed={allowed} />
       <div className="flex flex-1 flex-col min-w-0">
         {/* pt/height account for the safe-area inset so this doesn't render
             under the status bar / notch in standalone PWA mode (regular

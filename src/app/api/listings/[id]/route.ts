@@ -7,6 +7,11 @@ import { updateListingSchema } from "@/lib/validation/listing";
 import { scoreContent } from "@/lib/moderation";
 import { sanitizeText } from "@/lib/sanitize";
 import { createNotification } from "@/lib/notifications";
+import {
+  deleteBlockReason,
+  deleteListingCascade,
+  transitionBlockReason,
+} from "@/app/api/listings/_lib/transitions";
 
 export const dynamic = "force-dynamic";
 
@@ -88,7 +93,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (listing.sellerId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  if (!["DRAFT", "PENDING", "REJECTED", "ACTIVE"].includes(listing.status)) {
+  if (!["DRAFT", "PENDING", "REJECTED", "ACTIVE", "PAUSED"].includes(listing.status)) {
     return NextResponse.json({ error: "This listing can no longer be edited." }, { status: 400 });
   }
 
@@ -165,14 +170,30 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   if (listing.sellerId !== session.user.id && session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  if (!["DRAFT", "PENDING", "REJECTED"].includes(listing.status)) {
-    return NextResponse.json({ error: "Active or sold listings cannot be deleted." }, { status: 400 });
+  const statusBlock = transitionBlockReason(listing.status, "delete");
+  if (statusBlock) {
+    return NextResponse.json({ error: statusBlock }, { status: 400 });
+  }
+  const escrowBlock = await deleteBlockReason(listing.id).catch(() => "Service unavailable");
+  if (escrowBlock) {
+    return NextResponse.json({ error: escrowBlock }, { status: 400 });
   }
 
   try {
-    await prisma.listing.delete({ where: { id: listing.id } });
+    await prisma.$transaction((tx) => deleteListingCascade(tx, listing.id));
   } catch {
     return NextResponse.json({ error: "Failed to delete listing" }, { status: 500 });
   }
+
+  prisma.adminAuditLog.create({
+    data: {
+      adminId: session.user.id,
+      action: "LISTING_DELETED",
+      targetType: "LISTING",
+      targetId: listing.id,
+      metadata: { title: listing.title, sellerId: listing.sellerId, status: listing.status },
+    },
+  }).catch(() => null);
+
   return NextResponse.json({ success: true });
 }

@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
 import { useConfirm } from "@/hooks/useConfirm";
 import { cn } from "@/lib/utils";
 import type { EscrowStatus, TransferModel } from "@prisma/client";
-import { Check, TriangleAlert } from "lucide-react";
+import { Check, LifeBuoy, TriangleAlert } from "lucide-react";
 
 interface EscrowActionsProps {
   escrowId: string;
@@ -620,6 +621,17 @@ export function EscrowActions({
               </div>
             )}
           </div>
+        )}
+
+        {/* Support ticket pre-linked to this escrow */}
+        {(isBuyer || isSeller) && (
+          <Link
+            href={`/dashboard/support/new?escrowId=${encodeURIComponent(escrowId)}&category=ESCROW`}
+            className="flex w-full items-center justify-center gap-1.5 text-xs text-muted transition hover:text-brand-500"
+          >
+            <LifeBuoy className="h-3.5 w-3.5" aria-hidden />
+            Get help with this escrow
+          </Link>
         )}
       </div>
     </>

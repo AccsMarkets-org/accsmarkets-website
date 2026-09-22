@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
 import { emitToUser } from "@/lib/socket";
+import { transitionBlockReason } from "@/app/api/listings/_lib/transitions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +29,9 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  if (listing.status !== "ACTIVE") {
-    return NextResponse.json(
-      { error: "Only active listings can be marked as sold." },
-      { status: 400 },
-    );
+  const blocked = transitionBlockReason(listing.status, "mark_sold");
+  if (blocked) {
+    return NextResponse.json({ error: blocked }, { status: 400 });
   }
 
   let updated;

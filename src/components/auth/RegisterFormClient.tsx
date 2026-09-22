@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Captcha } from "@/components/ui/Captcha";
 import { PasswordStrength } from "@/components/ui/PasswordStrength";
+import { computeDeviceFingerprint } from "@/components/security/DeviceFingerprint";
 
 const TRUST_BADGES = [
   {
@@ -104,10 +105,11 @@ export function RegisterFormClient() {
     setLoading(true);
     const refCode = sessionStorage.getItem("ref_code") ?? undefined;
     try {
+      const fingerprintHash = (await computeDeviceFingerprint()) ?? undefined;
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, captchaToken, refCode, intent: intent || undefined }),
+        body: JSON.stringify({ ...form, captchaToken, refCode, intent: intent || undefined, fingerprintHash }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Registration failed");

@@ -4,14 +4,14 @@ import { RiskSeverity } from "@prisma/client";
 import { sendEmail } from "@/lib/email";
 import { adminHighRiskAlertTemplate } from "@/lib/email-templates";
 
-interface RiskFactor {
+export interface RiskFactor {
   key: string;
   label: string;
   weight: number; // 0–100
   detail?: string;
 }
 
-interface ComputeRiskResult {
+export interface ComputeRiskResult {
   score: number;
   severity: RiskSeverity;
   factors: RiskFactor[];
@@ -115,39 +115,75 @@ export async function computeRiskScore(userId: string): Promise<ComputeRiskResul
   return { score, severity, factors };
 }
 
-export async function upsertRiskScore(userId: string): Promise<void> {
+/**
+ * Emails ADMIN_EMAIL about a high-risk event. Best-effort, never throws.
+ * `transactionId` / `ip` are optional context for the template.
+ */
+export function notifyAdminHighRisk(params: {
+  userId: string;
+  flagId: string;
+  triggeredRule: string;
+  score: number;
+  transactionId?: string;
+  ip?: string;
+}): void {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return;
   try {
-    const { score, severity, factors } = await computeRiskScore(userId);
+    const { subject, html } = adminHighRiskAlertTemplate(
+      params.userId,
+      params.flagId,
+      params.triggeredRule,
+      String(params.score),
+      params.transactionId ?? "",
+      new Date().toLocaleDateString("en-US", { dateStyle: "long" }),
+      params.ip ?? "",
+    );
+    sendEmail({ to: adminEmail, subject, html }).catch(() => null);
+  } catch (err) {
+    logger.error("notifyAdminHighRisk failed", { userId: params.userId, err });
+  }
+}
+
+/**
+ * Recomputes and stores the user's RiskScore. Returns the computed result (or
+ * null on failure) so callers that gate on severity — e.g. withdrawals — can
+ * use the fresh value without a second read. Never throws.
+ *
+ * A HIGH/CRITICAL result raises a SecurityFlag and alerts the admin only when
+ * the user has no open `risk_engine` flag already: this now runs on every
+ * fingerprint post and withdrawal, and a flag per recompute would flood both.
+ */
+export async function upsertRiskScore(userId: string): Promise<ComputeRiskResult | null> {
+  try {
+    const result = await computeRiskScore(userId);
+    const { score, severity, factors } = result;
     await prisma.riskScore.upsert({
       where: { userId },
       create: { userId, score, severity, factors: factors as object[], computedAt: new Date() },
       update: { score, severity, factors: factors as object[], computedAt: new Date(), dismissedAt: null },
     });
     if (severity === "HIGH" || severity === "CRITICAL") {
-      const flag = await prisma.securityFlag.create({
-        data: {
-          userId,
-          source: "risk_engine",
-          severity,
-          reason: `Risk score ${score} (${severity}): ${factors.map((f) => f.label).join("; ")}`,
-        },
+      const open = await prisma.securityFlag.findFirst({
+        where: { userId, source: "risk_engine", resolvedAt: null },
+        select: { id: true },
       });
-      const adminEmail = process.env.ADMIN_EMAIL;
-      if (adminEmail) {
-        const { subject, html } = adminHighRiskAlertTemplate(
-          userId,
-          flag.id,
-          factors[0]?.label ?? severity,
-          String(score),
-          "",
-          new Date().toLocaleDateString("en-US", { dateStyle: "long" }),
-          "",
-        );
-        sendEmail({ to: adminEmail, subject, html }).catch(() => null);
+      if (!open) {
+        const flag = await prisma.securityFlag.create({
+          data: {
+            userId,
+            source: "risk_engine",
+            severity,
+            reason: `Risk score ${score} (${severity}): ${factors.map((f) => f.label).join("; ")}`,
+          },
+        });
+        notifyAdminHighRisk({ userId, flagId: flag.id, triggeredRule: factors[0]?.label ?? severity, score });
       }
     }
+    return result;
   } catch (err) {
     logger.error("upsertRiskScore failed", { userId, err });
+    return null;
   }
 }
 

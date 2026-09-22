@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card } from "@/components/ui/Card";
@@ -50,6 +52,9 @@ function groupRevenueByDay(txs: { createdAt: Date; amount: { toNumber(): number 
 }
 
 export default async function AnalyticsPage() {
+  const session = await requireAdmin("VIEW_ANALYTICS");
+  if (!session) redirect("/admin?denied=1");
+
   const now = new Date();
   const day30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const day7  = new Date(now.getTime() - 7  * 24 * 60 * 60 * 1000);

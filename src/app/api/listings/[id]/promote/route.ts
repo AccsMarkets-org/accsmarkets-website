@@ -112,7 +112,11 @@ export async function POST(
   if (Number(userPre.walletBalance) < promo.usd)
     return NextResponse.json({ error: "Insufficient wallet balance" }, { status: 400 });
 
-  const expiresAt = new Date(Date.now() + promo.days * 24 * 60 * 60 * 1000);
+  // Extend from the current expiry when a boost of the same slot is still running,
+  // so re-purchasing ("Extend") adds days instead of resetting the clock.
+  const currentUntil = type === "PINNED" ? listing.pinnedUntil : listing.featuredUntil;
+  const base = currentUntil && currentUntil.getTime() > Date.now() ? currentUntil.getTime() : Date.now();
+  const expiresAt = new Date(base + promo.days * 24 * 60 * 60 * 1000);
 
   let promoBalanceAfter: number | null = null;
   try {

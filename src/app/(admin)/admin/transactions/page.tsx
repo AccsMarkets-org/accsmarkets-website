@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -34,6 +36,9 @@ export default async function AdminTransactionsPage({
 }: {
   searchParams: { type?: string; status?: string; page?: string; q?: string; from?: string; to?: string };
 }) {
+  const session = await requireAdmin("MANAGE_FINANCE");
+  if (!session) redirect("/admin?denied=1");
+
   const typeFilter = searchParams.type as TransactionType | undefined;
   const statusFilter = searchParams.status;
   const q = searchParams.q?.trim() ?? "";

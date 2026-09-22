@@ -3,11 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { withdrawSchema } from "@/lib/validation/wallet";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { createNotification } from "@/lib/notifications";
 import { formatCurrency } from "@/lib/utils";
 import { sendEmail } from "@/lib/email";
 import { withdrawalRequestedTemplate } from "@/lib/email-templates";
+import { notifyAdminHighRisk, upsertRiskScore } from "@/lib/risk";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Insufficient available balance" }, { status: 400 });
   }
 
+  // Risk gate: recompute now (a withdrawal is exactly when a fresh score
+  // matters), fall back to the stored score if the recompute failed. HIGH /
+  // CRITICAL never blocks the request — it's created as usual but flagged with
+  // metadata.riskHold so admins see it needs a closer look before approving.
+  const fresh = await upsertRiskScore(user.id);
+  const severity =
+    fresh?.severity ??
+    (await prisma.riskScore.findUnique({ where: { userId: user.id }, select: { severity: true } }))?.severity ??
+    "LOW";
+  const riskHold = severity === "HIGH" || severity === "CRITICAL";
+
   // Balance is not debited here — only on admin approval (see /api/admin/withdrawals/[id]).
   const transaction = await prisma.transaction.create({
     data: {
@@ -91,15 +103,43 @@ export async function POST(req: Request) {
       amount: amountUsd,
       balanceBefore: user.walletBalance,
       balanceAfter: user.walletBalance,
-      metadata,
+      metadata: riskHold ? { ...metadata, riskHold: true, riskLevel: severity } : metadata,
     },
   });
+
+  if (riskHold) {
+    const openFlag = await prisma.securityFlag.findFirst({
+      where: { userId: user.id, resolvedAt: null },
+      select: { id: true },
+    });
+    const flag =
+      openFlag ??
+      (await prisma.securityFlag.create({
+        data: {
+          userId: user.id,
+          source: "withdrawal_hold",
+          severity,
+          reason: `Withdrawal of ${formatCurrency(amountUsd)} requested while risk severity is ${severity} (tx ${transaction.id}).`,
+        },
+        select: { id: true },
+      }));
+    notifyAdminHighRisk({
+      userId: user.id,
+      flagId: flag.id,
+      triggeredRule: `Withdrawal request under ${severity} risk`,
+      score: fresh?.score ?? 0,
+      transactionId: transaction.id,
+      ip: getClientIp(req.headers),
+    });
+  }
 
   await createNotification({
     userId: user.id,
     type: "PAYMENT",
-    title: "Withdrawal requested",
-    body: `Your request for ${formatCurrency(amountUsd)} is pending admin approval.`,
+    title: riskHold ? "Withdrawal under review" : "Withdrawal requested",
+    body: riskHold
+      ? `Your withdrawal of ${formatCurrency(amountUsd)} is under additional review. We'll notify you once it's processed.`
+      : `Your request for ${formatCurrency(amountUsd)} is pending admin approval.`,
     link: "/dashboard/wallet",
   });
 
@@ -117,5 +157,10 @@ export async function POST(req: Request) {
     sendEmail({ to: user.email, subject, html }).catch(() => null);
   }
 
-  return NextResponse.json({ success: true, transactionId: transaction.id });
+  return NextResponse.json({
+    success: true,
+    transactionId: transaction.id,
+    riskHold,
+    ...(riskHold ? { message: "Your withdrawal is under additional review." } : {}),
+  });
 }

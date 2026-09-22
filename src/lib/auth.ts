@@ -1,4 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
+import type { NextRequest, NextResponse } from "next/server";
+import { encode, getToken } from "next-auth/jwt";
 import type { AuthenticationResponseJSON, AuthenticatorTransportFuture } from "@simplewebauthn/types";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -15,6 +17,9 @@ import { createNotification, wantsEmail } from "@/lib/notifications";
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
+// How often a live JWT is re-checked against the DB (tokenVersion / isBanned).
+const TOKEN_RECHECK_MS = 60 * 1000;
+const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
 
 type AuthorizeHeaders = Record<string, unknown> | undefined;
 
@@ -106,7 +111,7 @@ const useSecureCookies = (process.env.NEXTAUTH_URL ?? "").startsWith("https://")
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 7 },
+  session: { strategy: "jwt", maxAge: SESSION_MAX_AGE },
   pages: {
     signIn: "/login",
   },
@@ -357,22 +362,61 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user, trigger }) {
+      // Once a token is marked invalid it stays invalid — the holder must sign
+      // in again (which mints a fresh token with the current tokenVersion).
+      if (token.invalid) return token;
+
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: string }).role ?? "USER";
       }
-      if (trigger === "update" || !token.role) {
+
+      // Sign-in / explicit update(): full refresh from the DB, and pin the
+      // token to the user's current tokenVersion.
+      if (user || trigger === "update" || !token.role || typeof token.tokenVersion !== "number") {
         const dbUser = await prisma.user.findUnique({ where: { id: token.id as string } });
-        if (dbUser) {
-          token.role = dbUser.role;
-          token.kycLevel = dbUser.kycLevel;
-          token.verifiedBadge = dbUser.verifiedBadge;
-          token.picture = dbUser.image ?? token.picture;
+        if (!dbUser) return user ? token : { ...token, invalid: true };
+        if (dbUser.isBanned) return { ...token, invalid: true };
+        // update() must not let a token re-adopt a bumped version — a stolen
+        // cookie could otherwise "heal" itself after "sign out everywhere".
+        // Only a fresh sign-in, or a token issued before tokenVersion existed
+        // (a client can't strip the claim from an encrypted JWE), adopts it.
+        if (!user && typeof token.tokenVersion === "number" && dbUser.tokenVersion !== token.tokenVersion) {
+          return { ...token, invalid: true };
         }
+        token.role = dbUser.role;
+        token.kycLevel = dbUser.kycLevel;
+        token.verifiedBadge = dbUser.verifiedBadge;
+        token.picture = dbUser.image ?? token.picture;
+        token.tokenVersion = dbUser.tokenVersion;
+        token.checkedAt = Date.now();
+        return token;
+      }
+
+      // Periodic revalidation (at most once a minute) so bans, password resets
+      // and "sign out everywhere" take effect within ~60s instead of at the
+      // 7-day JWT expiry. Also refreshes role/kycLevel so demotions aren't stale.
+      const checkedAt = typeof token.checkedAt === "number" ? token.checkedAt : 0;
+      if (Date.now() - checkedAt > TOKEN_RECHECK_MS) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { tokenVersion: true, isBanned: true, role: true, kycLevel: true, verifiedBadge: true },
+        });
+        if (!dbUser || dbUser.isBanned || dbUser.tokenVersion !== token.tokenVersion) {
+          return { ...token, invalid: true };
+        }
+        token.role = dbUser.role;
+        token.kycLevel = dbUser.kycLevel;
+        token.verifiedBadge = dbUser.verifiedBadge;
+        token.checkedAt = Date.now();
       }
       return token;
     },
     async session({ session, token }) {
+      // An invalidated token yields an empty session body: getServerSession()
+      // returns null for it and the client SessionProvider treats it as
+      // unauthenticated (both check Object.keys(body).length).
+      if (token.invalid) return {} as unknown as typeof session;
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
@@ -385,6 +429,33 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
+/**
+ * Re-mints the caller's own session cookie with a new tokenVersion. Used right
+ * after a route bumps User.tokenVersion on the caller's behalf (own password
+ * change, "sign out everywhere") so the device that requested it stays signed
+ * in while every other device's JWT — still carrying the old version — fails
+ * the next revalidation in the jwt callback. Returns false if there was no
+ * decodable session cookie on the request (nothing to reissue).
+ */
+export async function reissueSessionCookie(
+  req: Request,
+  res: NextResponse,
+  tokenVersion: number,
+): Promise<boolean> {
+  const secret = process.env.NEXTAUTH_SECRET;
+  const cookie = authOptions.cookies?.sessionToken;
+  if (!secret || !cookie) return false;
+  const token = await getToken({ req: req as NextRequest, secret, cookieName: cookie.name });
+  if (!token) return false;
+  const value = await encode({
+    token: { ...token, tokenVersion, checkedAt: Date.now(), invalid: undefined },
+    secret,
+    maxAge: SESSION_MAX_AGE,
+  });
+  res.cookies.set(cookie.name, value, { ...cookie.options, maxAge: SESSION_MAX_AGE });
+  return true;
+}
 
 async function generateUniqueUsername(seed: string): Promise<string> {
   const base =

@@ -1,5 +1,7 @@
 ﻿import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, TriangleAlert } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminPagination } from "@/components/ui/AdminPagination";
@@ -25,6 +27,9 @@ export default async function AdminEscrowsPage({
 }: {
   searchParams: { tab?: string; page?: string; q?: string };
 }) {
+  const session = await requireAdmin("MANAGE_ESCROWS");
+  if (!session) redirect("/admin?denied=1");
+
   const tabKey = (TABS.find((t) => t.key === (searchParams.tab ?? "active"))?.key ?? "active") as TabKey;
   const page = Math.max(0, Number(searchParams.page ?? 0));
   const q = searchParams.q?.trim() ?? "";

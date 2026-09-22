@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 import {
   Activity, Bell, Bookmark, Building2, CirclePlus, ClipboardList, CodeXml, LayoutDashboard,
-  Menu, MessageSquare, Search, Settings, ShieldCheck, Tag, Users, Wallet, X,
+  LifeBuoy, Menu, MessageSquare, Scale, Search, Settings, ShieldCheck, Tag, Users, Wallet, X, Zap,
 } from "lucide-react";
 
 // ── Icons (lucide) ─────────────────────────────────────────────────────────────
@@ -28,6 +28,9 @@ const I = {
   org:         <Building2 {...NAV_ICON} />,
   developer:   <CodeXml {...NAV_ICON} />,
   settings:    <Settings {...NAV_ICON} />,
+  promotions:  <Zap {...NAV_ICON} />,
+  support:     <LifeBuoy {...NAV_ICON} />,
+  disputes:    <Scale {...NAV_ICON} />,
 };
 
 export interface DashboardSidebarCounts {
@@ -66,8 +69,10 @@ const NAV_SECTIONS: NavSection[] = [
     label: "Trading",
     items: [
       { href: "/dashboard/listings", label: "My Listings", icon: I.listings, sellerOnly: true },
+      { href: "/dashboard/promotions", label: "Promotions", icon: I.promotions, sellerOnly: true },
       { href: "/dashboard/offers", label: "Offers", icon: I.offers, countKey: "pendingOffers" },
       { href: "/dashboard/escrows", label: "Escrows", icon: I.escrows, countKey: "activeEscrows" },
+      { href: "/dashboard/disputes", label: "Disputes", icon: I.disputes },
       { href: "/dashboard/wallet", label: "Wallet", icon: I.wallet },
     ],
   },
@@ -96,6 +101,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/dashboard/referrals", label: "Referrals", icon: I.referrals },
       { href: "/dashboard/organization", label: "Organization", icon: I.org },
       { href: "/dashboard/developer", label: "Developer", icon: I.developer },
+      { href: "/dashboard/support", label: "Support", icon: I.support },
       { href: "/dashboard/settings", label: "Settings", icon: I.settings },
     ],
   },

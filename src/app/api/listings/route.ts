@@ -14,6 +14,7 @@ import type { Prisma } from "@prisma/client";
 import { emitToAdmins } from "@/lib/socket";
 import { sendEmail } from "@/lib/email";
 import { listingSubmittedTemplate } from "@/lib/email-templates";
+import { upsertRiskScore } from "@/lib/risk";
 
 export const dynamic = "force-dynamic";
 
@@ -131,7 +132,7 @@ export async function POST(req: Request) {
   }
 
   const activeCount = await prisma.listing.count({
-    where: { sellerId: user.id, status: { in: ["DRAFT", "PENDING", "ACTIVE"] } },
+    where: { sellerId: user.id, status: { in: ["DRAFT", "PENDING", "ACTIVE", "PAUSED"] } },
   });
   const limit = user.subscriptionPlan?.listingLimit ?? 3;
   if (activeCount >= limit) {
@@ -222,6 +223,9 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "Failed to create listing" }, { status: 500 });
   }
+
+  // The new-account/high-price rule keys off listings, so rescore now.
+  void upsertRiskScore(user.id).catch(() => null);
 
   if (!moderation.blocked) {
     // Notify online admins that a new listing is awaiting review.

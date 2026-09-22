@@ -8,6 +8,7 @@ import { emitToUser, emitToAdmins } from "@/lib/socket";
 import { z } from "zod";
 import { sendEmail } from "@/lib/email";
 import { disputeOpenedTemplate } from "@/lib/email-templates";
+import { upsertRiskScore } from "@/lib/risk";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 
   const counterpartyId = session.user.id === escrow.buyerId ? escrow.sellerId : escrow.buyerId;
+  // Both parties' dispute history feeds the risk rules.
+  void upsertRiskScore(session.user.id).catch(() => null);
+  void upsertRiskScore(counterpartyId).catch(() => null);
   await createNotification({
     userId: counterpartyId,
     type: "DISPUTE",

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { HELP_ARTICLES, HELP_CATEGORIES, searchHelpArticles, type HelpArticle } from "@/lib/help-articles";
 
 const CATEGORY_ICON: Record<string, string> = {
@@ -18,6 +19,9 @@ export function HelpCenterClient() {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [openSlug, setOpenSlug] = useState<string | null>(null);
+  // Logged-in users get routed to the ticket system; guests keep the public contact form.
+  const { status: sessionStatus } = useSession();
+  const supportHref = sessionStatus === "authenticated" ? "/dashboard/support/new" : "/contact";
 
   const results = useMemo(() => {
     const base = query.trim() ? searchHelpArticles(query) : HELP_ARTICLES;
@@ -89,7 +93,7 @@ export function HelpCenterClient() {
           <p className="text-sm font-semibold text-foreground">No articles match "{query}"</p>
           <p className="mt-1 text-sm text-muted">
             Try a different search, or{" "}
-            <Link href="/contact" className="text-brand-500 hover:underline">contact support</Link> directly.
+            <Link href={supportHref} className="text-brand-500 hover:underline">contact support</Link> directly.
           </p>
         </div>
       ) : (
@@ -135,12 +139,16 @@ export function HelpCenterClient() {
 
       <div className="mt-14 rounded-2xl border border-surface-border bg-surface px-6 py-8 text-center">
         <p className="text-sm font-semibold text-foreground">Still need help?</p>
-        <p className="mt-1 text-sm text-muted">Our support team responds directly in messages once you're logged in, or reach out below.</p>
+        <p className="mt-1 text-sm text-muted">
+          {sessionStatus === "authenticated"
+            ? "Open a support ticket and our team will reply within 24–48 hours."
+            : "Our support team responds directly in messages once you're logged in, or reach out below."}
+        </p>
         <Link
-          href="/contact"
+          href={supportHref}
           className="mt-4 inline-block rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600"
         >
-          Contact support
+          {sessionStatus === "authenticated" ? "Open a support ticket" : "Contact support"}
         </Link>
       </div>
     </main>

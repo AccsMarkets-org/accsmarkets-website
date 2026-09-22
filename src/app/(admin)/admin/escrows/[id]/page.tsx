@@ -1,9 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { ArrowLeft } from "lucide-react";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { decryptCredentials } from "@/lib/credentials-crypto";
 import { Card } from "@/components/ui/Card";
@@ -20,8 +19,8 @@ const EscrowChat = dynamic(
 );
 
 export default async function AdminEscrowDetailPage({ params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user || session.user.role !== "ADMIN") notFound();
+  const session = await requireAdmin("MANAGE_ESCROWS");
+  if (!session) redirect("/admin?denied=1");
 
   const escrow = await prisma.escrow.findUnique({
     where: { id: params.id },

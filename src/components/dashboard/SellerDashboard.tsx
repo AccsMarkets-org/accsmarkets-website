@@ -13,7 +13,7 @@ import {
   DateRangePicker,
 } from "@/app/(dashboard)/dashboard/DashboardClient";
 import { ListingViewsChart } from "@/components/ui/ListingViewsChart";
-import { ArrowRight, Eye, Globe, Handshake, KeyRound, ShieldCheck, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, Eye, Globe, Handshake, KeyRound, ShieldCheck, TrendingDown, TrendingUp, Zap } from "lucide-react";
 
 // ── Local helpers ─────────────────────────────────────────────────────────────
 
@@ -923,6 +923,13 @@ export function SellerDashboard({
                   className="rounded-xl bg-brand-500 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-brand-600 transition shadow-sm"
                 >
                   + Create listing
+                </Link>
+                <Link
+                  href="/dashboard/promotions"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-brand-300 bg-brand-50 px-4 py-2.5 text-center text-sm font-semibold text-brand-700 hover:bg-brand-100 transition dark:border-brand-700 dark:bg-brand-950/30 dark:text-brand-300 dark:hover:bg-brand-950/50"
+                >
+                  <Zap className="h-4 w-4" aria-hidden />
+                  Manage promotions
                 </Link>
                 <Link
                   href="/listings"

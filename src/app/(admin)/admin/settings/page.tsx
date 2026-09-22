@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminSettingsClient } from "@/components/admin/AdminSettingsClient";
@@ -8,8 +7,8 @@ import { AdminSettingsClient } from "@/components/admin/AdminSettingsClient";
 export const metadata = { title: "Settings" };
 
 export default async function AdminSettingsPage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) redirect("/admin/login");
+  const session = await requireAdmin("MANAGE_SETTINGS");
+  if (!session) redirect("/admin?denied=1");
 
   const [user, rawSettings] = await Promise.all([
     prisma.user.findUnique({

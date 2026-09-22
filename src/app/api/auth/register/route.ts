@@ -8,7 +8,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { RATE_LIMITS } from "@/lib/constants";
 import { sendEmail } from "@/lib/email";
 import { emailVerifyTemplate } from "@/lib/email-templates";
-import { upsertRiskScore } from "@/lib/risk";
+import { recordDeviceFingerprint, upsertRiskScore } from "@/lib/risk";
 
 export async function POST(req: Request) {
   // Basic CSRF protection: reject cross-origin POSTs. Browsers always send the
@@ -46,6 +46,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
   const { name, email, password, captchaToken, refCode, intent } = parsed.data;
+  // Optional device fingerprint from the register form (SHA-256 hex). Parsed
+  // outside registerSchema so a malformed value is ignored, never a 400.
+  const rawFingerprint = (body as { fingerprintHash?: unknown } | null)?.fingerprintHash;
+  const fingerprintHash =
+    typeof rawFingerprint === "string" && /^[a-f0-9]{64}$/.test(rawFingerprint) ? rawFingerprint : null;
 
   const captchaOk = await verifyCaptcha(captchaToken);
   if (!captchaOk) {
@@ -105,6 +110,8 @@ export async function POST(req: Request) {
     }
   }
 
+  // Record the device before scoring so the multi-account rule can fire at signup.
+  if (fingerprintHash) await recordDeviceFingerprint(user.id, fingerprintHash);
   void upsertRiskScore(user.id);
 
   return NextResponse.json({ success: true, message: "Check your email to verify your account." });

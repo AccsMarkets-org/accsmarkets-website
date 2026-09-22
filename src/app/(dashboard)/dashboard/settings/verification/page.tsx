@@ -140,10 +140,16 @@ function Section({ icon: Icon, title, children }: { icon: LucideIcon; title: str
 
 // ── File upload widget ─────────────────────────────────────────────────────────
 
+/** What /api/upload/kyc returns: the stored URL plus a short-lived signature binding it to this user. */
+interface KycDoc {
+  url: string;
+  sig: string;
+}
+
 interface UploadFieldProps {
   label: string;
-  value: string;
-  onChange: (url: string) => void;
+  value: KycDoc | null;
+  onChange: (doc: KycDoc) => void;
 }
 
 function UploadField({ label, value, onChange }: UploadFieldProps) {
@@ -169,7 +175,8 @@ function UploadField({ label, value, onChange }: UploadFieldProps) {
       const res = await fetch("/api/upload/kyc", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      onChange(data.url);
+      if (!data.url || !data.sig) throw new Error("Upload failed");
+      onChange({ url: data.url, sig: data.sig });
       toast.success("Uploaded!");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
@@ -203,13 +210,13 @@ function UploadField({ label, value, onChange }: UploadFieldProps) {
       {value ? (
         <div className="flex items-center gap-3 rounded-xl border border-success/40 bg-success/5 px-4 py-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="preview" className="h-14 w-14 rounded-lg object-cover border border-surface-border shrink-0" />
+          <img src={value.url} alt="preview" className="h-14 w-14 rounded-lg object-cover border border-surface-border shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-success flex items-center gap-1.5">
               <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
               Uploaded
             </p>
-            <p className="text-xs text-muted truncate">{value.split("/").pop()}</p>
+            <p className="text-xs text-muted truncate">Stored privately · encrypted at rest</p>
           </div>
           <button
             type="button"
@@ -264,9 +271,9 @@ export default function VerificationPage() {
   const [subStep, setSubStep] = useState<SubStep>("email-entry");
   const [userEmail, setUserEmail] = useState<string>("");
   const [code, setCode] = useState("");
-  const [idFrontUrl, setIdFrontUrl] = useState("");
-  const [idBackUrl, setIdBackUrl] = useState("");
-  const [selfieUrl, setSelfieUrl] = useState("");
+  const [idFrontUrl, setIdFrontUrl] = useState<KycDoc | null>(null);
+  const [idBackUrl, setIdBackUrl] = useState<KycDoc | null>(null);
+  const [selfieUrl, setSelfieUrl] = useState<KycDoc | null>(null);
   const [kycStatus, setKycStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -465,7 +472,9 @@ export default function VerificationPage() {
             {(kycStatus === "PENDING" || kycStatus === "UNDER_REVIEW" || subStep === "id-pending") && (
               <div className="rounded-xl bg-brand-500/10 p-4 text-sm">
                 <p className="font-medium text-brand-700">Submission under review</p>
-                <p className="mt-1 text-muted">Our team typically reviews submissions within 24 hours.</p>
+                <p className="mt-1 text-muted">
+                  An automated pre-check reads your document for legibility, then a member of our compliance team makes the final decision — typically within 24 hours. Automated checks never approve or reject on their own.
+                </p>
               </div>
             )}
 

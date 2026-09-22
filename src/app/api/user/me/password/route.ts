@@ -2,7 +2,7 @@
 import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { authOptions } from "@/lib/auth";
+import { authOptions, reissueSessionCookie } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { passwordChangedTemplate } from "@/lib/email-templates";
@@ -38,9 +38,12 @@ export async function PATCH(req: Request) {
   }
 
   const hashed = await bcrypt.hash(parsed.data.newPassword, 12);
-  await prisma.user.update({
+  // Bumping tokenVersion signs out every other device; the caller's own cookie
+  // is re-minted below with the new version so this device stays logged in.
+  const updated = await prisma.user.update({
     where: { id: session.user.id },
-    data: { password: hashed },
+    data: { password: hashed, tokenVersion: { increment: 1 } },
+    select: { tokenVersion: true },
   });
 
   if (user.email) {
@@ -48,5 +51,7 @@ export async function PATCH(req: Request) {
     sendEmail({ to: user.email, subject: tpl.subject, html: tpl.html }).catch(() => null);
   }
 
-  return NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true });
+  await reissueSessionCookie(req, res, updated.tokenVersion);
+  return res;
 }

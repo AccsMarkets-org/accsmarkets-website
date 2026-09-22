@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -25,6 +27,9 @@ export default async function AdminListingsPage({
 }: {
   searchParams: { tab?: string; page?: string; q?: string; platform?: string };
 }) {
+  const session = await requireAdmin("MANAGE_LISTINGS");
+  if (!session) redirect("/admin?denied=1");
+
   const tab = TABS.find((t) => t.key === (searchParams.tab ?? "pending")) ?? TABS[0];
   const page = Math.max(0, Number(searchParams.page ?? 0));
   const q = searchParams.q?.trim() ?? "";

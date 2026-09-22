@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { formatDate } from "@/lib/utils";
@@ -7,6 +9,9 @@ import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
 export const revalidate = 0;
 
 export default async function AdminAppsPage() {
+  const session = await requireAdmin("MANAGE_USERS");
+  if (!session) redirect("/admin?denied=1");
+
   const [submitted, approved, rejected] = await Promise.all([
     prisma.appListing.findMany({
       where: { status: "SUBMITTED" },

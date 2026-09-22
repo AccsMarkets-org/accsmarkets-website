@@ -18,6 +18,7 @@ export const LISTING_STATUS_STYLE: Record<ListingStatus, StatusStyle> = {
   DRAFT: { label: "Draft", className: "bg-muted/10 text-muted" },
   PENDING: { label: "Pending Review", className: "bg-warning/10 text-warning" },
   ACTIVE: { label: "Active", className: "bg-success/10 text-success" },
+  PAUSED: { label: "Paused", className: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400" },
   SOLD: { label: "Sold", className: "bg-brand-100 text-brand-700" },
   REJECTED: { label: "Rejected", className: "bg-danger/10 text-danger" },
   SUSPENDED: { label: "Suspended", className: "bg-danger/10 text-danger" },

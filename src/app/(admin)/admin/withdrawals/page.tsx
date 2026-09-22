@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -24,6 +26,9 @@ export default async function AdminWithdrawalsPage({
 }: {
   searchParams: { tab?: string };
 }) {
+  const session = await requireAdmin("MANAGE_FINANCE");
+  if (!session) redirect("/admin?denied=1");
+
   const tabKey = TABS.find((t) => t.key === (searchParams.tab ?? "pending"))?.key ?? "pending";
   const tab = TABS.find((t) => t.key === tabKey)!;
 
@@ -96,6 +101,8 @@ export default async function AdminWithdrawalsPage({
             bankAccountNumber?: string;
             bankName?: string;
             bankRouting?: string;
+            riskHold?: boolean;
+            riskLevel?: string;
           };
           const isBank = meta.method === "bank";
           const isPending = w.status === "PENDING";
@@ -117,6 +124,11 @@ export default async function AdminWithdrawalsPage({
                     }`}>
                       {w.status}
                     </span>
+                    {meta.riskHold && (
+                      <span className="rounded-full bg-danger/10 px-2 py-0.5 text-xs font-semibold text-danger" title="Requester's risk score is elevated — review before approving">
+                        Risk hold · {meta.riskLevel ?? "HIGH"}
+                      </span>
+                    )}
                     {isBank ? (
                       <span className="rounded-full bg-surface-border px-2 py-0.5 text-xs font-medium text-foreground">
                         Bank Wire

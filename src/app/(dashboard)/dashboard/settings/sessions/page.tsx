@@ -33,10 +33,14 @@ export default async function SessionsPage() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Active sessions</h1>
-        {sessions.length > 1 && <SessionRevokeButton revokeAll />}
+        <SessionRevokeButton revokeAll />
       </div>
+      <p className="text-xs text-muted">
+        &ldquo;Sign out everywhere else&rdquo; signs out every other device within about a minute and keeps you
+        logged in here. Removing a single entry only tidies this list — it does not sign that device out.
+      </p>
 
       {sessions.length === 0 && (
         <p className="text-sm text-muted">No sessions recorded.</p>

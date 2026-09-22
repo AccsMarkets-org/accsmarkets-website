@@ -125,14 +125,40 @@ export async function POST(req: Request) {
   // past escrow — previously this row was deleted on use instead, which also
   // deleted the unique(promoCodeId, userId) constraint's only enforcement
   // point, letting the same code be redeemed and applied again.
-  const activePromo = await prisma.promoRedemption.findFirst({
-    where: { userId: session.user.id, consumedAt: null },
-    include: { promoCode: { select: { type: true, value: true, expiresAt: true } } },
-    orderBy: { redeemedAt: "desc" },
-  });
+  //
+  // The checkout form may name a specific code (`promoCode`, entered via the
+  // "Have a promo code?" field and already redeemed through POST /api/promo).
+  // When it does, that exact redemption must exist and be usable — otherwise we
+  // refuse rather than silently charging the full fee the buyer wasn't shown.
+  // Without a code we fall back to the buyer's most recent open fee discount.
+  const requestedPromoCode =
+    body && typeof body === "object" && typeof (body as { promoCode?: unknown }).promoCode === "string"
+      ? (body as { promoCode: string }).promoCode.trim()
+      : "";
+  const promoInclude = { promoCode: { select: { code: true, type: true, value: true, expiresAt: true } } };
+  const activePromo = requestedPromoCode
+    ? await prisma.promoRedemption.findFirst({
+        where: {
+          userId: session.user.id,
+          consumedAt: null,
+          promoCode: { type: "PERCENT_OFF_FEE", code: { in: [requestedPromoCode, requestedPromoCode.toUpperCase()] } },
+        },
+        include: promoInclude,
+      })
+    : await prisma.promoRedemption.findFirst({
+        where: { userId: session.user.id, consumedAt: null, promoCode: { type: "PERCENT_OFF_FEE" } },
+        include: promoInclude,
+        orderBy: { redeemedAt: "desc" },
+      });
   const promoApplied =
     activePromo?.promoCode.type === "PERCENT_OFF_FEE" &&
     (!activePromo.promoCode.expiresAt || activePromo.promoCode.expiresAt > new Date());
+  if (requestedPromoCode && !promoApplied) {
+    return NextResponse.json(
+      { error: "That promo code can't be applied to this order. Remove it and try again." },
+      { status: 400 },
+    );
+  }
   if (promoApplied) {
     const discount = Math.min(Number(activePromo!.promoCode.value) / 100, 1);
     escrowFee = Math.max(0, Math.round(escrowFee * (1 - discount) * 100) / 100);

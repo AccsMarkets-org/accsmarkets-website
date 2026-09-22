@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { PLATFORM_LABEL } from "@/lib/constants";
 import { Card } from "@/components/ui/Card";
@@ -7,6 +9,9 @@ import type { Platform } from "@prisma/client";
 const PLATFORMS = Object.keys(PLATFORM_LABEL) as Platform[];
 
 export default async function TransferPoliciesPage() {
+  const session = await requireAdmin("MANAGE_LISTINGS");
+  if (!session) redirect("/admin?denied=1");
+
   const policies = await prisma.platformTransferPolicy.findMany({ orderBy: { platform: "asc" } });
   const policyMap = Object.fromEntries(policies.map((p) => [p.platform, p]));
 

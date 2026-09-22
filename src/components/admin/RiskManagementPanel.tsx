@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { RiskSeverity } from "@prisma/client";
 
@@ -176,7 +177,13 @@ export function RiskManagementPanel({ initialRiskScores }: { initialRiskScores: 
                   onClick={() => setExpandedId(expandedId === row.userId ? null : row.userId)}
                 >
                   <td className="px-4 py-3">
-                    <p className="font-medium text-foreground">{row.user.name ?? row.user.username ?? "—"}</p>
+                    <Link
+                      href={`/admin/risk/${row.userId}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-medium text-foreground hover:text-brand-600 hover:underline"
+                    >
+                      {row.user.name ?? row.user.username ?? "—"}
+                    </Link>
                     <p className="text-xs text-muted">{row.user.email}</p>
                   </td>
                   <td className="px-4 py-3">
@@ -190,6 +197,12 @@ export function RiskManagementPanel({ initialRiskScores }: { initialRiskScores: 
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      <Link
+                        href={`/admin/risk/${row.userId}`}
+                        className="rounded-lg border border-brand-300 px-2.5 py-1 text-xs font-medium text-brand-600 hover:bg-brand-500/5"
+                      >
+                        Details
+                      </Link>
                       <button
                         onClick={() => setEscalateUserId(row.userId)}
                         className="rounded-lg border border-danger/30 px-2.5 py-1 text-xs font-medium text-danger hover:bg-danger/5"

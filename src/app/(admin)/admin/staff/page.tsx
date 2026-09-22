@@ -9,7 +9,7 @@ const StaffManagementClient = dynamic(
 
 export default async function StaffPage() {
   const session = await requireAdmin("MANAGE_STAFF");
-  if (!session) redirect("/admin");
+  if (!session) redirect("/admin?denied=1");
 
   return <StaffManagementClient />;
 }

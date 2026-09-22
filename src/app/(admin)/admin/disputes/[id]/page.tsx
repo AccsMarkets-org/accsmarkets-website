@@ -1,6 +1,7 @@
 ﻿import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, CheckCircle2, X } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -20,6 +21,9 @@ const STATUS_STYLE: Record<string, { label: string; className: string }> = {
 };
 
 export default async function AdminDisputeDetailPage({ params }: { params: { id: string } }) {
+  const session = await requireAdmin("MANAGE_DISPUTES");
+  if (!session) redirect("/admin?denied=1");
+
   const dispute = await prisma.dispute.findUnique({
     where: { id: params.id },
     include: {

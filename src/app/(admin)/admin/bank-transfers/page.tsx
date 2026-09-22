@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
@@ -29,6 +31,9 @@ export default async function AdminBankTransfersPage({
 }: {
   searchParams: { status?: string; page?: string };
 }) {
+  const session = await requireAdmin("MANAGE_FINANCE");
+  if (!session) redirect("/admin?denied=1");
+
   const statusFilter = (searchParams.status as BankTransferStatus | undefined) ?? undefined;
   const page = Math.max(1, Number(searchParams.page ?? "1"));
 
