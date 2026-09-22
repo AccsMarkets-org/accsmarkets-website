@@ -28,7 +28,9 @@ export async function GET(req: Request) {
       skip: page * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    prisma.promoCode.count({ where: { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } }),
+    // Must share the search filter with `total`, otherwise a search that
+    // matches one code still reports every active code on the platform.
+    prisma.promoCode.count({ where: { ...where, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } }),
     prisma.promoRedemption.count(),
   ]);
 

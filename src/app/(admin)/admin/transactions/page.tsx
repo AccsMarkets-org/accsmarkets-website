@@ -31,6 +31,13 @@ const STATUS_STYLE: Record<string, { label: string; className: string }> = {
   CANCELLED: { label: "Cancelled", className: "bg-muted/10 text-muted" },
 };
 
+/** `new Date("nonsense")` is an Invalid Date, which Prisma rejects — drop it. */
+function parseDateParam(raw: string | undefined, suffix = ""): Date | undefined {
+  if (!raw) return undefined;
+  const d = new Date(raw + suffix);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
 export default async function AdminTransactionsPage({
   searchParams,
 }: {
@@ -39,12 +46,19 @@ export default async function AdminTransactionsPage({
   const session = await requireAdmin("MANAGE_FINANCE");
   if (!session) redirect("/admin?denied=1");
 
-  const typeFilter = searchParams.type as TransactionType | undefined;
-  const statusFilter = searchParams.status;
+  // Unvalidated enum / date / page values from the URL reach Prisma and throw,
+  // so anything that isn't a known value is dropped instead.
+  const typeFilter = searchParams.type && searchParams.type in TYPE_LABEL
+    ? (searchParams.type as TransactionType)
+    : undefined;
+  const statusFilter = searchParams.status && searchParams.status in STATUS_STYLE
+    ? searchParams.status
+    : undefined;
   const q = searchParams.q?.trim() ?? "";
-  const from = searchParams.from ? new Date(searchParams.from) : undefined;
-  const to = searchParams.to ? new Date(searchParams.to + "T23:59:59.999Z") : undefined;
-  const page = Math.max(0, Number(searchParams.page ?? 0));
+  const from = parseDateParam(searchParams.from);
+  const to = parseDateParam(searchParams.to, "T23:59:59.999Z");
+  const pageRaw = Math.floor(Number(searchParams.page));
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 0;
 
   const where: Prisma.TransactionWhereInput = {
     ...(typeFilter ? { type: typeFilter } : {}),

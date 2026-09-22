@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
   const q = searchParams.get("q")?.trim() ?? "";
-  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10));
+  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
   const role = searchParams.get("role") ?? undefined;
   const isBanned = searchParams.get("isBanned");
 

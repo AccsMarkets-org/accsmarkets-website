@@ -579,6 +579,10 @@ model Dispute {
   openedById            String
   status                DisputeStatus @default(OPEN)
   phase                 DisputePhase  @default(EVIDENCE)
+  // Escrow status at the moment the dispute was opened. Closing a dispute
+  // "without action" restores it: DISPUTED has no outbound transitions, so an
+  // escrow whose dispute was closed used to be frozen with the funds held.
+  escrowStatusBefore    EscrowStatus?
   reason                String        @db.Text
   resolution            String?       @db.Text
   adminNotes            String?       @db.Text

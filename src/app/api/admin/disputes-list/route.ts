@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
   const status = searchParams.get("status") ?? "OPEN";
-  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10));
+  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
 
   const validStatuses: DisputeStatus[] = ["OPEN", "UNDER_REVIEW", "RESOLVED_BUYER", "RESOLVED_SELLER", "CLOSED"];
   const statusFilter: DisputeStatus = (validStatuses as string[]).includes(status) ? (status as DisputeStatus) : "OPEN";

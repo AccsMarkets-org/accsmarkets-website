@@ -47,7 +47,9 @@ export default async function AdminReportsPage({
   if (!session) redirect("/admin?denied=1");
 
   const tab = (TABS.includes(searchParams.tab as TabKey) ? searchParams.tab as TabKey : "PENDING");
-  const page = Math.max(0, Number(searchParams.page ?? 0));
+  // Number("abc") is NaN and Math.max(0, NaN) is NaN, which Prisma rejects as `skip`.
+  const pageRaw = Math.floor(Number(searchParams.page));
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 0;
 
   const statusFilter = tab === "ALL" ? undefined : tab;
 

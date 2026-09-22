@@ -52,7 +52,8 @@ export function RiskCaseActions({ userId }: { userId: string }) {
       destructive: true,
     });
     if (!ok) return;
-    const reason = await promptInput({ title: "Reason (optional):", placeholder: "e.g. suspected account takeover" });
+    const reason = await promptInput({ title: "Reason (recorded in the audit log):", placeholder: "e.g. suspected account takeover" });
+    if (reason === null) return;
     await run("force_signout", { action: "force_signout", reason: reason ?? undefined }, "All sessions invalidated");
   }
 
@@ -82,10 +83,12 @@ export function FlagActions({ userId, flagId }: { userId: string; flagId: string
 
   async function close(action: "resolve" | "dismiss") {
     const note = await promptInput({
-      title: action === "resolve" ? "Resolution note (optional):" : "Dismissal note (optional):",
+      title: action === "resolve" ? "Resolution note:" : "Dismissal note:",
       placeholder: "What was checked / why it's not an issue",
     });
-    await run(action, { action, flagId, note: note ?? undefined }, action === "resolve" ? "Flag resolved" : "Flag dismissed");
+    // Cancelling must not resolve/dismiss the flag.
+    if (note === null) return;
+    await run(action, { action, flagId, note }, action === "resolve" ? "Flag resolved" : "Flag dismissed");
   }
 
   return (

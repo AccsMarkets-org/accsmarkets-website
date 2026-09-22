@@ -19,6 +19,15 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const dispute = await prisma.dispute.findUnique({ where: { id: params.id } });
   if (!dispute) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  // A ruled/closed dispute must not keep moving through phases — that would
+  // overwrite resolvedAt and re-open evidence on an already-settled case.
+  if (dispute.status !== "OPEN" && dispute.status !== "UNDER_REVIEW") {
+    return NextResponse.json(
+      { error: "This dispute is already resolved — phase changes are no longer possible." },
+      { status: 400 },
+    );
+  }
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid" }, { status: 400 });

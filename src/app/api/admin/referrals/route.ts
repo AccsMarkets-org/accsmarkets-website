@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
-  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0"));
+  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0") || 0);
   const pageSize = 50;
 
   const [total, rewarded, pending, referrals, topReferrers] = await Promise.all([

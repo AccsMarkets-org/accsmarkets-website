@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
   const filter = searchParams.get("filter") ?? "active";
-  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10));
+  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
 
   const where =
     filter === "disputed"

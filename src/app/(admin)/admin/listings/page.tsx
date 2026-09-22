@@ -31,7 +31,9 @@ export default async function AdminListingsPage({
   if (!session) redirect("/admin?denied=1");
 
   const tab = TABS.find((t) => t.key === (searchParams.tab ?? "pending")) ?? TABS[0];
-  const page = Math.max(0, Number(searchParams.page ?? 0));
+  // Number("abc") is NaN and Math.max(0, NaN) is NaN, which Prisma rejects as `skip`.
+  const pageRaw = Math.floor(Number(searchParams.page));
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 0;
   const q = searchParams.q?.trim() ?? "";
   const rawPlatform = searchParams.platform?.trim() ?? "";
   const platformFilter = rawPlatform in PLATFORM_LABEL ? (rawPlatform as Platform) : undefined;

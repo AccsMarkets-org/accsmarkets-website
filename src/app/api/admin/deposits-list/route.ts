@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
   const status = searchParams.get("status") ?? "waiting";
-  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10));
+  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
 
   const deposits = await prisma.cryptoWallet.findMany({
     where: { isManual: true, ...(status !== "all" ? { status } : {}) },

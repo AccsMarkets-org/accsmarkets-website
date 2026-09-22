@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
   const status = searchParams.get("status") ?? "PENDING";
-  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10));
+  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
 
   const validStatuses: ReportStatus[] = ["PENDING", "REVIEWING", "RESOLVED", "DISMISSED"];
   const statusFilter = (validStatuses as string[]).includes(status) ? (status as ReportStatus) : undefined;

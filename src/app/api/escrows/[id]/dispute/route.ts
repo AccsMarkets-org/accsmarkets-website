@@ -57,7 +57,13 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       });
       if (moved.count === 0) throw Object.assign(new Error("STATE_CHANGED"), { code: "STATE_CHANGED" });
       return tx.dispute.create({
-        data: { escrowId: escrow.id, openedById: session.user.id, reason: parsed.data.reason },
+        data: {
+          escrowId: escrow.id,
+          openedById: session.user.id,
+          reason: parsed.data.reason,
+          // Remembered so "close without action" can put the escrow back.
+          escrowStatusBefore: escrow.status,
+        },
       });
     });
   } catch (err: unknown) {

@@ -41,8 +41,10 @@ export default async function AdminDisputeDetailPage({ params }: { params: { id:
   if (!dispute) notFound();
 
   const style = STATUS_STYLE[dispute.status] ?? STATUS_STYLE.OPEN;
-  const isActive = dispute.phase !== "FINAL";
   const isUnresolved = dispute.status === "OPEN" || dispute.status === "UNDER_REVIEW";
+  // Phase controls stay hidden once a ruling is in, even if the phase never
+  // reached FINAL — the phase API rejects those transitions anyway.
+  const isActive = dispute.phase !== "FINAL" && isUnresolved;
 
   const buyerEvidence = dispute.evidence.filter((e) => e.userId === dispute.escrow.buyerId);
   const sellerEvidence = dispute.evidence.filter((e) => e.userId === dispute.escrow.sellerId);

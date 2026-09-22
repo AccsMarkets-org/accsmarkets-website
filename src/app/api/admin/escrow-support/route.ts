@@ -11,7 +11,7 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const statusParam = searchParams.get("status") ?? "FUNDED";
-  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0"));
+  const page = Math.max(0, parseInt(searchParams.get("page") ?? "0") || 0);
   const pageSize = 30;
 
   const isValidStatus = Object.values(EscrowStatus).includes(statusParam as EscrowStatus);

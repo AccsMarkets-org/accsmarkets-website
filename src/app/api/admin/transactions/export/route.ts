@@ -7,23 +7,42 @@ export const dynamic = "force-dynamic";
 
 const MAX_EXPORT = 50_000;
 
+const TRANSACTION_TYPES: TransactionType[] = [
+  "DEPOSIT", "WITHDRAWAL", "ESCROW_PAYMENT", "ESCROW_RELEASE", "PLATFORM_FEE",
+  "REFUND", "WALLET_CREDIT", "WALLET_DEBIT", "PROMOTION", "BUMP", "SUBSCRIPTION",
+];
+
+/** `new Date("nonsense")` is an Invalid Date, which Prisma rejects — drop it. */
+function parseDate(raw: string | null): Date | undefined {
+  if (!raw) return undefined;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
 export async function GET(req: Request) {
   const session = await requireAdmin("MANAGE_FINANCE");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const url = new URL(req.url);
-  const typeFilter = url.searchParams.get("type") as TransactionType | null;
-  const from = url.searchParams.get("from");
-  const to = url.searchParams.get("to");
+  // Unvalidated enum / date / limit values from the query string reach Prisma
+  // and throw, so anything that isn't a known value is dropped instead.
+  const rawType = url.searchParams.get("type");
+  const typeFilter = TRANSACTION_TYPES.includes(rawType as TransactionType)
+    ? (rawType as TransactionType)
+    : null;
+  const from = parseDate(url.searchParams.get("from"));
+  const to = parseDate(url.searchParams.get("to"));
   const limitParam = Number(url.searchParams.get("limit") ?? MAX_EXPORT);
-  const take = Math.min(Math.max(1, limitParam), MAX_EXPORT);
+  const take = Number.isFinite(limitParam)
+    ? Math.min(Math.max(1, Math.floor(limitParam)), MAX_EXPORT)
+    : MAX_EXPORT;
 
   const dateFilter =
     from || to
       ? {
           createdAt: {
-            ...(from ? { gte: new Date(from) } : {}),
-            ...(to ? { lte: new Date(to) } : {}),
+            ...(from ? { gte: from } : {}),
+            ...(to ? { lte: to } : {}),
           },
         }
       : {};

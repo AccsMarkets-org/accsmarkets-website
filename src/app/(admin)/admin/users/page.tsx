@@ -31,7 +31,9 @@ export default async function AdminUsersPage({
   if (!session) redirect("/admin?denied=1");
 
   const q = searchParams.q?.trim() ?? "";
-  const page = Math.max(0, Number(searchParams.page ?? 0));
+  // Number("abc") is NaN and Math.max(0, NaN) is NaN, which Prisma rejects as `skip`.
+  const pageRaw = Math.floor(Number(searchParams.page));
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 0;
   const roleFilter = (["ADMIN", "USER"].includes(searchParams.role ?? "") ? searchParams.role as Role : undefined);
   const bannedFilter = searchParams.status === "banned" ? true : searchParams.status === "active" ? false : undefined;
   const kycFilter = (["NONE", "EMAIL", "PHONE", "ID_VERIFIED"].includes(searchParams.kyc ?? "") ? searchParams.kyc as KycLevel : undefined);

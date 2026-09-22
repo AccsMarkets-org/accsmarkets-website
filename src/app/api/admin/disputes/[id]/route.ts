@@ -70,6 +70,13 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   if (action === "close") {
     const updated = await prisma.$transaction(async (tx) => {
       await auditLog(tx, session.user.id, "dispute.close", "Dispute", dispute.id, { notes: narrowed.adminNotes });
+      // DISPUTED has no outbound transitions, so closing without restoring the
+      // pre-dispute status would strand the escrow and its funds forever.
+      const restoreTo = dispute.escrowStatusBefore ?? "FUNDED";
+      await tx.escrow.updateMany({
+        where: { id: dispute.escrowId, status: "DISPUTED" },
+        data: { status: restoreTo },
+      });
       return tx.dispute.update({
         where: { id: dispute.id },
         data: { status: "CLOSED", adminNotes: narrowed.adminNotes, resolvedAt: new Date() },

@@ -46,8 +46,12 @@ export function AdminActionButtons({
 
     const payload: Record<string, unknown> = { action: spec.action };
     if (spec.promptReason) {
-      const reason = await promptInput({ title: "Reason (optional):", placeholder: "Enter reason…" });
-      if (reason) payload.reason = reason;
+      // Cancelling the dialog must abort. The prompt resolves null for both
+      // cancel and an empty submit, so a blank reason aborts too — safer than
+      // firing a reject/ban because the admin dismissed the box.
+      const reason = await promptInput({ title: "Reason (recorded in the audit log):", placeholder: "Enter reason…" });
+      if (reason === null) return;
+      payload.reason = reason;
     }
     if (spec.promptAmount) {
       const raw = await promptInput({

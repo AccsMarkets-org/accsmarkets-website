@@ -8,6 +8,8 @@ import { AdminActionButtons } from "@/components/admin/AdminActionButtons";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { BankTransferStatus } from "@prisma/client";
 
+const BANK_TRANSFER_STATUSES: BankTransferStatus[] = ["PENDING", "SENT", "VERIFIED", "REJECTED", "EXPIRED"];
+
 const TABS: { label: string; status: BankTransferStatus | null }[] = [
   { label: "All", status: null },
   { label: "Needs Review", status: "SENT" },
@@ -34,8 +36,13 @@ export default async function AdminBankTransfersPage({
   const session = await requireAdmin("MANAGE_FINANCE");
   if (!session) redirect("/admin?denied=1");
 
-  const statusFilter = (searchParams.status as BankTransferStatus | undefined) ?? undefined;
-  const page = Math.max(1, Number(searchParams.page ?? "1"));
+  // An unknown ?status= reaches Prisma as an invalid enum value and throws, and
+  // Number("abc") is NaN, which Math.max propagates straight into `skip`.
+  const statusFilter = BANK_TRANSFER_STATUSES.includes(searchParams.status as BankTransferStatus)
+    ? (searchParams.status as BankTransferStatus)
+    : undefined;
+  const pageRaw = Math.floor(Number(searchParams.page));
+  const page = Number.isFinite(pageRaw) && pageRaw > 1 ? pageRaw : 1;
 
   const where = statusFilter ? { status: statusFilter } : {};
 
