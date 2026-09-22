@@ -20,3 +20,7 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local database dumps (contain user data)
+backups/*.sql.gz
+backups/*.log
