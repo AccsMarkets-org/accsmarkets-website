@@ -12,8 +12,12 @@ export const metadata: Metadata = {
 const SECTIONS = [
   { id: "overview", title: "Overview" },
   { id: "who", title: "Who Must Verify" },
+  { id: "consequences", title: "If You Don't Verify" },
   { id: "what", title: "What We Collect" },
+  { id: "ai-review", title: "AI-Assisted Review" },
   { id: "how", title: "How We Use It" },
+  { id: "reverification", title: "Re-Verification" },
+  { id: "sanctions", title: "Sanctions Screening" },
   { id: "security", title: "Security & Encryption" },
   { id: "retention", title: "Retention" },
   { id: "rights", title: "Your Rights" },
@@ -41,7 +45,8 @@ export default function KycPolicyPage() {
         </p>
         <p>
           This policy explains what identity data we collect, how it is stored and protected, why we need
-          it, and the rights you have over that data.
+          it, what happens if you don&apos;t complete it, and the rights you have over that data. This policy should
+          be read together with our <strong>AML Policy</strong> and <strong>Terms of Service</strong>.
         </p>
       </LegalSection>
 
@@ -50,17 +55,31 @@ export default function KycPolicyPage() {
         title="Who Must Verify"
         icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
       >
-        <p>KYC verification is required for users who wish to:</p>
+        <p>We use three verification levels — <strong>Email</strong>, <strong>Phone</strong>, and <strong>ID Verified</strong> — and gate access accordingly:</p>
         <ul>
-          <li>List accounts for sale on the marketplace</li>
-          <li>Initiate or participate in escrow transactions above certain thresholds</li>
-          <li>Withdraw funds from their AccsMarkets wallet</li>
-          <li>Access higher trust tiers and verified seller badges</li>
+          <li><strong>Email</strong> (required for every account) — lets you browse the marketplace and buy at a basic level.</li>
+          <li><strong>Phone</strong> — required before you can create a listing or withdraw funds from your wallet.</li>
+          <li><strong>ID Verified</strong> — unlocks the verified-seller badge and the highest trust tier, and is the level checked for certain higher-trust surfaces of the platform (for example, the &quot;verified sellers only&quot; browse filter).</li>
         </ul>
         <p>
-          Basic browsing and purchasing of low-value listings may be available with email verification only.
-          Full identity verification unlocks the complete platform.
+          Basic browsing and purchasing of listings may be available with email verification only. Listing accounts
+          for sale and withdrawing funds always require Phone-level verification or higher.
         </p>
+      </LegalSection>
+
+      <LegalSection
+        id="consequences"
+        title="If You Don't Verify"
+        icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
+      >
+        <p>If you decline, delay, or fail identity verification:</p>
+        <ul>
+          <li>You can still browse the marketplace and message sellers with email verification alone.</li>
+          <li>You <strong>cannot create a listing</strong> and you <strong>cannot withdraw funds</strong> from your wallet until your account reaches Phone-level verification or higher — this is enforced at the point you try to list or withdraw, not just described here.</li>
+          <li>If your ID submission is <strong>rejected</strong>, you will be shown the reason in your dashboard and may submit a new attempt at any time — rejection does not permanently block you from re-applying.</li>
+          <li>Repeatedly submitting fraudulent, forged, or clearly falsified documents is a violation of our Terms of Service and our AML Policy, and may result in account suspension independent of any single rejected submission.</li>
+          <li>Where our risk systems flag your account as elevated risk, a withdrawal you have already requested may be held for manual review rather than declined outright — see our AML Policy for how that review works.</li>
+        </ul>
       </LegalSection>
 
       <LegalSection
@@ -87,8 +106,33 @@ export default function KycPolicyPage() {
           </li>
         </ul>
         <p>
-          We do not collect biometric data beyond what is visible in the photos you submit. We do not
-          perform automated facial recognition. All review is carried out by human compliance staff.
+          We do not collect biometric data beyond what is visible in the photos you submit, and we do not perform
+          automated facial-recognition matching between your selfie and your ID (see &quot;AI-Assisted Review&quot;
+          below for exactly what our automated tooling does and does not do).
+        </p>
+      </LegalSection>
+
+      <LegalSection
+        id="ai-review"
+        title="AI-Assisted Review"
+        icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+      >
+        <p>
+          To help our compliance team work through submissions efficiently, we use a vision-capable AI model as a
+          first-pass assistant. This step:
+        </p>
+        <ul>
+          <li>Reads the text printed on your ID (name, date of birth, document number, expiry date) — comparable to OCR (optical character recognition) — so a reviewer doesn&apos;t have to transcribe it by hand.</li>
+          <li>Estimates image quality (focus, lighting, whether the whole document is in frame) and flags possible signs of tampering (e.g. mismatched fonts, a re-photographed screen, a pasted photo).</li>
+          <li>Checks whether a face is visible on the ID and whether exactly one face appears in the selfie.</li>
+          <li>Produces a composite quality/completeness score used only to help our team prioritize its review queue — for example, surfacing a low-quality or possibly-tampered submission sooner.</li>
+        </ul>
+        <p>
+          <strong>This is explicitly not an automated identity decision.</strong> The AI does not compare your
+          selfie against your ID photo, does not perform liveness detection, and — most importantly — never
+          approves or rejects a submission. Every KYC submission, regardless of its AI-assigned score, is reviewed
+          and decided by a human member of our compliance team. The AI&apos;s output is only ever a hint to that
+          human reviewer, never the decision itself.
         </p>
       </LegalSection>
 
@@ -111,6 +155,35 @@ export default function KycPolicyPage() {
       </LegalSection>
 
       <LegalSection
+        id="reverification"
+        title="Re-Verification"
+        icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>}
+      >
+        <p>We reserve the right to require you to re-verify your identity — submitting fresh documents even if you were previously approved — where, for example:</p>
+        <ul>
+          <li>Your previously submitted document has since expired;</li>
+          <li>Our risk-monitoring systems detect a material change in your account&apos;s risk profile (see our AML Policy);</li>
+          <li>We have reason to believe your original submission was fraudulent, forged, or no longer matches your account; or</li>
+          <li>You are subject to enhanced due diligence for a specific transaction or dispute.</li>
+        </ul>
+        <p>We will tell you in-app and by email if a feature is restricted pending re-verification, and why.</p>
+      </LegalSection>
+
+      <LegalSection
+        id="sanctions"
+        title="Sanctions & PEP Screening"
+        icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>}
+      >
+        <p>
+          AccsMarkets reserves the right to decline to onboard, verify, or continue providing services to any
+          individual or entity that appears on an applicable government sanctions or watch list (such as the OFAC
+          Specially Designated Nationals list), or that we reasonably believe to be a politically exposed person
+          (PEP) presenting elevated risk. Where a match or suspected match is identified, the affected account and
+          any pending transactions may be held pending enhanced review, consistent with our AML Policy.
+        </p>
+      </LegalSection>
+
+      <LegalSection
         id="security"
         title="Security & Encryption"
         icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
@@ -128,7 +201,9 @@ export default function KycPolicyPage() {
         </ul>
         <p>
           Access to decrypted KYC data is restricted to a small number of authorised compliance staff and
-          is logged for audit purposes. Staff access is reviewed quarterly.
+          is logged for audit purposes. Staff access is reviewed quarterly. The AI-assisted review described above
+          receives only the images required for that single analysis call — never a batch export of documents —
+          and neither the image bytes nor the extracted personal data are written to application logs.
         </p>
       </LegalSection>
 
@@ -141,6 +216,12 @@ export default function KycPolicyPage() {
           We retain identity verification records for a minimum of <strong>5 years</strong> from the date
           of submission, or 5 years after the closure of your account, whichever is later. This retention
           period is required by applicable AML legislation.
+        </p>
+        <p>
+          This applies whether your submission was approved or rejected: a <strong>rejected</strong> submission and
+          its documents are kept under the same schedule (so there is an audit trail of what was reviewed and why it
+          was declined), but a rejection does not, by itself, grant the associated KYC level — you remain free to
+          submit a fresh attempt at any time.
         </p>
         <p>
           After the mandatory retention period has expired, documents are securely deleted from our systems.

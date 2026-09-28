@@ -18,7 +18,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  const session = await requireAdmin("MANAGE_SETTINGS");
+  const session = await requireAdmin("MANAGE_USERS");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => null);

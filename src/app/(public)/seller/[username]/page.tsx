@@ -72,6 +72,7 @@ export default async function SellerProfilePage({ params }: { params: { username
           comment: true,
           createdAt: true,
           reviewer: { select: { name: true, username: true, image: true } },
+          escrow: { select: { listing: { select: { title: true } } } },
         },
       },
       achievementBadges: {
@@ -89,6 +90,12 @@ export default async function SellerProfilePage({ params }: { params: { username
   });
 
   if (!seller) notFound();
+
+  // Average across ALL reviews the seller has received — not just the 6 most
+  // recent ones fetched above for the preview list.
+  const ratingAgg = seller._count.reviewsReceived > 0
+    ? await prisma.review.aggregate({ where: { revieweeId: seller.id }, _avg: { rating: true } })
+    : null;
 
   // Check if current user follows this seller
   const session = await getServerSession(authOptions);
@@ -109,9 +116,7 @@ export default async function SellerProfilePage({ params }: { params: { username
 
   const trustTier = getTrustTier(seller.trustScore);
 
-  const avgRating = seller.reviewsReceived.length > 0
-    ? seller.reviewsReceived.reduce((s, r) => s + r.rating, 0) / seller.reviewsReceived.length
-    : 0;
+  const avgRating = ratingAgg?._avg.rating ?? 0;
 
   const isOnline = seller.lastSeenAt
     ? Date.now() - new Date(seller.lastSeenAt).getTime() < 15 * 60_000
@@ -330,23 +335,28 @@ export default async function SellerProfilePage({ params }: { params: { username
                     {seller.reviewsReceived.map((review) => (
                       <div key={review.id} className="py-4 first:pt-0">
                         <div className="flex items-center gap-2.5">
-                          {review.reviewer.image ? (
-                            <Image
-                              src={review.reviewer.image}
-                              alt={review.reviewer.name ?? review.reviewer.username ?? ""}
-                              width={32}
-                              height={32}
-                              className="h-8 w-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/50 text-xs font-bold text-brand-600">
-                              {(review.reviewer.name ?? review.reviewer.username ?? "?").slice(0, 1).toUpperCase()}
-                            </div>
-                          )}
+                          <Link href={review.reviewer.username ? `/seller/${review.reviewer.username}` : "#"} className="shrink-0">
+                            {review.reviewer.image ? (
+                              <Image
+                                src={review.reviewer.image}
+                                alt={review.reviewer.name ?? review.reviewer.username ?? ""}
+                                width={32}
+                                height={32}
+                                className="h-8 w-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/50 text-xs font-bold text-brand-600">
+                                {(review.reviewer.name ?? review.reviewer.username ?? "?").slice(0, 1).toUpperCase()}
+                              </div>
+                            )}
+                          </Link>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground">
+                            <Link
+                              href={review.reviewer.username ? `/seller/${review.reviewer.username}` : "#"}
+                              className="text-sm font-medium text-foreground hover:text-brand-500 transition"
+                            >
                               {review.reviewer.name ?? review.reviewer.username}
-                            </p>
+                            </Link>
                             <div className="flex items-center gap-2">
                               <StarRating value={review.rating} size={12} />
                               <span className="text-[11px] text-muted">
@@ -357,6 +367,12 @@ export default async function SellerProfilePage({ params }: { params: { username
                         </div>
                         {review.comment && (
                           <p className="mt-2 text-sm text-muted leading-relaxed pl-[42px]">{review.comment}</p>
+                        )}
+                        {review.escrow?.listing && (
+                          <div className="mt-2 ml-[42px] inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 text-[11px] font-medium text-muted">
+                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 11H4L5 9z" /></svg>
+                            Purchased: {review.escrow.listing.title}
+                          </div>
                         )}
                       </div>
                     ))}

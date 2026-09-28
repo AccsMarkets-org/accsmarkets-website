@@ -27,6 +27,16 @@ function stepIndex(level: KycLevel): number {
 function KycConsentModal({ onAccept }: { onAccept: () => void }) {
   const [checked, setChecked] = useState(false);
 
+  // Lock background scroll while the modal is open (mirrors the pattern used
+  // by the mobile nav/sidebar overlays) and always restore it on unmount —
+  // otherwise a stuck `overflow: hidden` on <body> makes the whole site feel
+  // broken after the modal closes.
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prevOverflow; };
+  }, []);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-lg rounded-2xl bg-bg border border-surface-border shadow-2xl flex flex-col overflow-hidden">

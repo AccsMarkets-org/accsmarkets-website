@@ -17,17 +17,30 @@ export function FeatureFlagManager({ initialFlags }: { initialFlags: FeatureFlag
   const [newKey, setNewKey] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [creating, setCreating] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   // Draft rollout values — committed on mouseup/blur only (prevents one PATCH per tick)
   const [draftRollout, setDraftRollout] = useState<Record<string, number>>({});
 
   async function toggle(flag: FeatureFlag) {
-    const res = await fetch(`/api/admin/feature-flags/${flag.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ enabled: !flag.enabled }),
-    });
-    if (res.ok) {
-      setFlags((prev) => prev.map((f) => (f.id === flag.id ? { ...f, enabled: !flag.enabled } : f)));
+    if (togglingId) return;
+    setTogglingId(flag.id);
+    try {
+      const res = await fetch(`/api/admin/feature-flags/${flag.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !flag.enabled }),
+      });
+      if (res.ok) {
+        setFlags((prev) => prev.map((f) => (f.id === flag.id ? { ...f, enabled: !flag.enabled } : f)));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error ?? "Failed to update flag");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setTogglingId(null);
     }
   }
 
@@ -38,20 +51,43 @@ export function FeatureFlagManager({ initialFlags }: { initialFlags: FeatureFlag
   async function commitRollout(flag: FeatureFlag) {
     const pct = draftRollout[flag.id] ?? flag.rolloutPct;
     if (pct === flag.rolloutPct) return;
-    await fetch(`/api/admin/feature-flags/${flag.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rolloutPct: pct }),
-    });
-    setFlags((prev) => prev.map((f) => (f.id === flag.id ? { ...f, rolloutPct: pct } : f)));
-    setDraftRollout((prev) => { const next = { ...prev }; delete next[flag.id]; return next; });
+    try {
+      const res = await fetch(`/api/admin/feature-flags/${flag.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rolloutPct: pct }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error ?? "Failed to update rollout");
+        setDraftRollout((prev) => { const next = { ...prev }; delete next[flag.id]; return next; });
+        return;
+      }
+      setFlags((prev) => prev.map((f) => (f.id === flag.id ? { ...f, rolloutPct: pct } : f)));
+      setDraftRollout((prev) => { const next = { ...prev }; delete next[flag.id]; return next; });
+    } catch {
+      toast.error("Network error");
+      setDraftRollout((prev) => { const next = { ...prev }; delete next[flag.id]; return next; });
+    }
   }
 
   async function deleteFlag(id: string) {
-    const res = await fetch(`/api/admin/feature-flags/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setFlags((prev) => prev.filter((f) => f.id !== id));
-      toast.success("Flag deleted");
+    if (deletingId) return;
+    if (!confirm("Delete this feature flag? This can't be undone.")) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/feature-flags/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setFlags((prev) => prev.filter((f) => f.id !== id));
+        toast.success("Flag deleted");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error ?? "Failed to delete flag");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -144,7 +180,8 @@ export function FeatureFlagManager({ initialFlags }: { initialFlags: FeatureFlag
 
                 <button
                   onClick={() => toggle(f)}
-                  className={`rounded-lg px-3 py-1 text-xs font-medium ${
+                  disabled={togglingId === f.id || deletingId === f.id}
+                  className={`rounded-lg px-3 py-1 text-xs font-medium disabled:opacity-50 ${
                     f.enabled
                       ? "bg-surface-border text-muted hover:bg-red-100 dark:hover:bg-red-950/40 hover:text-danger"
                       : "bg-brand-600 text-white hover:bg-brand-700"
@@ -155,9 +192,10 @@ export function FeatureFlagManager({ initialFlags }: { initialFlags: FeatureFlag
 
                 <button
                   onClick={() => deleteFlag(f.id)}
-                  className="text-xs text-danger hover:underline"
+                  disabled={deletingId === f.id || togglingId === f.id}
+                  className="text-xs text-danger hover:underline disabled:opacity-50"
                 >
-                  Delete
+                  {deletingId === f.id ? "Deleting…" : "Delete"}
                 </button>
               </div>
             </div>

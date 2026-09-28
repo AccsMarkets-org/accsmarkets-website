@@ -1,0 +1,177 @@
+import { randomUUID } from "crypto";
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getTagada } from "@/lib/tagada";
+import type { Payment, PaymentInstrument } from "@tagadapay/node-sdk";
+import { prisma } from "@/lib/db";
+import { tagadaDepositSchema } from "@/lib/validation/wallet";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { RATE_LIMITS } from "@/lib/constants";
+import { createNotification } from "@/lib/notifications";
+import { sendEmail } from "@/lib/email";
+import { depositConfirmedTemplate } from "@/lib/email-templates";
+import { formatCurrency, round2 } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tagada = await getTagada();
+  if (!tagada) return NextResponse.json({ error: "Card payments are not configured" }, { status: 503 });
+
+  const storeId = process.env.TAGADA_STORE_ID;
+  if (!storeId) return NextResponse.json({ error: "Card payments are not configured" }, { status: 503 });
+
+  const { allowed } = await checkRateLimit(
+    `tagada-deposit:${session.user.id}`,
+    RATE_LIMITS.MANUAL_DEPOSITS.limit,
+    RATE_LIMITS.MANUAL_DEPOSITS.windowSeconds,
+  );
+  if (!allowed) return NextResponse.json({ error: "Too many deposit requests. Try again later." }, { status: 429 });
+
+  const body = await req.json().catch(() => null);
+  const parsed = tagadaDepositSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
+  }
+  const { amountUsd, tagadaToken } = parsed.data;
+
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
+
+  // A single-use idempotency key generated up front, not the FiatPayment row's
+  // own `id` — that field isn't known to have the real TagadaPay payment id
+  // until after payments.process() responds, and providerPaymentId is a
+  // required unique column. The row is created below with a placeholder
+  // ("pending_<key>") that's swapped for the real payment id once known, and
+  // the same key is passed to payments.process() so a client retry (e.g. a
+  // dropped connection) can never double-charge the card.
+  const idempotencyKey = randomUUID();
+
+  const fiatPayment = await prisma.fiatPayment.create({
+    data: {
+      userId: user.id,
+      provider: "tagadapay",
+      providerPaymentId: `pending_${idempotencyKey}`,
+      amountUsd,
+      currency: "usd",
+      status: "PENDING",
+    },
+  });
+
+  let instrument: PaymentInstrument;
+  try {
+    const result = await tagada.paymentInstruments.createFromToken({
+      tagadaToken,
+      storeId,
+      customerData: { email: user.email, firstName: user.name ?? undefined },
+    });
+    instrument = result.paymentInstrument;
+  } catch (err) {
+    await prisma.fiatPayment.update({ where: { id: fiatPayment.id }, data: { status: "FAILED" } }).catch(() => null);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Could not verify card" },
+      { status: 400 },
+    );
+  }
+
+  let payment: Payment;
+  try {
+    const result = await tagada.payments.process(
+      {
+        paymentInstrumentId: instrument.id,
+        amount: Math.round(amountUsd * 100),
+        currency: "USD",
+        storeId,
+        initiatedBy: user.id,
+      },
+      { idempotencyKey },
+    );
+    payment = result.payment;
+  } catch (err) {
+    await prisma.fiatPayment.update({ where: { id: fiatPayment.id }, data: { status: "FAILED" } }).catch(() => null);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Card charge failed" },
+      { status: 502 },
+    );
+  }
+
+  // TODO: 3DS continuation — if a processor returns a client-side "requires
+  // action" step (Radar fingerprint / 3DS challenge), `payment` carries a
+  // `requireAction` field alongside status "pending" per the SDK's README,
+  // but the exact shape isn't in the published .d.ts. That flow needs a
+  // browser round-trip via @tagadapay/core-js's ThreedsManager/PaymentsClient
+  // (see tagada.payments.continue()) and isn't implemented here — the happy
+  // path (no additional action required) is what's handled below.
+
+  if (payment.status === "captured" || payment.status === "authorized") {
+    const credited = await prisma.$transaction(async (tx) => {
+      const fresh = await tx.fiatPayment.findUniqueOrThrow({ where: { id: fiatPayment.id } });
+      if (fresh.status !== "PENDING") return null; // idempotency guard against a racing webhook delivery
+
+      await tx.fiatPayment.update({
+        where: { id: fresh.id },
+        data: { status: "COMPLETED", providerPaymentId: payment.id, completedAt: new Date() },
+      });
+
+      const freshUser = await tx.user.findUniqueOrThrow({ where: { id: user.id } });
+      const newBalance = round2(Number(freshUser.walletBalance) + amountUsd);
+
+      await tx.user.update({ where: { id: user.id }, data: { walletBalance: { increment: amountUsd } } });
+      await tx.transaction.create({
+        data: {
+          userId: user.id,
+          type: "DEPOSIT",
+          status: "COMPLETED",
+          amount: amountUsd,
+          balanceBefore: freshUser.walletBalance,
+          balanceAfter: newBalance,
+          metadata: { provider: "tagadapay", paymentId: payment.id },
+        },
+      });
+
+      return { newBalance };
+    });
+
+    if (credited) {
+      await createNotification({
+        userId: user.id,
+        type: "PAYMENT",
+        title: "Card deposit successful",
+        body: `${formatCurrency(amountUsd)} has been added to your wallet.`,
+        link: "/dashboard/wallet",
+      }).catch(() => null);
+
+      const { subject, html } = depositConfirmedTemplate(
+        user.name ?? "there",
+        formatCurrency(amountUsd),
+        formatCurrency(credited.newBalance),
+        "Card (TagadaPay)",
+        payment.id,
+      );
+      await sendEmail({ to: user.email, subject, html, slug: "deposit_confirmed" }).catch(() => null);
+    }
+
+    return NextResponse.json({ status: "completed", paymentId: payment.id });
+  }
+
+  if (payment.status === "pending") {
+    await prisma.fiatPayment.update({
+      where: { id: fiatPayment.id },
+      data: { providerPaymentId: payment.id },
+    });
+    return NextResponse.json({ status: "pending", paymentId: payment.id });
+  }
+
+  // declined | error | cancelled
+  await prisma.fiatPayment.update({
+    where: { id: fiatPayment.id },
+    data: { status: "FAILED", providerPaymentId: payment.id },
+  });
+  return NextResponse.json(
+    { error: `Card charge ${payment.status === "declined" ? "was declined" : "failed"}. Please try another card.` },
+    { status: 402 },
+  );
+}

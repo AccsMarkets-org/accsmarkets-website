@@ -129,10 +129,12 @@ function RoleCard({
   role,
   onEdit,
   onDelete,
+  deleting,
 }: {
   role: StaffRole;
   onEdit: () => void;
   onDelete: () => void;
+  deleting: boolean;
 }) {
   const grouped = PERMISSION_GROUPS.map((g) => ({
     ...g,
@@ -181,7 +183,8 @@ function RoleCard({
             </button>
             <button
               onClick={onDelete}
-              className="rounded-lg p-1.5 text-muted hover:text-danger hover:bg-danger/10 transition"
+              disabled={deleting}
+              className="rounded-lg p-1.5 text-muted hover:text-danger hover:bg-danger/10 transition disabled:opacity-50"
               title="Delete role"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -234,11 +237,13 @@ function MemberRow({
   roles,
   onAssignRole,
   onRemove,
+  busy,
 }: {
   member: StaffMember;
   roles: StaffRole[];
   onAssignRole: (roleId: string | null) => void;
   onRemove: () => void;
+  busy: boolean;
 }) {
   const displayName = member.name ?? member.username ?? member.email.split("@")[0];
 
@@ -260,7 +265,8 @@ function MemberRow({
         <select
           value={member.staffRoleId ?? ""}
           onChange={(e) => onAssignRole(e.target.value || null)}
-          className="rounded-lg border border-surface-border bg-background px-2.5 py-1.5 text-base font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-[140px] sm:text-xs"
+          disabled={busy}
+          className="rounded-lg border border-surface-border bg-background px-2.5 py-1.5 text-base font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-[140px] sm:text-xs disabled:opacity-50"
         >
           <option value="">Owner (Full Access)</option>
           {roles.map((r) => (
@@ -286,10 +292,11 @@ function MemberRow({
       <td className="px-4 py-3.5 text-right">
         <button
           onClick={onRemove}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger/10 transition opacity-0 group-hover:opacity-100"
+          disabled={busy}
+          className="rounded-lg px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger/10 transition opacity-0 group-hover:opacity-100 disabled:opacity-50"
           title="Remove from admin team"
         >
-          Remove
+          {busy ? "Removing…" : "Remove"}
         </button>
       </td>
     </tr>
@@ -320,6 +327,8 @@ export function StaffManagementClient() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [newMemberRoleId, setNewMemberRoleId] = useState("");
   const [addingMember, setAddingMember] = useState(false);
+  const [deletingRoleId, setDeletingRoleId] = useState<string | null>(null);
+  const [busyMemberId, setBusyMemberId] = useState<string | null>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -408,20 +417,32 @@ export function StaffManagementClient() {
   }
 
   async function deleteRole(id: string) {
+    if (deletingRoleId) return;
     if (!confirm("Delete this role? Staff members with this role will become Owner-level.")) return;
-    const res = await fetch(`/api/admin/staff/${id}`, { method: "DELETE" });
-    if (res.ok) { toast.success("Role deleted"); fetchData(); }
-    else { const d = await res.json(); toast.error(d.error ?? "Failed"); }
+    setDeletingRoleId(id);
+    try {
+      const res = await fetch(`/api/admin/staff/${id}`, { method: "DELETE" });
+      if (res.ok) { toast.success("Role deleted"); fetchData(); }
+      else { const d = await res.json(); toast.error(d.error ?? "Failed"); }
+    } finally {
+      setDeletingRoleId(null);
+    }
   }
 
   async function assignRole(userId: string, staffRoleId: string | null) {
-    const res = await fetch("/api/admin/staff/assign", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, staffRoleId }),
-    });
-    if (res.ok) { toast.success("Role updated"); fetchData(); }
-    else { const d = await res.json(); toast.error(d.error ?? "Failed"); }
+    if (busyMemberId) return;
+    setBusyMemberId(userId);
+    try {
+      const res = await fetch("/api/admin/staff/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, staffRoleId }),
+      });
+      if (res.ok) { toast.success("Role updated"); fetchData(); }
+      else { const d = await res.json(); toast.error(d.error ?? "Failed"); }
+    } finally {
+      setBusyMemberId(null);
+    }
   }
 
   async function addStaffMember() {
@@ -475,15 +496,21 @@ export function StaffManagementClient() {
   }
 
   async function removeStaffMember(member: StaffMember) {
+    if (busyMemberId) return;
     const label = member.name ?? member.email;
     if (!confirm(`Remove ${label} from the admin team? They will become a regular user.`)) return;
-    const res = await fetch("/api/admin/staff/members", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: member.id }),
-    });
-    if (res.ok) { toast.success(`${label} removed from staff`); fetchData(); }
-    else { const d = await res.json(); toast.error(d.error ?? "Failed"); }
+    setBusyMemberId(member.id);
+    try {
+      const res = await fetch("/api/admin/staff/members", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: member.id }),
+      });
+      if (res.ok) { toast.success(`${label} removed from staff`); fetchData(); }
+      else { const d = await res.json(); toast.error(d.error ?? "Failed"); }
+    } finally {
+      setBusyMemberId(null);
+    }
   }
 
   if (loading) {
@@ -589,6 +616,7 @@ export function StaffManagementClient() {
                   roles={roles}
                   onAssignRole={(roleId) => assignRole(m.id, roleId)}
                   onRemove={() => removeStaffMember(m)}
+                  busy={busyMemberId === m.id}
                 />
               ))}
               {members.length === 0 && (
@@ -624,6 +652,7 @@ export function StaffManagementClient() {
               role={role}
               onEdit={() => openEditRole(role)}
               onDelete={() => deleteRole(role.id)}
+              deleting={deletingRoleId === role.id}
             />
           ))}
           {roles.length === 0 && (

@@ -144,6 +144,7 @@ export function RegisterFormClient() {
           <p className="text-muted">
             We sent a verification link to <strong className="text-foreground">{form.email}</strong>. Verify your email before you can log in.
           </p>
+          <p className="text-xs text-muted">Don't see it? Check your spam or promotions folder.</p>
           {isSeller && (
             <div className="mt-2 w-full rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-left">
               <p className="text-sm font-semibold text-amber-900 dark:text-amber-300">Next step for sellers</p>

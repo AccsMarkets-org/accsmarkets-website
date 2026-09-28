@@ -1,12 +1,28 @@
 ﻿"use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/hooks/useConfirm";
 import { ArrowLeft, ArrowRight, ChevronDown, Tag } from "lucide-react";
+import type { TagadaChargeResult } from "./TagadaCardForm";
+
+// Lazy-loaded so its chunk (and the @tagadapay/core-js tokenization SDK it
+// imports) is only ever fetched when a signed-in user actually opens the
+// Card tab with TagadaPay configured — never bundled into the main app JS,
+// and never fetched at all on a deployment where NEXT_PUBLIC_TAGADA_ENABLED
+// isn't "true" (see hasTagada below, which gates whether this ever renders).
+const TagadaCardForm = dynamic(() => import("./TagadaCardForm").then((m) => m.TagadaCardForm), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-8">
+      <svg className="h-5 w-5 animate-spin text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+    </div>
+  ),
+});
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -127,8 +143,9 @@ const PAYMENT_METHODS = [
 
 const QUICK_AMOUNTS = [10, 25, 50, 100, 250, 500];
 
-const stripePublicKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const hasStripe = Boolean(stripePublicKey);
+// NEXT_PUBLIC_* vars are inlined at build time, so reading them directly here
+// is safe and free — no server round-trip needed to decide what to render.
+const hasTagada = process.env.NEXT_PUBLIC_TAGADA_ENABLED === "true";
 
 interface DepositResult {
   walletId: string;
@@ -171,10 +188,9 @@ export function DepositWidget() {
   const [walletAddressCopied, setWalletAddressCopied] = useState(false);
   const [walletLoading, setWalletLoading] = useState(true);
 
-  // Card
-  const [cardClientSecret, setCardClientSecret] = useState<string | null>(null);
-  const [cardLoading, setCardLoading] = useState(false);
+  // Card (TagadaPay)
   const [cardSuccess, setCardSuccess] = useState(false);
+  const [cardPending, setCardPending] = useState(false);
 
   // Bank
   const [bankFeeConfig, setBankFeeConfig] = useState<FeeConfig | null>(null);
@@ -237,8 +253,8 @@ export function DepositWidget() {
     : "Bank wire fee";
 
   const selectedNetwork = NETWORKS.find((n) => n.value === network) ?? NETWORKS[0];
-  // Card stays visible even without a processor: users searching for a card
-  // option get the card→USDT onramp guide instead of a missing tab.
+  // Card stays visible even without TagadaPay configured: users searching for
+  // a card option get the card→USDT onramp guide instead of a missing tab.
   const visibleMethods = PAYMENT_METHODS;
 
   async function handleCryptoDeposit(e: React.FormEvent) {
@@ -298,22 +314,12 @@ export function DepositWidget() {
     }
   }
 
-  async function initCardPayment(e: React.FormEvent) {
-    e.preventDefault();
-    setCardLoading(true);
-    try {
-      const res = await fetch("/api/wallet/deposit/card", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amountUsd: amountNum }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed");
-      setCardClientSecret(data.clientSecret);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setCardLoading(false);
+  function handleTagadaResult(result: TagadaChargeResult) {
+    if (result.status === "completed") {
+      setCardSuccess(true);
+    } else {
+      setCardPending(true);
+      toast.success("Payment received — your wallet will be credited once it's confirmed.");
     }
   }
 
@@ -325,7 +331,7 @@ export function DepositWidget() {
           <button
             key={m.key}
             type="button"
-            onClick={() => { setMethod(m.key as typeof method); setResult(null); setManualSubmitted(false); setCardClientSecret(null); setCardSuccess(false); }}
+            onClick={() => { setMethod(m.key as typeof method); setResult(null); setManualSubmitted(false); setCardSuccess(false); setCardPending(false); }}
             className={cn(
               "flex flex-col items-center gap-1.5 py-4 px-2 text-xs font-semibold transition border-b-2",
               method === m.key
@@ -529,7 +535,7 @@ export function DepositWidget() {
         )}
 
         {/* ── Card without a processor: card→USDT onramp guide ──────────── */}
-        {method === "card" && !hasStripe && (
+        {method === "card" && !hasTagada && (
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-1">
               <p className="text-base font-bold text-foreground">Pay with your card — via USDT</p>
@@ -568,8 +574,8 @@ export function DepositWidget() {
           </div>
         )}
 
-        {/* ── Card (Stripe) ─────────────────────────────────────────────── */}
-        {method === "card" && hasStripe && (
+        {/* ── Card (TagadaPay) ──────────────────────────────────────────── */}
+        {method === "card" && hasTagada && (
           cardSuccess ? (
             <SuccessState
               icon={<svg className="h-8 w-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>}
@@ -577,20 +583,20 @@ export function DepositWidget() {
               sub="Your funds will appear in your wallet within a few minutes."
               action={{ label: "Back to wallet", href: "/dashboard/wallet" }}
             />
-          ) : cardClientSecret ? (
-            <StripeCardForm clientSecret={cardClientSecret} publishableKey={stripePublicKey!} onSuccess={() => setCardSuccess(true)} />
+          ) : cardPending ? (
+            <SuccessState
+              icon={<svg className="h-8 w-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+              title="Payment processing"
+              sub="We're confirming your payment with the card network — your wallet will be credited automatically once it clears."
+              action={{ label: "Back to wallet", href: "/dashboard/wallet" }}
+            />
           ) : (
-            <form onSubmit={initCardPayment} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
               <AmountInput value={amount} onChange={setAmount} label="Amount (USD)" />
-              <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 text-xs text-green-700 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400">
-                <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>
-                Funds credited instantly after successful payment
-              </div>
-              <Button type="submit" isLoading={cardLoading} disabled={amountNum < 1} className="h-12 w-full text-base font-bold">
-                Pay with Card
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Button>
-            </form>
+              {amountNum >= 1 && (
+                <TagadaCardForm amountUsd={amountNum} onSuccess={handleTagadaResult} />
+              )}
+            </div>
           )
         )}
 
@@ -981,64 +987,3 @@ function CryptoDepositResult({
   );
 }
 
-// ── Stripe card form ───────────────────────────────────────────────────────────
-
-function StripeCardForm({ clientSecret, publishableKey, onSuccess }: { clientSecret: string; publishableKey: string; onSuccess: () => void }) {
-  const [mounted, setMounted] = useState(false);
-  const [paying, setPaying] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const mountRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const elementsRef = useRef<any>(null);
-
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://js.stripe.com/v3/";
-    script.async = true;
-    script.onload = () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stripe = (window as any).Stripe(publishableKey);
-      const elements = stripe.elements({ clientSecret });
-      const card = elements.create("payment");
-      if (!mountRef.current) return;
-      card.mount(mountRef.current);
-      elementsRef.current = elements;
-      card.on("ready", () => setMounted(true));
-    };
-    document.head.appendChild(script);
-    return () => { document.head.removeChild(script); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function handlePay(e: React.FormEvent) {
-    e.preventDefault();
-    if (!elementsRef.current) return;
-    setPaying(true);
-    setError(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const stripe = (window as any).Stripe(publishableKey);
-    const { error: stripeError } = await stripe.confirmPayment({
-      elements: elementsRef.current,
-      confirmParams: { return_url: window.location.href },
-      redirect: "if_required",
-    });
-    if (stripeError) {
-      setError(stripeError.message ?? "Payment failed");
-      setPaying(false);
-    } else {
-      onSuccess();
-    }
-  }
-
-  return (
-    <form onSubmit={handlePay} className="flex flex-col gap-4">
-      <div ref={mountRef} className="min-h-[52px] rounded-xl border border-surface-border bg-background p-3" />
-      {!mounted && <p className="text-xs text-muted">Loading payment form…</p>}
-      {error && <p className="rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
-      <Button type="submit" isLoading={paying} disabled={!mounted} className="h-12 w-full text-base font-bold">
-        Confirm payment
-        <ArrowRight className="h-4 w-4" aria-hidden />
-      </Button>
-    </form>
-  );
-}

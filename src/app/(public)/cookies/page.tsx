@@ -15,6 +15,7 @@ const SECTIONS = [
   { id: "essential", title: "Essential Cookies" },
   { id: "analytics", title: "Analytics Cookies" },
   { id: "preferences", title: "Preference Cookies" },
+  { id: "legal-basis", title: "Legal Basis & Consent" },
   { id: "manage", title: "Managing Cookies" },
 ];
 
@@ -23,7 +24,7 @@ export default function CookiePolicyPage() {
     <LegalPageLayout
       title="Cookie Policy"
       subtitle="How AccsMarkets uses cookies and similar technologies."
-      updatedAt="July 2026"
+      updatedAt="September 2026"
       sections={SECTIONS}
     >
       <LegalSection
@@ -91,6 +92,25 @@ export default function CookiePolicyPage() {
           <li><strong>Sound preferences</strong> — Whether notification sounds are muted.</li>
           <li><strong>Theme preference</strong> — Light or dark mode selection.</li>
         </ul>
+      </LegalSection>
+
+      <LegalSection
+        id="legal-basis"
+        title="Legal Basis & Consent"
+        icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>}
+      >
+        <p>
+          We set <strong>essential</strong> cookies on the basis that they are strictly necessary to provide the
+          service you asked for (staying logged in, protecting the checkout flow from CSRF). We set{" "}
+          <strong>analytics</strong>, <strong>advertising</strong>, and non-essential <strong>preference</strong>{" "}
+          cookies only where you have consented via the cookie banner, or where applicable law otherwise permits it.
+        </p>
+        <p>
+          Your consent choice is recorded (see our <a href="/privacy">Privacy Policy</a>) and you can change it at
+          any time using the methods described below. We do not currently respond to browser-level &quot;Do Not
+          Track&quot; signals as a separate mechanism, because our cookie banner already gives you granular,
+          per-category control that goes further than a single on/off signal.
+        </p>
       </LegalSection>
 
       <LegalSection

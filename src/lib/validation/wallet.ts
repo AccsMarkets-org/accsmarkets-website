@@ -36,6 +36,11 @@ export const withdrawSchema = z.discriminatedUnion("method", [
   bankWithdrawSchema,
 ]);
 
+export const tagadaDepositSchema = z.object({
+  amountUsd: z.number().min(1, "Minimum deposit is $1").max(10000),
+  tagadaToken: z.string().trim().min(1, "Missing card token"),
+});
+
 export const bankTransferDepositSchema = z.object({
   amountUsd: z.number().min(10, "Minimum bank transfer is $10"),
   // Optional: which platform bank account the user chose to transfer to.

@@ -12,7 +12,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const session = await requireAdmin("MANAGE_SETTINGS");
+  const session = await requireAdmin("MANAGE_USERS");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const message = await prisma.contactMessage.findUnique({ where: { id: params.id } });

@@ -10,8 +10,8 @@ import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, BadgeCheck, Banknote, ChartLine,
   ChevronDown, ClipboardList, DollarSign, FileText, Flag, Inbox, Landmark, LayoutDashboard,
   LayoutGrid, LifeBuoy, Mail, Mails, Megaphone, Menu, MessageSquare, MessageSquareText,
-  Monitor, Rocket, Scale, ScrollText, Settings, ShieldAlert, ShieldCheck, SquarePen, Star,
-  Ticket, ToggleRight, TriangleAlert, UserCog, UserPlus, Users, Wrench, X, Zap,
+  MessageSquareWarning, Monitor, Rocket, Scale, ScrollText, Settings, ShieldAlert, ShieldCheck,
+  SquarePen, Star, Ticket, ToggleRight, TriangleAlert, UserCog, UserPlus, Users, Wrench, X, Zap,
 } from "lucide-react";
 
 // ── Icons (lucide) ────────────────────────────────────────────────────────────
@@ -55,6 +55,8 @@ const I = {
   referrals:     <UserPlus {...NAV_ICON} />,
   escsupport:    <LifeBuoy {...NAV_ICON} />,
   maintenance:   <Wrench {...NAV_ICON} />,
+  reviews:       <Star {...NAV_ICON} />,
+  flagged:       <MessageSquareWarning {...NAV_ICON} />,
   chevron:       <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />,
 };
 
@@ -131,6 +133,8 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/admin/verification", label: "Verification", icon: I.verification, countKey: "pendingKyc", permission: "MANAGE_KYC" },
       { href: "/admin/subscriptions", label: "Subscriptions", icon: I.subscriptions, permission: "MANAGE_USERS" },
       { href: "/admin/referrals", label: "Referrals", icon: I.referrals, permission: "MANAGE_REFERRALS" },
+      { href: "/admin/reviews", label: "Reviews", icon: I.reviews, permission: "MANAGE_USERS" },
+      { href: "/admin/flagged-messages", label: "Flagged Messages", icon: I.flagged, permission: "MANAGE_USERS" },
     ],
   },
   {

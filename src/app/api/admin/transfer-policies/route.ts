@@ -15,7 +15,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const session = await requireAdmin("MANAGE_ESCROWS");
+  const session = await requireAdmin("MANAGE_LISTINGS");
   if (!session) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const session = await requireAdmin("MANAGE_ESCROWS");
+  const session = await requireAdmin("MANAGE_LISTINGS");
   if (!session) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

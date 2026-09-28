@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 const schema = z.object({
   action: z.enum(["start_review", "dismiss", "resolve", "ban_user", "warn_user", "remove_listing"]),
   resolution: z.string().optional(),
-});
+  // AdminActionButtons' promptReason sends { reason } — accept both names.
+  reason: z.string().optional(),
+}).transform((v) => ({ ...v, resolution: v.resolution ?? v.reason }));
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const session = await requireAdmin("MANAGE_REPORTS");

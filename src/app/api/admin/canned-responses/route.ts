@@ -11,14 +11,14 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  const session = await requireAdmin("MANAGE_ESCROW_MESSAGES");
+  const session = await requireAdmin("MANAGE_USERS");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const responses = await prisma.cannedResponse.findMany({ orderBy: { createdAt: "desc" } });
   return NextResponse.json({ responses });
 }
 
 export async function POST(req: Request) {
-  const session = await requireAdmin("MANAGE_ESCROW_MESSAGES");
+  const session = await requireAdmin("MANAGE_USERS");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const body = await req.json().catch(() => null);
   const parsed = createSchema.safeParse(body);

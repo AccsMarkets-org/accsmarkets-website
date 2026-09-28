@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/admin";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const session = await requireAdmin("MANAGE_SETTINGS");
+  const session = await requireAdmin("MANAGE_USERS");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { searchParams } = req.nextUrl;

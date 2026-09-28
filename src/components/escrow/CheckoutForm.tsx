@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Card } from "@/components/ui/Card";
@@ -8,7 +9,24 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { ArrowRight, BadgeCheck, ChevronDown, Package, ShieldCheck, Tag, TriangleAlert, Undo2 } from "lucide-react";
+import { ArrowRight, BadgeCheck, ChevronDown, CreditCard, Package, ShieldCheck, Tag, TriangleAlert, Undo2 } from "lucide-react";
+import type { TagadaChargeResult } from "@/components/wallet/TagadaCardForm";
+
+// Same lazy-loading rationale as DepositWidget: this chunk (and the
+// @tagadapay/core-js tokenization SDK) is only fetched if a buyer with an
+// insufficient balance actually opens this section — never bundled into the
+// checkout page's main JS, and never fetched at all when TagadaPay isn't
+// configured (see hasTagada below).
+const TagadaCardForm = dynamic(() => import("@/components/wallet/TagadaCardForm").then((m) => m.TagadaCardForm), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-6">
+      <svg className="h-5 w-5 animate-spin text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+    </div>
+  ),
+});
+
+const hasTagada = process.env.NEXT_PUBLIC_TAGADA_ENABLED === "true";
 
 interface AppliedPromo {
   code: string;
@@ -53,6 +71,13 @@ export function CheckoutForm(props: CheckoutFormProps) {
   const [promo, setPromo] = useState<AppliedPromo | null>(null);
   const [walletBalance, setWalletBalance] = useState(props.walletBalance);
 
+  // "Pay the difference with card" — a top-up-then-proceed wrapper around the
+  // wallet deposit endpoint. It never touches escrow-creation logic: it just
+  // charges the shortfall, reflects the credit locally, then calls the same
+  // handleConfirm() a buyer with a sufficient balance would have used.
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const [topUpPending, setTopUpPending] = useState(false);
+
   // A fee discount redeemed earlier (e.g. from the wallet page) is applied by the
   // server automatically — surface it so the total shown matches what's charged.
   useEffect(() => {
@@ -75,6 +100,7 @@ export function CheckoutForm(props: CheckoutFormProps) {
 
   const sufficient = walletBalance >= buyerTotal;
   const shortfall = buyerTotal - walletBalance;
+  const shortfallRounded = Math.max(0, Math.round(shortfall * 100) / 100);
   const feePercent = Math.round(props.feeRate * 100);
 
   async function applyPromo() {
@@ -137,6 +163,20 @@ export function CheckoutForm(props: CheckoutFormProps) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleTopUpSuccess(result: TagadaChargeResult) {
+    if (result.status === "completed") {
+      setWalletBalance((b) => Math.round((b + shortfallRounded) * 100) / 100);
+      setTopUpOpen(false);
+      toast.success("Card charged — completing your order…");
+      // Wallet now covers the total: proceed with the same escrow-creation
+      // submit a buyer with a sufficient balance already would have used.
+      await handleConfirm();
+    } else {
+      setTopUpPending(true);
+      toast.success("Payment received — your wallet will be credited once it clears. Try again in a moment.");
     }
   }
 
@@ -209,6 +249,39 @@ export function CheckoutForm(props: CheckoutFormProps) {
                 Top up now
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </button>
+
+              {hasTagada && (
+                <div className="mt-3 border-t border-warning/30 pt-3">
+                  {topUpPending ? (
+                    <p className="text-xs text-muted">
+                      Your card payment is processing — refresh in a moment once your wallet is credited to continue.
+                    </p>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setTopUpOpen((o) => !o)}
+                        aria-expanded={topUpOpen}
+                        className="inline-flex items-center gap-1.5 font-medium text-foreground"
+                      >
+                        <CreditCard className="h-4 w-4 text-brand-500" aria-hidden />
+                        Pay the difference with card
+                        <ChevronDown className={cn("h-3.5 w-3.5 text-muted transition", topUpOpen && "rotate-180")} aria-hidden />
+                      </button>
+                      {topUpOpen && (
+                        <div className="mt-3">
+                          <TagadaCardForm
+                            amountUsd={shortfallRounded}
+                            endpoint="/api/wallet/deposit/tagada"
+                            onSuccess={handleTopUpSuccess}
+                            submitLabel={`Pay ${formatCurrency(shortfallRounded)} & continue`}
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

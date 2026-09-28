@@ -11,7 +11,7 @@ const updateSchema = z.object({
 });
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const session = await requireAdmin("MANAGE_ESCROW_MESSAGES");
+  const session = await requireAdmin("MANAGE_USERS");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const body = await req.json().catch(() => null);
   const parsed = updateSchema.safeParse(body);
@@ -31,7 +31,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const session = await requireAdmin("MANAGE_ESCROW_MESSAGES");
+  const session = await requireAdmin("MANAGE_USERS");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     await prisma.cannedResponse.delete({ where: { id: params.id } });

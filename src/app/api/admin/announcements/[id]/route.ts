@@ -17,7 +17,7 @@ const schema = z.object({
 });
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const session = await requireAdmin("MANAGE_SETTINGS");
+  const session = await requireAdmin("MANAGE_MARKETING");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => null);
@@ -60,7 +60,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const session = await requireAdmin("MANAGE_SETTINGS");
+  const session = await requireAdmin("MANAGE_MARKETING");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {

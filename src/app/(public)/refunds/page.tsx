@@ -23,7 +23,7 @@ export default function RefundsPage() {
     <LegalPageLayout
       title="Refund Policy"
       subtitle="Clear rules for refunds across escrows, deposits, and subscriptions."
-      updatedAt="July 2026"
+      updatedAt="September 2026"
       sections={SECTIONS}
     >
       <LegalSection
@@ -32,13 +32,15 @@ export default function RefundsPage() {
         icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
       >
         <p>
-          While an escrow is in the <strong>FUNDED</strong> stage — meaning the seller has not yet submitted
-          account credentials — the buyer may cancel at any time. The refund is immediate and complete:
+          While an escrow is in the <strong>FUNDED</strong> or <strong>AWAITING_MANAGER_ADD</strong> stage — meaning
+          the seller has not yet submitted account credentials for verification — the buyer may cancel at any time.
+          The refund is immediate and complete:
         </p>
         <ul>
           <li>Full sale amount returned to buyer&apos;s wallet</li>
           <li>Escrow fee fully refunded</li>
           <li>No questions asked, no waiting period</li>
+          <li>The listing automatically becomes active again for other buyers</li>
         </ul>
       </LegalSection>
 
@@ -48,7 +50,8 @@ export default function RefundsPage() {
         icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
       >
         <p>
-          Once the seller submits transfer details, cancellation is no longer one-sided. If the
+          Once the seller submits transfer details for verification, the escrow can no longer be cancelled
+          one-sided — this is a hard rule enforced by our escrow state machine, not just a guideline. If the
           handover fails or the account doesn&apos;t match the listing:
         </p>
         <ul>
@@ -56,7 +59,7 @@ export default function RefundsPage() {
           <li>Provide evidence (screenshots, recordings, messages)</li>
           <li>Our team reviews and rules within 48 hours</li>
         </ul>
-        <p>Funds remain safely locked in escrow until the dispute is resolved.</p>
+        <p>Funds remain safely locked in escrow until the dispute is resolved. Refunds are only possible before the seller submits credentials, or as the outcome of a dispute ruling afterward — there is no unilateral &quot;change of mind&quot; refund once verification has started.</p>
       </LegalSection>
 
       <LegalSection
@@ -81,7 +84,7 @@ export default function RefundsPage() {
         <ul>
           <li>Confirmed crypto deposits are credited to your wallet balance.</li>
           <li>Cryptocurrency transactions are irreversible by nature — we cannot reverse on-chain transfers.</li>
-          <li>Wallet balances can be withdrawn at any time (minimum $20), subject to manual review.</li>
+          <li>Wallet balances can be withdrawn at any time (minimum $20), subject to manual review and to completing Phone-level identity verification or higher — see our KYC Policy.</li>
           <li>If a deposit is sent to the wrong address or network, contact support immediately — recovery is not guaranteed but we will attempt to assist.</li>
         </ul>
       </LegalSection>

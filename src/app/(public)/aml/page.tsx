@@ -13,6 +13,7 @@ const SECTIONS = [
   { id: "purpose", title: "Purpose" },
   { id: "kyc", title: "KYC Requirements" },
   { id: "monitoring", title: "Transaction Monitoring" },
+  { id: "source-of-funds", title: "Source of Funds" },
   { id: "suspicious", title: "Suspicious Activity" },
   { id: "records", title: "Record Keeping" },
   { id: "enforcement", title: "Enforcement" },
@@ -23,7 +24,7 @@ export default function AmlPage() {
     <LegalPageLayout
       title="Anti-Money Laundering Policy"
       subtitle="Our commitment to preventing financial crime on the AccsMarkets platform."
-      updatedAt="July 2026"
+      updatedAt="September 2026"
       sections={SECTIONS}
     >
       <LegalSection
@@ -74,6 +75,26 @@ export default function AmlPage() {
         </ul>
         <p>
           All flagged transactions undergo manual review by our compliance team before processing.
+        </p>
+      </LegalSection>
+
+      <LegalSection
+        id="source-of-funds"
+        title="Source of Funds for Large Transactions"
+        icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+      >
+        <p>
+          Escrows at or above the platform&apos;s high-value threshold — currently <strong>$500</strong>, configurable
+          by AccsMarkets and shown to admins in the platform settings — are automatically flagged as high-value
+          transactions. A high-value escrow may require additional safeguards before funds are released, such as a
+          transfer-manager handover step or video verification of the handover, depending on the listing&apos;s
+          platform and our current risk assessment.
+        </p>
+        <p>
+          For large or unusual transactions, we reserve the right to ask you to explain the source of the funds
+          being deposited or withdrawn (for example, the origin of a large crypto deposit) before we process it.
+          Failure to provide a satisfactory explanation may result in the transaction being held, declined, or
+          reported as suspicious activity as described below.
         </p>
       </LegalSection>
 

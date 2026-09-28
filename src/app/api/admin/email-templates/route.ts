@@ -12,7 +12,7 @@ const updateSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const session = await requireAdmin("MANAGE_SETTINGS");
+  const session = await requireAdmin("MANAGE_MARKETING");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const templates = await prisma.emailTemplate.findMany({ orderBy: { slug: "asc" } });
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const session = await requireAdmin("MANAGE_SETTINGS");
+  const session = await requireAdmin("MANAGE_MARKETING");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => null);

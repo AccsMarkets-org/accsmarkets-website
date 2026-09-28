@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // GET /api/admin/apps — list apps, optionally filtered by status
 export async function GET(req: NextRequest) {
-  const session = await requireAdmin("MANAGE_SETTINGS");
+  const session = await requireAdmin("MANAGE_USERS");
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const statusParam = req.nextUrl.searchParams.get("status");
