@@ -5,6 +5,7 @@ import { createNotification } from "@/lib/notifications";
 import { sendEmail } from "@/lib/email";
 import { depositConfirmedTemplate } from "@/lib/email-templates";
 import { formatCurrency, round2 } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,19 @@ export async function POST(req: Request) {
   const tagada = await getTagada();
   if (!tagada) return NextResponse.json({ error: "TagadaPay not configured" }, { status: 503 });
 
+  try {
+    return await handleWebhook(req, tagada, secret);
+  } catch (err) {
+    logger.error("tagada.webhook.unhandled", { err: String(err) });
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  }
+}
+
+async function handleWebhook(
+  req: Request,
+  tagada: NonNullable<Awaited<ReturnType<typeof getTagada>>>,
+  secret: string,
+): Promise<NextResponse> {
   const rawBody = await req.text();
   const signature = req.headers.get("x-tagadapay-signature");
 

@@ -12,6 +12,7 @@ import { createNotification } from "@/lib/notifications";
 import { sendEmail } from "@/lib/email";
 import { depositConfirmedTemplate } from "@/lib/email-templates";
 import { formatCurrency, round2 } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,21 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // Everything below can hit the database or the TagadaPay API. Without this
+  // outer guard, an unexpected throw (a transient DB error, anything not
+  // covered by the two inner try/catches below) escapes as Next.js's default
+  // HTML error page instead of JSON -- the client's `res.json()` then fails
+  // with "Unexpected token '<'", which is indistinguishable from the request
+  // never reaching the server at all (nothing here is logged otherwise).
+  try {
+    return await handleDeposit(req, session.user.id);
+  } catch (err) {
+    logger.error("tagada.deposit.unhandled", { userId: session.user.id, err: String(err) });
+    return NextResponse.json({ error: "Something went wrong processing your deposit. Please try again." }, { status: 500 });
+  }
+}
+
+async function handleDeposit(req: Request, sessionUserId: string): Promise<NextResponse> {
   const tagada = await getTagada();
   if (!tagada) return NextResponse.json({ error: "Card payments are not configured" }, { status: 503 });
 
@@ -26,7 +42,7 @@ export async function POST(req: Request) {
   if (!storeId) return NextResponse.json({ error: "Card payments are not configured" }, { status: 503 });
 
   const { allowed } = await checkRateLimit(
-    `tagada-deposit:${session.user.id}`,
+    `tagada-deposit:${sessionUserId}`,
     RATE_LIMITS.MANUAL_DEPOSITS.limit,
     RATE_LIMITS.MANUAL_DEPOSITS.windowSeconds,
   );
@@ -39,7 +55,7 @@ export async function POST(req: Request) {
   }
   const { amountUsd, tagadaToken } = parsed.data;
 
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: sessionUserId } });
 
   // A single-use idempotency key generated up front, not the FiatPayment row's
   // own `id` — that field isn't known to have the real TagadaPay payment id
