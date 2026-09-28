@@ -35,6 +35,7 @@ export default async function PrivacySettingsPage() {
           status: r.status,
           requestedAt: r.requestedAt.toISOString(),
           completedAt: r.completedAt?.toISOString() ?? null,
+          expiresAt: r.expiresAt?.toISOString() ?? null,
         }))}
         erasureRequests={erasureRequests.map((r) => ({
           id: r.id,

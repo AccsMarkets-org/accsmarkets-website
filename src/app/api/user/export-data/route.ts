@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
+import { appUrl } from "@/lib/email-render";
 
 export const dynamic = "force-dynamic";
 
@@ -53,20 +54,22 @@ async function assembleAndNotify(userId: string, requestId: string, email: strin
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    // When a storage bucket (S3/R2/GCS) is configured, upload `json` there and store a
-    // time-limited pre-signed URL as `downloadUrl`. Until then, embed the archive in the
-    // email as a base64 data-URI so the user can at least copy-paste their data.
-    const dataUri = `data:application/json;base64,${Buffer.from(json).toString("base64")}`;
-
+    // Stored as the raw JSON text (not a data-URI -- base64 adds ~33% for no
+    // benefit once the value has room to fit, and a raw string lets the
+    // download route set correct download headers instead of relying on the
+    // browser's data: URI handling, which some browsers restrict).
+    // When a storage bucket (S3/R2/GCS) is configured, this can move to an
+    // actual pre-signed upload instead of storing the payload in the DB row.
     await prisma.dataExportRequest.update({
       where: { id: requestId },
-      data: { status: "READY", completedAt: new Date(), expiresAt, downloadUrl: dataUri },
+      data: { status: "READY", completedAt: new Date(), expiresAt, downloadUrl: json },
     });
 
+    const downloadPageUrl = `${appUrl()}/dashboard/settings/privacy`;
     await sendEmail({
       to: email,
       subject: "Your AccsMarkets data export is ready",
-      html: `<p>Your personal data export is ready. It includes your profile, listings (${listings.length}), escrows (${escrows.length}), transactions (${transactions.length}), reviews, and messages.</p><p>Copy the link below and open it in your browser to download the JSON file:</p><p style="word-break:break-all;font-family:monospace;font-size:12px">${dataUri.slice(0, 200)}…</p><p><em>This export will expire in 7 days.</em></p>`,
+      html: `<p>Your personal data export is ready. It includes your profile, listings (${listings.length}), escrows (${escrows.length}), transactions (${transactions.length}), reviews, and messages.</p><p><a href="${downloadPageUrl}">Sign in and download it from Settings → Privacy</a>.</p><p><em>This export will expire in 7 days. The download requires you to be signed in, so the file can only be fetched by you.</em></p>`,
     });
   } catch (err) {
     logger.error("data_export.failed", { userId, requestId, err: String(err) });

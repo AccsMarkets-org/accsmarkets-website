@@ -8,6 +8,7 @@ interface ExportRequest {
   status: string;
   requestedAt: string;
   completedAt: string | null;
+  expiresAt: string | null;
 }
 
 interface ErasureRequest {
@@ -104,7 +105,17 @@ export function PrivacySettingsClient({ exportRequests, erasureRequests }: Props
             {exportRequests.map((r) => (
               <div key={r.id} className="flex items-center justify-between rounded-xl border border-surface-border px-4 py-2 text-sm">
                 <span className="text-muted">{new Date(r.requestedAt).toLocaleDateString()}</span>
-                <StatusBadge status={r.status} />
+                <div className="flex items-center gap-3">
+                  {r.status === "READY" && (!r.expiresAt || new Date(r.expiresAt) > new Date()) && (
+                    <a
+                      href={`/api/user/export-data/${r.id}/download`}
+                      className="text-xs font-semibold text-brand-600 hover:underline"
+                    >
+                      Download
+                    </a>
+                  )}
+                  <StatusBadge status={r.status} />
+                </div>
               </div>
             ))}
           </div>

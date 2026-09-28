@@ -1107,7 +1107,11 @@ model DataExportRequest {
   status      DataRequestStatus @default(PENDING)
   requestedAt DateTime          @default(now())
   completedAt DateTime?
-  downloadUrl String?
+  // Holds the raw JSON export payload (not a URL despite the field name --
+  // renaming would need a drop+add migration on a live, already-drifted DB;
+  // documenting the real contents here instead). LongText because a very
+  // active user's message history can push this well past a normal TEXT cap.
+  downloadUrl String?   @db.LongText
   expiresAt   DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
