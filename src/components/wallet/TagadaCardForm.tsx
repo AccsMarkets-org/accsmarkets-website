@@ -57,6 +57,11 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
     // ad-blocker, or network filter before it ever reaches our server) be
     // diagnosed from the server-side error log a browser crash can't give us.
     let stage = "tokenizer_import";
+    // Extra context a plain err.message/stack can't carry, filled in at the
+    // exact point of failure and forwarded to /api/client-errors — this is
+    // what actually makes a client-side-only failure debuggable from the
+    // server log a browser crash never reaches.
+    let diagnostic = "";
     try {
       const { Tokenizer } = await import("@tagadapay/core-js");
       stage = "tokenizer_init";
@@ -91,6 +96,7 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
       try {
         data = JSON.parse(rawText);
       } catch {
+        diagnostic = `http_status=${res.status} content_type=${res.headers.get("content-type") ?? "?"} body="${rawText.slice(0, 200).replace(/"/g, "'")}"`;
         throw new Error(
           "Couldn't reach our payment processor. This usually means a VPN, ad-blocker, or network filter is blocking the connection — try disabling those, switching networks, or use a different deposit method.",
         );
@@ -101,11 +107,31 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
       const message = err instanceof Error ? err.message : "Something went wrong";
       setError(message);
       toast.error(message);
+
+      // The tokenizer SDK wraps every failure in a generic PaymentSDKError
+      // ("Failed to tokenize card" / "Failed to verify card"), discarding the
+      // real cause into .originalError and .code — unwrap those explicitly or
+      // the one detail that would actually explain a tokenize_card failure is
+      // lost the moment it's thrown.
+      const sdkErr = err as { code?: unknown; originalError?: unknown };
+      const sdkCode = typeof sdkErr?.code === "string" ? sdkErr.code : undefined;
+      const originalError = sdkErr?.originalError;
+      const originalMessage = originalError instanceof Error
+        ? originalError.message
+        : originalError != null
+          ? String(originalError).slice(0, 300)
+          : undefined;
+
       fetch("/api/client-errors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: `[tagada-card:${stage}] ${message}`,
+          message: [
+            `[tagada-card:${stage}] ${message}`,
+            sdkCode && `code=${sdkCode}`,
+            originalMessage && `cause="${originalMessage}"`,
+            diagnostic,
+          ].filter(Boolean).join(" "),
           stack: err instanceof Error ? err.stack : undefined,
           url: typeof window !== "undefined" ? window.location.href : undefined,
         }),
