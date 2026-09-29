@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const fee = await prisma.depositMethodFee.findUnique({ where: { method: "bank_transfer" } }).catch(() => null);
   return NextResponse.json({

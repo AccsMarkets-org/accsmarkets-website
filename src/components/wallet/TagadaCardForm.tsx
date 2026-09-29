@@ -50,13 +50,22 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Tracked so a failure can be attributed to a specific step instead of
+    // surfacing as one indistinguishable "something went wrong" — this stage
+    // is what actually lets a client-side-only failure (blocked by a VPN,
+    // ad-blocker, or network filter before it ever reaches our server) be
+    // diagnosed from the server-side error log a browser crash can't give us.
+    let stage = "tokenizer_import";
     try {
       const { Tokenizer } = await import("@tagadapay/core-js");
+      stage = "tokenizer_init";
       const tokenizer = new Tokenizer({ environment: TEST_MODE ? "development" : "production" });
       await tokenizer.initialize();
 
       // tokenizeCard() returns the base64 TagadaToken string directly — this
       // is the only thing that leaves the browser for our backend.
+      stage = "tokenize_card";
       const tagadaToken = await tokenizer.tokenizeCard({
         cardNumber: cardNumber.replace(/\s+/g, ""),
         expiryDate: expiryDate.trim(), // "MM/YY"
@@ -64,18 +73,43 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
         cardholderName: cardholderName.trim() || undefined,
       });
 
+      stage = "server_request";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amountUsd, tagadaToken }),
       });
-      const data = await res.json();
+
+      // Read as text first: a proxy, VPN, or firewall between the browser and
+      // our server can return an HTML block/error page instead of JSON, and
+      // res.json() on that throws an opaque "Unexpected token '<'" that's
+      // indistinguishable from every other possible failure. Parsing text
+      // ourselves lets that specific case get a real, actionable message.
+      stage = "server_response";
+      const rawText = await res.text();
+      let data: { status?: string; paymentId?: string; error?: string };
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        throw new Error(
+          "Couldn't reach our payment processor. This usually means a VPN, ad-blocker, or network filter is blocking the connection — try disabling those, switching networks, or use a different deposit method.",
+        );
+      }
       if (!res.ok) throw new Error(data.error ?? "Payment failed");
-      onSuccess({ status: data.status, paymentId: data.paymentId });
+      onSuccess({ status: data.status as "completed" | "pending", paymentId: data.paymentId! });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       setError(message);
       toast.error(message);
+      fetch("/api/client-errors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: `[tagada-card:${stage}] ${message}`,
+          stack: err instanceof Error ? err.stack : undefined,
+          url: typeof window !== "undefined" ? window.location.href : undefined,
+        }),
+      }).catch(() => {});
     } finally {
       setLoading(false);
     }
