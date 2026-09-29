@@ -2,17 +2,16 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getTagada } from "@/lib/tagada";
+import { getTagada, creditTagadaFiatPayment } from "@/lib/tagada";
 import { TagadaAPIError, type Payment, type PaymentInstrument } from "@tagadapay/node-sdk";
 import { prisma } from "@/lib/db";
 import { tagadaDepositSchema } from "@/lib/validation/wallet";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { RATE_LIMITS } from "@/lib/constants";
-import { createNotification } from "@/lib/notifications";
-import { sendEmail } from "@/lib/email";
-import { depositConfirmedTemplate } from "@/lib/email-templates";
-import { formatCurrency, round2 } from "@/lib/utils";
 import { logger } from "@/lib/logger";
+import { sendEmail } from "@/lib/email";
+import { depositRejectedTemplate } from "@/lib/email-templates";
+import { formatCurrency } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -183,53 +182,14 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
   // charge as a failure: the card was actually charged, the customer was
   // told it failed, and their wallet was never credited.
   if (payment.status === "captured" || payment.status === "authorized" || (payment.status as string) === "succeeded") {
-    const credited = await prisma.$transaction(async (tx) => {
-      const fresh = await tx.fiatPayment.findUniqueOrThrow({ where: { id: fiatPayment.id } });
-      if (fresh.status !== "PENDING") return null; // idempotency guard against a racing webhook delivery
-
-      await tx.fiatPayment.update({
-        where: { id: fresh.id },
-        data: { status: "COMPLETED", providerPaymentId: payment.id, completedAt: new Date() },
-      });
-
-      const freshUser = await tx.user.findUniqueOrThrow({ where: { id: user.id } });
-      const newBalance = round2(Number(freshUser.walletBalance) + amountUsd);
-
-      await tx.user.update({ where: { id: user.id }, data: { walletBalance: { increment: amountUsd } } });
-      await tx.transaction.create({
-        data: {
-          userId: user.id,
-          type: "DEPOSIT",
-          status: "COMPLETED",
-          amount: amountUsd,
-          balanceBefore: freshUser.walletBalance,
-          balanceAfter: newBalance,
-          metadata: { provider: "tagadapay", paymentId: payment.id },
-        },
-      });
-
-      return { newBalance };
+    await creditTagadaFiatPayment({
+      fiatPaymentId: fiatPayment.id,
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.name,
+      amountUsd,
+      tagadaPaymentId: payment.id,
     });
-
-    if (credited) {
-      await createNotification({
-        userId: user.id,
-        type: "PAYMENT",
-        title: "Card deposit successful",
-        body: `${formatCurrency(amountUsd)} has been added to your wallet.`,
-        link: "/dashboard/wallet",
-      }).catch(() => null);
-
-      const { subject, html } = depositConfirmedTemplate(
-        user.name ?? "there",
-        formatCurrency(amountUsd),
-        formatCurrency(credited.newBalance),
-        "Card (TagadaPay)",
-        payment.id,
-      );
-      await sendEmail({ to: user.email, subject, html, slug: "deposit_confirmed" }).catch(() => null);
-    }
-
     return NextResponse.json({ status: "completed", paymentId: payment.id });
   }
 
@@ -253,6 +213,13 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
     // logging it whole here beats guessing at a property name.
     payment,
   });
+  const { subject, html } = depositRejectedTemplate(
+    user.name ?? "there",
+    formatCurrency(amountUsd),
+    "Card (TagadaPay)",
+    payment.status === "declined" ? "Your card issuer declined this charge." : "The charge could not be completed.",
+  );
+  await sendEmail({ to: user.email, subject, html, slug: "deposit_rejected" }).catch(() => null);
   return NextResponse.json(
     { error: `Card charge ${payment.status === "declined" ? "was declined" : "failed"}. Please try another card.` },
     { status: 402 },

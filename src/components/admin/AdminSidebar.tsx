@@ -123,6 +123,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/admin/deposits", label: "Deposits", icon: I.deposits, countKey: "pendingDeposits", permission: "MANAGE_FINANCE" },
       { href: "/admin/bank-transfers", label: "Bank Transfers", icon: I.banktransfer, countKey: "pendingBankTransfers", permission: "MANAGE_FINANCE" },
       { href: "/admin/paypal-deposits", label: "PayPal Deposits", icon: I.paypal, countKey: "pendingPaypalDeposits", permission: "MANAGE_FINANCE" },
+      { href: "/admin/card-deposits", label: "Card Deposits", icon: I.deposits, permission: "MANAGE_FINANCE" },
       { href: "/admin/withdrawals", label: "Withdrawals", icon: I.withdrawals, countKey: "pendingWithdrawals", permission: "MANAGE_FINANCE" },
       { href: "/admin/transactions", label: "Transactions", icon: I.transactions, permission: "MANAGE_FINANCE" },
       { href: "/admin/bank-accounts", label: "Bank Accounts", icon: I.bankaccounts, permission: "MANAGE_FINANCE" },

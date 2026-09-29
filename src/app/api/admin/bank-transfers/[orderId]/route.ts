@@ -4,7 +4,7 @@ import { requireAdmin, auditLog } from "@/lib/admin";
 import { createNotification } from "@/lib/notifications";
 import { emitToUser } from "@/lib/socket";
 import { sendEmail } from "@/lib/email";
-import { depositConfirmedTemplate } from "@/lib/email-templates";
+import { depositConfirmedTemplate, depositRejectedTemplate } from "@/lib/email-templates";
 import { formatCurrency } from "@/lib/utils";
 import { adminBankTransferActionSchema } from "@/lib/validation/wallet";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -49,6 +49,13 @@ export async function PUT(req: Request, { params }: { params: { orderId: string 
       body: reason ?? "Your bank transfer could not be verified. Contact support if this is a mistake.",
       link: `/dashboard/wallet/deposit/bank-transfer/${order.id}`,
     });
+    const { subject, html } = depositRejectedTemplate(
+      order.user.name ?? "there",
+      formatCurrency(Number(order.totalDue)),
+      "Bank Transfer",
+      reason ?? "We couldn't verify this transfer against your order.",
+    );
+    await sendEmail({ to: order.user.email, subject, html, slug: "deposit_rejected" }).catch(() => null);
     return NextResponse.json({ success: true });
   }
 

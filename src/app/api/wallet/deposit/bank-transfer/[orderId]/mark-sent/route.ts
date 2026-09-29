@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { bankTransferMarkSentSchema } from "@/lib/validation/wallet";
+import { createNotification } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,14 @@ export async function POST(req: Request, { params }: { params: { orderId: string
       proofImageUrl: proofImageUrl ?? null,
     },
   });
+
+  await createNotification({
+    userId: order.userId,
+    type: "PAYMENT",
+    title: "Bank transfer marked as sent",
+    body: `Your transfer for reference ${order.referenceId} is under review — we'll notify you once it's verified.`,
+    link: `/dashboard/wallet/deposit/bank-transfer/${order.id}`,
+  }).catch(() => null);
 
   return NextResponse.json({ success: true });
 }

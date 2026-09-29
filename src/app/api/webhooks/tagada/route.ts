@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getTagada } from "@/lib/tagada";
+import { getTagada, creditTagadaFiatPayment } from "@/lib/tagada";
 import { prisma } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
 import { sendEmail } from "@/lib/email";
-import { depositConfirmedTemplate } from "@/lib/email-templates";
+import { depositRejectedTemplate } from "@/lib/email-templates";
 import { formatCurrency, round2 } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
@@ -70,55 +70,24 @@ async function handleWebhook(
     const payment = extractPayment(event);
     if (!payment) return NextResponse.json({ received: true });
 
-    const credited = await prisma.$transaction(async (tx) => {
-      const fiat = await tx.fiatPayment.findUnique({ where: { providerPaymentId: payment.id } });
-      // Idempotency guard, matching the NOWPayments/Stripe webhook convention:
-      // only credit once. A retried delivery (or a race with the synchronous
-      // POST /api/wallet/deposit/tagada response) for the same payment id is
-      // a no-op once it's already COMPLETED.
-      if (!fiat || fiat.status !== "PENDING") return null;
-
-      const user = await tx.user.findUniqueOrThrow({ where: { id: fiat.userId } });
-      const amountUsd = round2(Number(fiat.amountUsd));
-      const newBalance = round2(Number(user.walletBalance) + amountUsd);
-
-      await tx.fiatPayment.update({
-        where: { id: fiat.id },
-        data: { status: "COMPLETED", completedAt: new Date() },
-      });
-      await tx.user.update({ where: { id: user.id }, data: { walletBalance: { increment: amountUsd } } });
-      await tx.transaction.create({
-        data: {
+    // Idempotency guard, matching the NOWPayments/Stripe webhook convention:
+    // only credit once. A retried delivery (or a race with the synchronous
+    // POST /api/wallet/deposit/tagada response) for the same payment id is a
+    // no-op once it's already COMPLETED -- creditTagadaFiatPayment enforces
+    // this itself (same helper the deposit route's own success path uses).
+    const fiat = await prisma.fiatPayment.findUnique({ where: { providerPaymentId: payment.id } });
+    if (fiat) {
+      const user = await prisma.user.findUnique({ where: { id: fiat.userId } });
+      if (user) {
+        await creditTagadaFiatPayment({
+          fiatPaymentId: fiat.id,
           userId: user.id,
-          type: "DEPOSIT",
-          status: "COMPLETED",
-          amount: amountUsd,
-          balanceBefore: user.walletBalance,
-          balanceAfter: newBalance,
-          metadata: { provider: "tagadapay", paymentId: payment.id },
-        },
-      });
-
-      return { user, amountUsd, newBalance };
-    });
-
-    if (credited) {
-      await createNotification({
-        userId: credited.user.id,
-        type: "PAYMENT",
-        title: "Card deposit successful",
-        body: `${formatCurrency(credited.amountUsd)} has been added to your wallet.`,
-        link: "/dashboard/wallet",
-      }).catch(() => null);
-
-      const { subject, html } = depositConfirmedTemplate(
-        credited.user.name ?? "there",
-        formatCurrency(credited.amountUsd),
-        formatCurrency(credited.newBalance),
-        "Card (TagadaPay)",
-        payment.id,
-      );
-      await sendEmail({ to: credited.user.email, subject, html, slug: "deposit_confirmed" }).catch(() => null);
+          userEmail: user.email,
+          userName: user.name,
+          amountUsd: round2(Number(fiat.amountUsd)),
+          tagadaPaymentId: payment.id,
+        });
+      }
     }
 
     return NextResponse.json({ received: true });
@@ -127,10 +96,27 @@ async function handleWebhook(
   if (FAILURE_EVENTS.has(eventType)) {
     const payment = extractPayment(event);
     if (payment) {
-      await prisma.fiatPayment.updateMany({
-        where: { providerPaymentId: payment.id, status: "PENDING" },
-        data: { status: "FAILED" },
-      });
+      const fiat = await prisma.fiatPayment.findUnique({ where: { providerPaymentId: payment.id } });
+      if (fiat && fiat.status === "PENDING") {
+        await prisma.fiatPayment.update({ where: { id: fiat.id }, data: { status: "FAILED" } });
+        const user = await prisma.user.findUnique({ where: { id: fiat.userId } });
+        if (user) {
+          await createNotification({
+            userId: user.id,
+            type: "PAYMENT",
+            title: "Card deposit failed",
+            body: "Your card deposit could not be completed. Please try again or use another card.",
+            link: "/dashboard/wallet",
+          }).catch(() => null);
+          const { subject, html } = depositRejectedTemplate(
+            user.name ?? "there",
+            formatCurrency(Number(fiat.amountUsd)),
+            "Card (TagadaPay)",
+            "The card charge did not complete.",
+          );
+          await sendEmail({ to: user.email, subject, html, slug: "deposit_rejected" }).catch(() => null);
+        }
+      }
     }
     return NextResponse.json({ received: true });
   }

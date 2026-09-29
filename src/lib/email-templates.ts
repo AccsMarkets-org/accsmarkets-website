@@ -361,6 +361,32 @@ export function depositConfirmedTemplate(name: string, amount: string, newBalanc
   };
 }
 
+export function depositSubmittedTemplate(name: string, amount: string, paymentMethod: string, instructions: string, reference: string, orderUrl: string): EmailContent {
+  return {
+    subject: "Deposit Request Received — Action Needed",
+    html: renderTemplate("deposit_submitted", {
+      user_name: name,
+      amount,
+      payment_method: paymentMethod,
+      instructions,
+      reference,
+      order_url: orderUrl,
+    }),
+  };
+}
+
+export function depositRejectedTemplate(name: string, amount: string, paymentMethod: string, reason = ""): EmailContent {
+  return {
+    subject: "Deposit Could Not Be Verified",
+    html: renderTemplate("deposit_rejected", {
+      user_name: name,
+      amount,
+      payment_method: paymentMethod,
+      reason,
+    }),
+  };
+}
+
 export function kycApprovedTemplate(name: string, level: string): EmailContent {
   return {
     subject: "Identity Verification Approved",

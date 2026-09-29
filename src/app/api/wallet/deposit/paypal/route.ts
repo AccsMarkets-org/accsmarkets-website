@@ -7,6 +7,10 @@ import { calculateDepositFee } from "@/lib/fees";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { RATE_LIMITS } from "@/lib/constants";
 import { randomBytes } from "crypto";
+import { sendEmail } from "@/lib/email";
+import { depositSubmittedTemplate } from "@/lib/email-templates";
+import { appUrl } from "@/lib/email-render";
+import { formatCurrency } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +66,19 @@ export async function POST(req: Request) {
       status: "PENDING",
     },
   });
+
+  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { email: true, name: true } });
+  if (user) {
+    const { subject, html } = depositSubmittedTemplate(
+      user.name ?? "there",
+      formatCurrency(totalDue),
+      "PayPal",
+      `Send ${formatCurrency(totalDue)} to ${paypalAccount.paypalEmail} as Friends & Family using the reference below, then mark it as sent from your dashboard.`,
+      referenceId,
+      `${appUrl()}/dashboard/wallet/deposit/paypal/${order.id}`,
+    );
+    await sendEmail({ to: user.email, subject, html, slug: "deposit_submitted" }).catch(() => null);
+  }
 
   return NextResponse.json({
     orderId: order.id,

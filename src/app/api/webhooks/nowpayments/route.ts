@@ -3,10 +3,14 @@ import { prisma } from "@/lib/db";
 import { verifyIpnSignature } from "@/lib/nowpayments";
 import { createNotification } from "@/lib/notifications";
 import { sendEmail } from "@/lib/email";
-import { depositConfirmedTemplate } from "@/lib/email-templates";
+import { depositConfirmedTemplate, depositRejectedTemplate } from "@/lib/email-templates";
 import { formatCurrency, round2 } from "@/lib/utils";
 
 const CREDIT_STATUSES = new Set(["finished", "confirmed", "partially_paid"]);
+// Terminal failure states worth telling the user about -- "waiting",
+// "confirming", "sending" etc. are normal in-progress states, not failures,
+// and must not trigger a "your deposit failed" email.
+const FAILURE_STATUSES = new Set(["failed", "expired", "refunded"]);
 
 export async function POST(req: Request) {
   const rawBody = await req.text();
@@ -36,6 +40,27 @@ export async function POST(req: Request) {
       where: { id: wallet.id },
       data: { status: payload.payment_status },
     });
+    if (FAILURE_STATUSES.has(payload.payment_status) && wallet.status !== payload.payment_status) {
+      const user = await prisma.user.findUnique({ where: { id: wallet.userId } });
+      if (user) {
+        await createNotification({
+          userId: user.id,
+          type: "PAYMENT",
+          title: "Deposit failed",
+          body: `Your ${wallet.network} deposit could not be completed (${payload.payment_status}).`,
+          link: "/dashboard/wallet",
+        }).catch(() => null);
+        const { subject, html } = depositRejectedTemplate(
+          user.name ?? "there",
+          formatCurrency(wallet.amountUsd.toString()),
+          `Crypto (${wallet.network})`,
+          payload.payment_status === "expired"
+            ? "The payment window expired before funds arrived."
+            : "The network payment did not complete.",
+        );
+        await sendEmail({ to: user.email, subject, html, slug: "deposit_rejected" }).catch(() => null);
+      }
+    }
     return NextResponse.json({ received: true });
   }
 

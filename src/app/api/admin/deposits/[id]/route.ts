@@ -5,7 +5,7 @@ import { requireAdmin, auditLog } from "@/lib/admin";
 import { createNotification } from "@/lib/notifications";
 import { emitToUser } from "@/lib/socket";
 import { sendEmail } from "@/lib/email";
-import { depositConfirmedTemplate } from "@/lib/email-templates";
+import { depositConfirmedTemplate, depositRejectedTemplate } from "@/lib/email-templates";
 import { formatCurrency } from "@/lib/utils";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -65,6 +65,18 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       body: reason ?? "Your manual deposit could not be verified. Contact support if this is a mistake.",
       link: "/dashboard/wallet",
     });
+
+    const rejectedUser = await prisma.user.findUnique({ where: { id: wallet.userId }, select: { email: true, name: true } });
+    if (rejectedUser) {
+      const { subject, html } = depositRejectedTemplate(
+        rejectedUser.name ?? "there",
+        formatCurrency(wallet.amountUsd.toString()),
+        `Crypto (${wallet.network})`,
+        reason ?? "We couldn't verify this transaction on the blockchain.",
+      );
+      await sendEmail({ to: rejectedUser.email, subject, html, slug: "deposit_rejected" }).catch(() => null);
+    }
+
     return NextResponse.json({ deposit: updated });
   }
 
