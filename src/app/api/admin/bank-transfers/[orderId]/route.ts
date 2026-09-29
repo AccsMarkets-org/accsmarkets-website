@@ -36,13 +36,25 @@ export async function PUT(req: Request, { params }: { params: { orderId: string 
     if (order.status === "REJECTED" || order.status === "VERIFIED") {
       return NextResponse.json({ error: "Order cannot be rejected in its current state." }, { status: 400 });
     }
-    await prisma.$transaction(async (tx) => {
+    // Re-checked inside the transaction, not just the stale pre-read above:
+    // a concurrent verify can commit between that read and this transaction
+    // starting. Without this, a reject arriving just after a verify would
+    // silently flip an already-credited order's status to REJECTED with the
+    // wallet credit never reversed — the ledger then lies about what
+    // happened. `rejected` false means a verify won the race; caller is told.
+    const rejected = await prisma.$transaction(async (tx) => {
+      const fresh = await tx.bankTransferOrder.findUniqueOrThrow({ where: { id: order.id } });
+      if (fresh.status === "REJECTED" || fresh.status === "VERIFIED") return false;
       await tx.bankTransferOrder.update({
         where: { id: order.id },
         data: { status: "REJECTED", rejectedAt: new Date(), rejectionReason: reason ?? null, adminNotes: adminNotes ?? null },
       });
       await auditLog(tx, session.user.id, "bank_deposit.reject", "BankTransferOrder", order.id, { reason });
+      return true;
     });
+    if (!rejected) {
+      return NextResponse.json({ error: "Order was verified by another action just now — refresh to see its current state." }, { status: 409 });
+    }
     await createNotification({
       userId: order.userId,
       type: "PAYMENT",
@@ -93,7 +105,12 @@ export async function PUT(req: Request, { params }: { params: { orderId: string 
 
   const result = await prisma.$transaction(async (tx) => {
     const fresh = await tx.bankTransferOrder.findUniqueOrThrow({ where: { id: order.id } });
-    if (fresh.status === "VERIFIED") return null;
+    // Must still be SENT, not just "not already VERIFIED" -- the old check
+    // let a verify through even after a concurrent reject had already moved
+    // it to REJECTED (status is neither SENT nor VERIFIED in that case, but
+    // the old guard only excluded VERIFIED), crediting a wallet for a
+    // transfer an admin had just rejected.
+    if (fresh.status !== "SENT") return null;
 
     const user = await tx.user.findUniqueOrThrow({ where: { id: order.userId } });
     const balanceBefore = Number(user.walletBalance);
@@ -132,7 +149,7 @@ export async function PUT(req: Request, { params }: { params: { orderId: string 
   });
 
   if (!result) {
-    return NextResponse.json({ error: "Order was already verified." }, { status: 409 });
+    return NextResponse.json({ error: "Order is no longer in SENT status — it was already verified or rejected by another action." }, { status: 409 });
   }
 
   await createNotification({

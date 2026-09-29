@@ -597,7 +597,10 @@ export function DepositWidget() {
                 Make sure the TX hash matches the exact network you selected. Wrong hash or network = delayed review.
               </div>
 
-              {/* Payment summary shown before submit */}
+              {/* Payment summary shown before submit -- manual deposits have
+                  no "request the exact total" step like the automatic tab,
+                  so the fee is deducted from what's credited instead of
+                  added to what you send (you already sent it). */}
               {amountNum >= 1 && (
                 <div className="overflow-hidden rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-background dark:border-brand-800 dark:from-brand-950/30">
                   <div className="border-b border-brand-100 bg-brand-500 px-4 py-2">
@@ -605,9 +608,9 @@ export function DepositWidget() {
                   </div>
                   <div className="flex flex-col gap-0 divide-y divide-brand-100 dark:divide-brand-800">
                     <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-sm text-muted">You must send</span>
+                      <span className="text-sm text-muted">You sent</span>
                       <span className="text-xl font-black tabular-nums text-brand-700 dark:text-brand-400">
-                        {cryptoTotal.toFixed(2)} <span className="text-sm font-bold">USDT</span>
+                        {amountNum.toFixed(2)} <span className="text-sm font-bold">USDT</span>
                       </span>
                     </div>
                     <div className="flex items-center justify-between px-4 py-3 text-sm">
@@ -618,16 +621,16 @@ export function DepositWidget() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between px-4 py-3 text-sm">
-                      <span className="text-muted">{cryptoFeeLabel}</span>
-                      <span className="font-medium text-foreground">{cryptoFee === 0 ? "Free" : `$${cryptoFee.toFixed(2)}`}</span>
+                      <span className="text-muted">{cryptoFeeLabel} (deducted)</span>
+                      <span className="font-medium text-foreground">{cryptoFee === 0 ? "Free" : `-$${cryptoFee.toFixed(2)}`}</span>
                     </div>
                     <div className="flex items-center justify-between px-4 py-3 text-sm">
                       <span className="text-muted">Network fee</span>
-                      <span className="font-medium text-amber-600">{selectedNetwork.fee} <span className="font-normal text-muted">(paid to blockchain)</span></span>
+                      <span className="font-medium text-amber-600">{selectedNetwork.fee} <span className="font-normal text-muted">(paid to blockchain, not to us)</span></span>
                     </div>
                     <div className="flex items-center justify-between px-4 py-3 text-sm">
                       <span className="text-muted">You receive</span>
-                      <span className="font-bold text-success">${amountNum.toFixed(2)} wallet credit</span>
+                      <span className="font-bold text-success">${Math.max(0, amountNum - cryptoFee).toFixed(2)} wallet credit</span>
                     </div>
                   </div>
                 </div>

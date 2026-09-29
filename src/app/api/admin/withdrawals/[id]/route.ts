@@ -40,10 +40,22 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 
   if (action === "reject") {
-    await prisma.$transaction(async (tx) => {
+    // Re-checked inside the transaction, not just the stale pre-read above:
+    // a concurrent approve can commit (debiting the balance and marking
+    // COMPLETED) between that read and this transaction starting. Without
+    // this guard, a reject arriving right after would silently overwrite an
+    // already-paid-out withdrawal's status back to CANCELLED, making the
+    // ledger say funds were never sent when they actually were.
+    const rejected = await prisma.$transaction(async (tx) => {
+      const fresh = await tx.transaction.findUniqueOrThrow({ where: { id: withdrawal.id } });
+      if (fresh.status !== "PENDING") return false;
       await tx.transaction.update({ where: { id: withdrawal.id }, data: { status: "CANCELLED" } });
       await auditLog(tx, session.user.id, "withdrawal.reject", "Transaction", withdrawal.id, { reason });
+      return true;
     });
+    if (!rejected) {
+      return NextResponse.json({ error: "Withdrawal was already approved by another action just now — refresh to see its current state." }, { status: 409 });
+    }
 
     await createNotification({
       userId: withdrawal.userId,

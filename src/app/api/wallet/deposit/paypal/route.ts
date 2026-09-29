@@ -10,7 +10,7 @@ import { randomBytes } from "crypto";
 import { sendEmail } from "@/lib/email";
 import { depositSubmittedTemplate } from "@/lib/email-templates";
 import { appUrl } from "@/lib/email-render";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, round2 } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
   const minFee = feeConfig ? Number(feeConfig.minFee) : 0;
   const maxFee = feeConfig?.maxFee != null ? Number(feeConfig.maxFee) : null;
   const feeUsd = calculateDepositFee(amountUsd, feeRate, minFee, maxFee);
-  const totalDue = amountUsd + feeUsd;
+  const totalDue = round2(amountUsd + feeUsd);
 
   const referenceId = "PP-" + randomBytes(4).toString("hex").toUpperCase();
 

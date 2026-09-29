@@ -6,7 +6,7 @@ import { cryptoDepositSchema } from "@/lib/validation/wallet";
 import { createNowPayment } from "@/lib/nowpayments";
 import { createNotification } from "@/lib/notifications";
 import { calculateDepositFee } from "@/lib/fees";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, round2 } from "@/lib/utils";
 import { emitToAdmins } from "@/lib/socket";
 
 export const dynamic = "force-dynamic";
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     // balance) -- only the amount actually requested from NOWPayments below
     // includes the fee, so the customer sends totalDue in crypto but is
     // credited exactly amountUsd once it's confirmed.
-    const totalDue = amountUsd + feeUsd;
+    const totalDue = round2(amountUsd + feeUsd);
 
     const wallet = await prisma.cryptoWallet.create({
       data: {

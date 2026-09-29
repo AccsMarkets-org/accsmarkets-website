@@ -7,7 +7,8 @@ import { emitToUser } from "@/lib/socket";
 import { sendEmail } from "@/lib/email";
 import { depositConfirmedTemplate, depositRejectedTemplate } from "@/lib/email-templates";
 import { appUrl } from "@/lib/email-render";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, round2 } from "@/lib/utils";
+import { calculateDepositFee } from "@/lib/fees";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -81,13 +82,32 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ deposit: updated });
   }
 
+  // Manual deposits (unlike the automatic NOWPayments flow, which requests
+  // amountUsd + fee up front from the customer) have no "request the total
+  // due" step -- the customer just reports what they sent. The Manual USDT
+  // tab tells them "you must send $X + fee", so the fee has to come out of
+  // the credit here, or it's collected nowhere at all: the customer sends
+  // extra for nothing, or gets the fee-inclusive amount credited for free.
+  const feeConfig = wallet.isManual
+    ? await prisma.depositMethodFee.findUnique({ where: { method: "crypto" } })
+    : null;
+
   // confirm — atomic credit, idempotent via the status !== "waiting" guard inside the transaction
   const result = await prisma.$transaction(async (tx) => {
     const fresh = await tx.cryptoWallet.findUniqueOrThrow({ where: { id: wallet.id } });
     if (fresh.status !== "waiting") return null;
 
     const user = await tx.user.findUniqueOrThrow({ where: { id: wallet.userId } });
-    const depositAmount = Number(fresh.amountUsd);
+    const reportedAmount = Number(fresh.amountUsd);
+    const feeUsd = feeConfig
+      ? calculateDepositFee(
+          reportedAmount,
+          Number(feeConfig.feeRate),
+          Number(feeConfig.minFee),
+          feeConfig.maxFee != null ? Number(feeConfig.maxFee) : null,
+        )
+      : 0;
+    const depositAmount = round2(reportedAmount - feeUsd);
     const newBalance = Number(user.walletBalance) + depositAmount;
 
     await tx.cryptoWallet.update({
@@ -105,9 +125,18 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       },
     });
     if (pendingTx) {
+      const priorMeta = (pendingTx.metadata as Record<string, unknown> | null) ?? {};
       await tx.transaction.update({
         where: { id: pendingTx.id },
-        data: { status: "COMPLETED", balanceAfter: newBalance },
+        // amount corrected from the raw reported figure to what was actually
+        // credited -- the PENDING row was created at submission time before
+        // any fee was known.
+        data: {
+          status: "COMPLETED",
+          amount: depositAmount,
+          balanceAfter: newBalance,
+          metadata: { ...priorMeta, ...(feeUsd ? { feeUsd, reportedAmount } : {}) },
+        },
       });
     } else {
       await tx.transaction.create({
@@ -115,18 +144,18 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
           userId: user.id,
           type: "DEPOSIT",
           status: "COMPLETED",
-          amount: fresh.amountUsd,
+          amount: depositAmount,
           balanceBefore: user.walletBalance,
           balanceAfter: newBalance,
-          metadata: { cryptoWalletId: fresh.id, manual: true },
+          metadata: { cryptoWalletId: fresh.id, manual: true, ...(feeUsd ? { feeUsd, reportedAmount } : {}) },
         },
       });
     }
 
     await auditLog(tx, session.user.id, "deposit.confirm", "CryptoWallet", fresh.id, {
-      amountUsd: Number(fresh.amountUsd),
+      reportedAmount, feeUsd, creditedAmount: depositAmount,
     });
-    return { user, amountUsd: Number(fresh.amountUsd) };
+    return { user, amountUsd: depositAmount };
   });
 
   if (!result) {
