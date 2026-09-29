@@ -10,6 +10,7 @@ export const getAdminSidebarCounts = unstable_cache(
       openDisputes,
       pendingKyc,
       pendingBankTransfers,
+      pendingPaypalDeposits,
       unreadContactMessages,
       openSupportTickets,
     ] = await Promise.all([
@@ -19,6 +20,7 @@ export const getAdminSidebarCounts = unstable_cache(
       prisma.dispute.count({ where: { status: { in: ["OPEN", "UNDER_REVIEW"] } } }),
       prisma.kycSubmission.count({ where: { status: { in: ["PENDING", "UNDER_REVIEW"] } } }),
       prisma.bankTransferOrder.count({ where: { status: "SENT" } }),
+      prisma.payPalDepositOrder.count({ where: { status: "SENT" } }),
       prisma.contactMessage.count({ where: { isRead: false } }),
       prisma.supportTicket.count({ where: { status: { in: ["OPEN", "AWAITING_STAFF"] } } }),
     ]);
@@ -29,6 +31,7 @@ export const getAdminSidebarCounts = unstable_cache(
       openDisputes,
       pendingKyc,
       pendingBankTransfers,
+      pendingPaypalDeposits,
       unreadContactMessages,
       openSupportTickets,
     };

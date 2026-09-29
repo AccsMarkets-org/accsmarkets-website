@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 import type { Permission } from "@/lib/permissions";
 import {
   ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, BadgeCheck, Banknote, ChartLine,
-  ChevronDown, ClipboardList, DollarSign, FileText, Flag, Inbox, Landmark, LayoutDashboard,
+  ChevronDown, CircleDollarSign, ClipboardList, DollarSign, FileText, Flag, Inbox, Landmark, LayoutDashboard,
   LayoutGrid, LifeBuoy, Mail, Mails, Megaphone, Menu, MessageSquare, MessageSquareText,
   MessageSquareWarning, Monitor, Rocket, Scale, ScrollText, Settings, ShieldAlert, ShieldCheck,
-  SquarePen, Star, Ticket, ToggleRight, TriangleAlert, UserCog, UserPlus, Users, Wrench, X, Zap,
+  SquarePen, Star, Ticket, ToggleRight, TriangleAlert, UserCog, UserPlus, Users, Wallet2, Wrench, X, Zap,
 } from "lucide-react";
 
 // ── Icons (lucide) ────────────────────────────────────────────────────────────
@@ -26,6 +26,8 @@ const I = {
   deposits:      <ArrowDownToLine {...NAV_ICON} />,
   banktransfer:  <Landmark {...NAV_ICON} />,
   bankaccounts:  <Banknote {...NAV_ICON} />,
+  paypal:        <CircleDollarSign {...NAV_ICON} />,
+  paypalaccounts: <Wallet2 {...NAV_ICON} />,
   withdrawals:   <ArrowUpFromLine {...NAV_ICON} />,
   transactions:  <ArrowLeftRight {...NAV_ICON} />,
   users:         <Users {...NAV_ICON} />,
@@ -60,7 +62,7 @@ const I = {
   chevron:       <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />,
 };
 
-type CountKey = "pendingListings" | "pendingDeposits" | "pendingWithdrawals" | "openDisputes" | "pendingKyc" | "pendingBankTransfers" | "unreadContactMessages" | "unreadOwnMessages" | "openSupportTickets";
+type CountKey = "pendingListings" | "pendingDeposits" | "pendingWithdrawals" | "openDisputes" | "pendingKyc" | "pendingBankTransfers" | "pendingPaypalDeposits" | "unreadContactMessages" | "unreadOwnMessages" | "openSupportTickets";
 
 export interface AdminSidebarCounts {
   pendingListings: number;
@@ -69,6 +71,7 @@ export interface AdminSidebarCounts {
   openDisputes: number;
   pendingKyc: number;
   pendingBankTransfers: number;
+  pendingPaypalDeposits: number;
   unreadContactMessages: number;
   unreadOwnMessages: number;
   openSupportTickets?: number;
@@ -119,9 +122,11 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: "/admin/deposits", label: "Deposits", icon: I.deposits, countKey: "pendingDeposits", permission: "MANAGE_FINANCE" },
       { href: "/admin/bank-transfers", label: "Bank Transfers", icon: I.banktransfer, countKey: "pendingBankTransfers", permission: "MANAGE_FINANCE" },
+      { href: "/admin/paypal-deposits", label: "PayPal Deposits", icon: I.paypal, countKey: "pendingPaypalDeposits", permission: "MANAGE_FINANCE" },
       { href: "/admin/withdrawals", label: "Withdrawals", icon: I.withdrawals, countKey: "pendingWithdrawals", permission: "MANAGE_FINANCE" },
       { href: "/admin/transactions", label: "Transactions", icon: I.transactions, permission: "MANAGE_FINANCE" },
       { href: "/admin/bank-accounts", label: "Bank Accounts", icon: I.bankaccounts, permission: "MANAGE_FINANCE" },
+      { href: "/admin/paypal-accounts", label: "PayPal Accounts", icon: I.paypalaccounts, permission: "MANAGE_FINANCE" },
       { href: "/admin/pricing", label: "Pricing", icon: I.pricing, permission: "MANAGE_PRICING" },
     ],
   },
@@ -318,6 +323,7 @@ const EMPTY_COUNTS: AdminSidebarCounts = {
   openDisputes: 0,
   pendingKyc: 0,
   pendingBankTransfers: 0,
+  pendingPaypalDeposits: 0,
   unreadContactMessages: 0,
   unreadOwnMessages: 0,
   openSupportTickets: 0,

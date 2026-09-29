@@ -139,6 +139,17 @@ const PAYMENT_METHODS = [
       </svg>
     ),
   },
+  {
+    key: "paypal",
+    label: "PayPal",
+    sub: "Personal acct",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8}>
+        <path d="M7 4h7a4 4 0 014 4c0 3-2 5-5 5H9l-1 6H5l2.5-15z"/>
+        <path d="M11 8h5a3 3 0 013 3c0 2.2-1.8 4-4 4h-3"/>
+      </svg>
+    ),
+  },
 ];
 
 const QUICK_AMOUNTS = [10, 25, 50, 100, 250, 500];
@@ -170,11 +181,18 @@ interface BankAccountOption {
   accountLast4: string;
 }
 
+interface PayPalAccountOption {
+  id: string;
+  label: string;
+  paypalEmail: string;
+  currency: string;
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function DepositWidget() {
   const router = useRouter();
-  const [method, setMethod] = useState<"crypto" | "manual" | "card" | "bank">("crypto");
+  const [method, setMethod] = useState<"crypto" | "manual" | "card" | "bank" | "paypal">("crypto");
   const [amount, setAmount] = useState("");
   const [network, setNetwork] = useState("TRC20");
   const [loading, setLoading] = useState(false);
@@ -198,6 +216,30 @@ export function DepositWidget() {
   const [bankAccounts, setBankAccounts] = useState<BankAccountOption[]>([]);
   const [bankAccountsLoaded, setBankAccountsLoaded] = useState(false);
   const [selectedBankId, setSelectedBankId] = useState<string>("");
+
+  // PayPal
+  const [paypalFeeConfig, setPaypalFeeConfig] = useState<FeeConfig | null>(null);
+  const [paypalLoading, setPaypalLoading] = useState(false);
+  const [paypalAccounts, setPaypalAccounts] = useState<PayPalAccountOption[]>([]);
+  const [paypalAccountsLoaded, setPaypalAccountsLoaded] = useState(false);
+  const [selectedPaypalId, setSelectedPaypalId] = useState<string>("");
+
+  useEffect(() => {
+    if (method !== "paypal") return;
+    fetch("/api/wallet/deposit/paypal/fee-config")
+      .then((r) => r.json())
+      .then((d) => setPaypalFeeConfig(d))
+      .catch(() => null);
+    fetch("/api/wallet/deposit/paypal/accounts")
+      .then((r) => r.json())
+      .then((d) => {
+        const list: PayPalAccountOption[] = d?.accounts ?? [];
+        setPaypalAccounts(list);
+        setPaypalAccountsLoaded(true);
+        setSelectedPaypalId((prev) => prev || (list[0]?.id ?? ""));
+      })
+      .catch(() => setPaypalAccountsLoaded(true));
+  }, [method]);
 
   useEffect(() => {
     if (method !== "bank") return;
@@ -251,6 +293,17 @@ export function DepositWidget() {
   const bankFeeLabel = bankFeeConfig
     ? `Bank wire fee (${(bankFeeConfig.feeRate * 100).toFixed(0)}%${bankFeeConfig.minFee > 0 ? `, min $${bankFeeConfig.minFee}` : ""})`
     : "Bank wire fee";
+
+  const paypalFee = paypalFeeConfig
+    ? (() => {
+        const raw = Math.max(amountNum * paypalFeeConfig.feeRate, paypalFeeConfig.minFee);
+        return paypalFeeConfig.maxFee != null ? Math.min(raw, paypalFeeConfig.maxFee) : raw;
+      })()
+    : 0;
+  const paypalTotal = amountNum + paypalFee;
+  const paypalFeeLabel = paypalFeeConfig
+    ? `PayPal fee (${(paypalFeeConfig.feeRate * 100).toFixed(0)}%${paypalFeeConfig.minFee > 0 ? `, min $${paypalFeeConfig.minFee}` : ""})`
+    : "PayPal fee";
 
   const selectedNetwork = NETWORKS.find((n) => n.value === network) ?? NETWORKS[0];
   // Card stays visible even without TagadaPay configured: users searching for
@@ -311,6 +364,24 @@ export function DepositWidget() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
       setBankLoading(false);
+    }
+  }
+
+  async function handlePaypalDeposit(e: React.FormEvent) {
+    e.preventDefault();
+    setPaypalLoading(true);
+    try {
+      const res = await fetch("/api/wallet/deposit/paypal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amountUsd: amountNum, paypalAccountId: selectedPaypalId || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to create order");
+      router.push(`/dashboard/wallet/deposit/paypal/${data.orderId}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      setPaypalLoading(false);
     }
   }
 
@@ -600,6 +671,40 @@ export function DepositWidget() {
           )
         )}
 
+        {/* ── PayPal ────────────────────────────────────────────────────── */}
+        {method === "paypal" && (
+          <form onSubmit={handlePaypalDeposit} className="flex flex-col gap-5">
+            <AmountInput value={amount} onChange={setAmount} label="Amount (USD)" min={5} />
+            {paypalAccounts.length > 0 && (
+              <PayPalAccountPicker accounts={paypalAccounts} value={selectedPaypalId} onChange={setSelectedPaypalId} />
+            )}
+            {paypalAccountsLoaded && paypalAccounts.length === 0 && (
+              <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-400">
+                <svg className="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                PayPal deposits are temporarily unavailable. Please try another deposit method.
+              </div>
+            )}
+            {amountNum >= 5 && (
+              <FeeBreakdown
+                rows={[
+                  { label: "Deposit amount", value: `$${amountNum.toFixed(2)}` },
+                  { label: paypalFeeLabel, value: paypalFee === 0 ? "Free" : `$${paypalFee.toFixed(2)}`, green: paypalFee === 0 },
+                ]}
+                total={`$${paypalTotal.toFixed(2)}`}
+                totalLabel="Total to send"
+              />
+            )}
+            <div className="flex items-center gap-2 rounded-xl border border-surface-border bg-surface px-3 py-2.5 text-xs text-muted">
+              <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Send as Friends &amp; Family · Processing: a few hours to 1 business day
+            </div>
+            <Button type="submit" isLoading={paypalLoading} disabled={amountNum < 5 || (paypalAccountsLoaded && paypalAccounts.length === 0) || (paypalAccounts.length > 0 && !selectedPaypalId)} className="h-12 w-full text-base font-bold">
+              Get PayPal Details
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Button>
+          </form>
+        )}
+
         {/* ── Promo code (all methods) ───────────────────────────────────── */}
         <PromoCodeEntry onCredited={() => router.refresh()} />
       </div>
@@ -813,6 +918,49 @@ function BankAccountPicker({ accounts, value, onChange }: { accounts: BankAccoun
                   {a.accountName}
                   {a.accountLast4 && <span className="font-mono"> · ••{a.accountLast4}</span>}
                 </p>
+              </div>
+              <span className="shrink-0 rounded-full border border-surface-border px-2 py-0.5 text-[10px] font-bold text-muted">{a.currency}</span>
+              {selected && (
+                <svg className="h-4 w-4 shrink-0 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><polyline points="20 6 9 17 4 12"/></svg>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PayPalAccountPicker({ accounts, value, onChange }: { accounts: PayPalAccountOption[]; value: string; onChange: (id: string) => void }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium text-foreground">
+        {accounts.length > 1 ? "Choose PayPal account" : "Send to"}
+      </label>
+      <div className="flex flex-col gap-2">
+        {accounts.map((a) => {
+          const selected = a.id === value;
+          return (
+            <button
+              key={a.id}
+              type="button"
+              onClick={() => onChange(a.id)}
+              className={cn(
+                "flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition",
+                selected
+                  ? "border-brand-500 bg-brand-50/60 ring-1 ring-brand-400/30 dark:bg-brand-950/30 dark:ring-brand-500/30"
+                  : "border-surface-border bg-background hover:border-brand-300 dark:hover:border-brand-700",
+              )}
+            >
+              <span className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                selected ? "bg-brand-500 text-white" : "bg-surface text-muted",
+              )}>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path d="M7 4h7a4 4 0 014 4c0 3-2 5-5 5H9l-1 6H5l2.5-15z"/><path d="M11 8h5a3 3 0 013 3c0 2.2-1.8 4-4 4h-3"/></svg>
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-foreground">{a.label}</p>
+                <p className="truncate text-xs text-muted">{a.paypalEmail}</p>
               </div>
               <span className="shrink-0 rounded-full border border-surface-border px-2 py-0.5 text-[10px] font-bold text-muted">{a.currency}</span>
               {selected && (

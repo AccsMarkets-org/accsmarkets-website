@@ -61,3 +61,24 @@ export const adminBankTransferActionSchema = z.object({
   reason: z.string().trim().max(500).optional(),
   adminNotes: z.string().trim().max(1000).optional(),
 }).transform((v) => ({ ...v, amountReceived: v.amountReceived ?? v.amount }));
+
+export const paypalDepositSchema = z.object({
+  amountUsd: z.number().min(1, "Minimum deposit is $1"),
+  // Optional: which platform PayPal account the user chose to send to.
+  // Falls back to the first active account when omitted.
+  paypalAccountId: z.string().trim().min(1).optional(),
+});
+
+export const paypalMarkSentSchema = z.object({
+  senderPaypalEmail: z.string().trim().email("Enter the PayPal email you sent from"),
+  transactionId: z.string().trim().max(50).optional(),
+  proofImageUrl: z.string().url().optional(),
+});
+
+export const adminPaypalActionSchema = z.object({
+  action: z.enum(["verify", "reject", "partial"]),
+  amountReceived: z.number().min(0).optional(),
+  amount: z.number().min(0).optional(),
+  reason: z.string().trim().max(500).optional(),
+  adminNotes: z.string().trim().max(1000).optional(),
+}).transform((v) => ({ ...v, amountReceived: v.amountReceived ?? v.amount }));

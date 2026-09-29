@@ -190,13 +190,13 @@ export default async function AdminDashboardPage({
     `.catch(() => [] as { day: string; cnt: bigint }[]),
   ]);
 
-  const { pendingListings, pendingDeposits, pendingWithdrawals, openDisputes, pendingKyc, pendingBankTransfers } = sidebarCounts;
+  const { pendingListings, pendingDeposits, pendingWithdrawals, openDisputes, pendingKyc, pendingBankTransfers, pendingPaypalDeposits } = sidebarCounts;
 
   const revenue30d = Number(feeRevenue._sum.amount ?? 0);
   const revenuePrev30d = Number(feeRevenuePrev._sum.amount ?? 0);
   const revenueTrend = revenuePrev30d > 0 ? Math.round(((revenue30d - revenuePrev30d) / revenuePrev30d) * 100) : null;
 
-  const totalUrgent = pendingListings + pendingDeposits + pendingBankTransfers + pendingWithdrawals + openDisputes + pendingKyc;
+  const totalUrgent = pendingListings + pendingDeposits + pendingBankTransfers + pendingPaypalDeposits + pendingWithdrawals + openDisputes + pendingKyc;
 
   const userSparkData = groupByDay(recentUsers, 30);
   const revSparkData = groupRevenueByDay(recentFeeTransactions as { createdAt: Date; amount: { toNumber(): number } }[], 30);
@@ -522,6 +522,7 @@ export default async function AdminDashboardPage({
                 <AdminQueueItem label="Listing reviews" count={pendingListings} href="/admin/listings" delay={0.05} icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>} />
                 <AdminQueueItem label="Manual deposits" count={pendingDeposits} href="/admin/deposits" delay={0.1} icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 2v14m0 0l-4-4m4 4l4-4"/><rect x="3" y="18" width="18" height="4" rx="1"/></svg>} />
                 <AdminQueueItem label="Bank transfers" count={pendingBankTransfers} href="/admin/bank-transfers" delay={0.15} icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>} />
+                <AdminQueueItem label="PayPal deposits" count={pendingPaypalDeposits} href="/admin/paypal-deposits" delay={0.18} icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M7 4h7a4 4 0 014 4c0 3-2 5-5 5H9l-1 6H5l2.5-15z"/><path d="M11 8h5a3 3 0 013 3c0 2.2-1.8 4-4 4h-3"/></svg>} />
                 <AdminQueueItem label="Withdrawals" count={pendingWithdrawals} href="/admin/withdrawals" delay={0.2} icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 22V8m0 0l-4 4m4-4l4 4"/><rect x="3" y="2" width="18" height="4" rx="1"/></svg>} />
                 <AdminQueueItem label="Open disputes" count={openDisputes} href="/admin/disputes" delay={0.25} icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>} />
                 <AdminQueueItem label="KYC reviews" count={pendingKyc} href="/admin/verification" delay={0.3} icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>} />

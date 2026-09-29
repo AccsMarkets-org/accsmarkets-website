@@ -399,6 +399,7 @@ model User {
   developerApps         AppListing[]           @relation("DeveloperApps")
   installedApps         AppInstallation[]      @relation("InstalledApps")
   bankTransferOrders    BankTransferOrder[]
+  paypalDepositOrders   PayPalDepositOrder[]
   staffRoleId           String?
   staffRole             StaffRole?             @relation(fields: [staffRoleId], references: [id], onDelete: SetNull)
   sentStaffInvites      StaffInvite[]          @relation("StaffInviter")
@@ -1111,7 +1112,7 @@ model DataExportRequest {
   // renaming would need a drop+add migration on a live, already-drifted DB;
   // documenting the real contents here instead). LongText because a very
   // active user's message history can push this well past a normal TEXT cap.
-  downloadUrl String?   @db.LongText
+  downloadUrl String?           @db.LongText
   expiresAt   DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1653,6 +1654,48 @@ model BankTransferOrder {
   adminNotes      String?             @db.Text
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+}
+
+model PlatformPayPalAccount {
+  id           String               @id @default(cuid())
+  label        String
+  paypalEmail  String
+  instructions String?              @db.Text
+  currency     String               @default("USD")
+  isActive     Boolean              @default(true)
+  sortOrder    Int                  @default(0)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  orders       PayPalDepositOrder[]
+
+  @@index([isActive, sortOrder])
+}
+
+model PayPalDepositOrder {
+  id                String                @id @default(cuid())
+  referenceId       String                @unique
+  userId            String
+  user              User                  @relation(fields: [userId], references: [id])
+  paypalAccountId   String
+  paypalAccount     PlatformPayPalAccount @relation(fields: [paypalAccountId], references: [id])
+  amountUsd         Decimal               @db.Decimal(10, 2)
+  feeUsd            Decimal               @db.Decimal(10, 2)
+  totalDue          Decimal               @db.Decimal(10, 2)
+  amountReceived    Decimal?              @db.Decimal(10, 2)
+  status            BankTransferStatus    @default(PENDING)
+  senderPaypalEmail String?
+  transactionId     String?
+  proofImageUrl     String?
+  sentAt            DateTime?
+  verifiedAt        DateTime?
+  rejectedAt        DateTime?
+  rejectionReason   String?               @db.Text
+  adminNotes        String?               @db.Text
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
   @@index([userId, status])
   @@index([status, createdAt])
