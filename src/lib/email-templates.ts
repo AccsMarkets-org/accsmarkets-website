@@ -347,7 +347,7 @@ export function escrowCompletedTemplate(name: string, listingTitle: string, escr
   };
 }
 
-export function depositConfirmedTemplate(name: string, amount: string, newBalance = "", paymentMethod = "", transactionId = ""): EmailContent {
+export function depositConfirmedTemplate(name: string, amount: string, newBalance = "", paymentMethod = "", transactionId = "", receiptUrl = ""): EmailContent {
   return {
     subject: "Deposit Confirmed — Funds Added",
     html: renderTemplate("deposit_confirmed", {
@@ -356,7 +356,9 @@ export function depositConfirmedTemplate(name: string, amount: string, newBalanc
       new_balance: newBalance,
       payment_method: paymentMethod,
       transaction_id: transactionId,
-      receipt_url: `${appUrl()}/dashboard/wallet`,
+      // Falls back to the wallet page only if a caller doesn't have a real
+      // receipt document for this method yet — every method now does.
+      receipt_url: receiptUrl || `${appUrl()}/dashboard/wallet`,
     }),
   };
 }

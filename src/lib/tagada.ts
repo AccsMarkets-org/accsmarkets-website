@@ -24,6 +24,7 @@ import { prisma } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
 import { sendEmail } from "@/lib/email";
 import { depositConfirmedTemplate } from "@/lib/email-templates";
+import { appUrl } from "@/lib/email-render";
 import { formatCurrency, round2 } from "@/lib/utils";
 
 let _tagada: Tagada | null = null;
@@ -117,6 +118,7 @@ export async function creditTagadaFiatPayment(params: {
     formatCurrency(credited.newBalance),
     "Card (TagadaPay)",
     tagadaPaymentId,
+    `${appUrl()}/api/wallet/deposit/tagada/${fiatPaymentId}/receipt`,
   );
   await sendEmail({ to: userEmail, subject, html, slug: "deposit_confirmed" }).catch(() => null);
 

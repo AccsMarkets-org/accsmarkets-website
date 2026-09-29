@@ -4,6 +4,7 @@ import { verifyIpnSignature } from "@/lib/nowpayments";
 import { createNotification } from "@/lib/notifications";
 import { sendEmail } from "@/lib/email";
 import { depositConfirmedTemplate, depositRejectedTemplate } from "@/lib/email-templates";
+import { appUrl } from "@/lib/email-render";
 import { formatCurrency, round2 } from "@/lib/utils";
 
 const CREDIT_STATUSES = new Set(["finished", "confirmed", "partially_paid"]);
@@ -158,6 +159,7 @@ export async function POST(req: Request) {
         formatCurrency(Number(result.user.walletBalance) + result.amountUsd),
         "Crypto",
         result.transaction.id,
+        `${appUrl()}/api/wallet/deposit/crypto/${wallet.id}/receipt`,
       );
       // Credited already — a mail failure must not 500 (NOWPayments would retry a no-op).
       await sendEmail({ to: result.user.email, subject, html, slug: "deposit_confirmed" }).catch(() => null);

@@ -5,6 +5,7 @@ import { createNotification } from "@/lib/notifications";
 import { emitToUser } from "@/lib/socket";
 import { sendEmail } from "@/lib/email";
 import { depositConfirmedTemplate, depositRejectedTemplate } from "@/lib/email-templates";
+import { appUrl } from "@/lib/email-render";
 import { formatCurrency } from "@/lib/utils";
 import { adminPaypalActionSchema } from "@/lib/validation/wallet";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -129,6 +130,7 @@ export async function PUT(req: Request, { params }: { params: { orderId: string 
     formatCurrency(Number(result.user.walletBalance) + result.creditAmount),
     "PayPal",
     order.id,
+    `${appUrl()}/api/wallet/deposit/paypal/${order.id}/invoice`,
   );
   await sendEmail({ to: result.user.email, subject, html, slug: "deposit_confirmed" });
 

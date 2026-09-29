@@ -6,6 +6,7 @@ import { createNotification } from "@/lib/notifications";
 import { emitToUser } from "@/lib/socket";
 import { sendEmail } from "@/lib/email";
 import { depositConfirmedTemplate, depositRejectedTemplate } from "@/lib/email-templates";
+import { appUrl } from "@/lib/email-render";
 import { formatCurrency } from "@/lib/utils";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -146,6 +147,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     formatCurrency(Number(result.user.walletBalance) + result.amountUsd),
     "Crypto",
     params.id,
+    `${appUrl()}/api/wallet/deposit/crypto/${params.id}/receipt`,
   );
   await sendEmail({ to: result.user.email, subject, html, slug: "deposit_confirmed" });
 
