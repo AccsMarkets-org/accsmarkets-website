@@ -176,7 +176,13 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
   // (see tagada.payments.continue()) and isn't implemented here — the happy
   // path (no additional action required) is what's handled below.
 
-  if (payment.status === "captured" || payment.status === "authorized") {
+  // The SDK's own PaymentStatus type declares only 'pending' | 'authorized' |
+  // 'captured' | ... | 'declined' | 'error' | 'cancelled' -- but the actual
+  // API returns 'succeeded' for a completed charge, which isn't in that list
+  // at all. Trusting the .d.ts here silently treated every real successful
+  // charge as a failure: the card was actually charged, the customer was
+  // told it failed, and their wallet was never credited.
+  if (payment.status === "captured" || payment.status === "authorized" || (payment.status as string) === "succeeded") {
     const credited = await prisma.$transaction(async (tx) => {
       const fresh = await tx.fiatPayment.findUniqueOrThrow({ where: { id: fiatPayment.id } });
       if (fresh.status !== "PENDING") return null; // idempotency guard against a racing webhook delivery
