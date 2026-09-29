@@ -39,6 +39,9 @@ export const withdrawSchema = z.discriminatedUnion("method", [
 export const tagadaDepositSchema = z.object({
   amountUsd: z.number().min(1, "Minimum deposit is $1").max(10000),
   tagadaToken: z.string().trim().min(1, "Missing card token"),
+  // Client-generated, stable across that submission's own automatic retries
+  // (not sent by an older cached client bundle -- optional for that reason).
+  idempotencyKey: z.string().trim().uuid().optional(),
 });
 
 export const bankTransferDepositSchema = z.object({

@@ -57,6 +57,31 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
 
   const user = await prisma.user.findUniqueOrThrow({ where: { id: sessionUserId } });
 
+  // Prefer the client's key so it stays stable across that submission's own
+  // automatic retries (see TagadaCardForm) -- a request that dies in transit
+  // after we've already charged the card must retry into the SAME attempt,
+  // not mint a fresh one, or a second real charge becomes possible. Falls
+  // back to a server-generated key for an older cached client bundle that
+  // never sent one.
+  const idempotencyKey = parsed.data.idempotencyKey ?? randomUUID();
+
+  if (parsed.data.idempotencyKey) {
+    const existing = await prisma.fiatPayment.findUnique({ where: { clientIdempotencyKey: idempotencyKey } });
+    if (existing) {
+      // Replay of a submission we've already seen -- never re-tokenize or
+      // re-charge, just report where that attempt currently stands.
+      if (existing.status === "COMPLETED") {
+        return NextResponse.json({ status: "completed", paymentId: existing.providerPaymentId });
+      }
+      if (existing.status === "FAILED") {
+        return NextResponse.json({ error: "Card charge failed. Please try another card." }, { status: 402 });
+      }
+      // Still PENDING: the original attempt is (or was) genuinely in flight.
+      // Report pending rather than starting a second charge attempt for it.
+      return NextResponse.json({ status: "pending", paymentId: existing.providerPaymentId });
+    }
+  }
+
   // A single-use idempotency key generated up front, not the FiatPayment row's
   // own `id` — that field isn't known to have the real TagadaPay payment id
   // until after payments.process() responds, and providerPaymentId is a
@@ -64,13 +89,12 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
   // ("pending_<key>") that's swapped for the real payment id once known, and
   // the same key is passed to payments.process() so a client retry (e.g. a
   // dropped connection) can never double-charge the card.
-  const idempotencyKey = randomUUID();
-
   const fiatPayment = await prisma.fiatPayment.create({
     data: {
       userId: user.id,
       provider: "tagadapay",
       providerPaymentId: `pending_${idempotencyKey}`,
+      clientIdempotencyKey: idempotencyKey,
       amountUsd,
       currency: "usd",
       status: "PENDING",

@@ -1286,16 +1286,22 @@ model PromoRedemption {
 // ---------- Payments Expansion ----------
 
 model FiatPayment {
-  id                String    @id @default(cuid())
-  userId            String
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider          String // "stripe"
-  providerPaymentId String    @unique
-  amountUsd         Decimal   @db.Decimal(12, 2)
-  currency          String    @default("usd")
-  status            String    @default("PENDING") // PENDING | COMPLETED | FAILED | REFUNDED
-  createdAt         DateTime  @default(now())
-  completedAt       DateTime?
+  id                    String    @id @default(cuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider              String // "stripe"
+  providerPaymentId     String    @unique
+  // The client's idempotency key for this submission (stable across an
+  // automatic client-side retry of the same attempt, unlike providerPaymentId
+  // which starts as "pending_<key>" and is overwritten once a real payment id
+  // is known) -- lets a retry after a lost/blocked response be recognized as
+  // the same attempt instead of triggering a second charge.
+  clientIdempotencyKey  String?   @unique
+  amountUsd             Decimal   @db.Decimal(12, 2)
+  currency              String    @default("usd")
+  status                String    @default("PENDING") // PENDING | COMPLETED | FAILED | REFUNDED
+  createdAt             DateTime  @default(now())
+  completedAt           DateTime?
 
   @@index([userId])
   @@index([status])

@@ -109,6 +109,13 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
 
     setLoading(true);
 
+    // One key for this whole submission, sent on every attempt below —
+    // lets the server recognize a retry as the same attempt instead of a
+    // fresh one, so retrying after a lost/blocked response can never trigger
+    // a second real charge. A genuinely new submission (calling handleSubmit
+    // again) gets its own fresh key.
+    const idempotencyKey = crypto.randomUUID();
+
     // Tracked so a failure can be attributed to a specific step instead of
     // surfacing as one indistinguishable "something went wrong" — this stage
     // is what actually lets a client-side-only failure (blocked by a VPN,
@@ -136,30 +143,49 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
         cardholderName: cardholderName.trim() || undefined,
       });
 
+      // Up to 3 attempts of the *same* submission (same idempotencyKey and
+      // already-tokenized card — no need to touch BasisTheory again) before
+      // giving up. This is what actually papers over a transient gateway
+      // blip between the browser and our server instead of dead-ending the
+      // user on the first one; it's only safe to retry blindly like this
+      // because the server recognizes the repeated key and will never
+      // process a second real charge for it.
       stage = "server_request";
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amountUsd, tagadaToken }),
-      });
+      const MAX_ATTEMPTS = 3;
+      let data: { status?: string; paymentId?: string; error?: string } | null = null;
+      let resOk = false;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amountUsd, tagadaToken, idempotencyKey }),
+        });
 
-      // Read as text first: a proxy, VPN, or firewall between the browser and
-      // our server can return an HTML block/error page instead of JSON, and
-      // res.json() on that throws an opaque "Unexpected token '<'" that's
-      // indistinguishable from every other possible failure. Parsing text
-      // ourselves lets that specific case get a real, actionable message.
-      stage = "server_response";
-      const rawText = await res.text();
-      let data: { status?: string; paymentId?: string; error?: string };
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        diagnostic = `http_status=${res.status} content_type=${res.headers.get("content-type") ?? "?"} body="${rawText.slice(0, 200).replace(/"/g, "'")}"`;
+        // Read as text first: a proxy, VPN, or firewall between the browser
+        // and our server can return an HTML block/error page instead of
+        // JSON, and res.json() on that throws an opaque "Unexpected token
+        // '<'" indistinguishable from every other failure. Parsing text
+        // ourselves both gives that case a real message and lets it retry.
+        stage = "server_response";
+        const rawText = await res.text();
+        try {
+          data = JSON.parse(rawText);
+          resOk = res.ok;
+          break;
+        } catch {
+          diagnostic = `attempt=${attempt}/${MAX_ATTEMPTS} http_status=${res.status} content_type=${res.headers.get("content-type") ?? "?"} body="${rawText.slice(0, 200).replace(/"/g, "'")}"`;
+          if (attempt === MAX_ATTEMPTS) break;
+          await new Promise((r) => setTimeout(r, attempt * 1200));
+          stage = "server_request";
+        }
+      }
+
+      if (!data) {
         throw new Error(
-          "Couldn't reach our payment processor. This usually means a VPN, ad-blocker, or network filter is blocking the connection — try disabling those, switching networks, or use a different deposit method.",
+          "Couldn't reach our payment processor after a few tries. This usually means a VPN, ad-blocker, or network filter is blocking the connection — try disabling those, switching networks, or use a different deposit method.",
         );
       }
-      if (!res.ok) throw new Error(data.error ?? "Payment failed");
+      if (!resOk) throw new Error(data.error ?? "Payment failed");
       onSuccess({ status: data.status as "completed" | "pending", paymentId: data.paymentId! });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
