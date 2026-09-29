@@ -143,10 +143,16 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
     const result = await tagada.payments.process(
       {
         paymentInstrumentId: instrument.id,
+        customerId: instrument.customerId,
         amount: Math.round(amountUsd * 100),
         currency: "USD",
         storeId,
-        initiatedBy: user.id,
+        // Enum, not a user id ("customer" | "merchant") -- describes who
+        // initiated the charge. Every real deposit attempt was rejected by
+        // TagadaPay's own validation because this was sent as user.id; the
+        // SDK's .d.ts types it as a bare `string`, so nothing caught this at
+        // compile time, only their API's runtime validation.
+        initiatedBy: "customer",
       },
       { idempotencyKey },
     );
