@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PrimaryButton } from "@/components/wallet/PrimaryButton";
 import { ShieldCheck } from "lucide-react";
 
 // "true" only once TAGADA_API_KEY is a live key server-side — purely cosmetic
@@ -337,14 +337,13 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
 
       {error && <p className="rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
 
-      <Button
+      <PrimaryButton
         type="submit"
         isLoading={loading}
         disabled={!cardNumber.trim() || !expiryDate.trim() || !cvc.trim() || amountUsd <= 0}
-        className="h-12 w-full text-base font-bold"
       >
         {submitLabel ?? `Pay $${amountUsd.toFixed(2)}`}
-      </Button>
+      </PrimaryButton>
     </form>
   );
 }

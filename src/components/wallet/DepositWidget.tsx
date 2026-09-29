@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
+import { PrimaryButton } from "@/components/wallet/PrimaryButton";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/hooks/useConfirm";
 import { ArrowLeft, ArrowRight, ChevronDown, Tag } from "lucide-react";
@@ -1047,32 +1048,6 @@ function PayPalAccountPicker({ accounts, value, onChange }: { accounts: PayPalAc
         })}
       </div>
     </div>
-  );
-}
-
-/** Bold gradient CTA matching the Withdraw page's premium button treatment — used for every deposit method's primary submit action for a consistent, upgraded feel across the whole Add Funds flow. */
-function PrimaryButton({ children, isLoading, disabled, type = "button", onClick }: { children: React.ReactNode; isLoading?: boolean; disabled?: boolean; type?: "button" | "submit"; onClick?: () => void }) {
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled || isLoading}
-      className={cn(
-        "flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-black transition",
-        !disabled && !isLoading
-          ? "bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-[1.01]"
-          : "cursor-not-allowed bg-surface text-muted",
-      )}
-    >
-      {isLoading ? (
-        <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-      ) : (
-        children
-      )}
-    </button>
   );
 }
 
