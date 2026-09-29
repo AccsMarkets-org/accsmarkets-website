@@ -40,6 +40,39 @@ function normalizeExpiry(raw: string): string {
   return `${month}/${year}`;
 }
 
+type CardBrand = "visa" | "mastercard" | "amex" | "discover";
+
+// IIN/BIN range detection — cosmetic only (which badge to show as the user
+// types); the actual brand TagadaPay bills against comes back from the
+// tokenizer/processor, never from this guess.
+function detectCardBrand(digits: string): CardBrand | null {
+  if (/^4/.test(digits)) return "visa";
+  if (/^(5[1-5]|2[2-7])/.test(digits)) return "mastercard";
+  if (/^3[47]/.test(digits)) return "amex";
+  if (/^(6011|65|64[4-9]|622)/.test(digits)) return "discover";
+  return null;
+}
+
+const CARD_BRAND_STYLE: Record<CardBrand, { bg: string; label: string }> = {
+  visa: { bg: "#1a1f71", label: "VISA" },
+  mastercard: { bg: "#eb001b", label: "MC" },
+  amex: { bg: "#2e77bc", label: "AMEX" },
+  discover: { bg: "#ff6000", label: "DISC" },
+};
+
+function CardBrandBadge({ brand }: { brand: CardBrand }) {
+  const style = CARD_BRAND_STYLE[brand];
+  return (
+    <span
+      className="pointer-events-none absolute right-3 top-[34px] flex h-6 items-center rounded-md px-1.5 text-[9px] font-black italic tracking-tight text-white shadow-sm"
+      style={{ backgroundColor: style.bg }}
+      aria-hidden
+    >
+      {style.label}
+    </span>
+  );
+}
+
 function validateCardFields(cardNumber: string, expiryDate: string, cvc: string): string | null {
   const digits = cardNumber.replace(/\D/g, "");
   if (digits.length < 12 || digits.length > 19) return "Enter a valid card number.";
@@ -88,6 +121,7 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
   const [cardholderName, setCardholderName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cardBrand = detectCardBrand(cardNumber.replace(/\D/g, ""));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -238,15 +272,19 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
         )}
       </div>
 
-      <Input
-        label="Card number"
-        inputMode="numeric"
-        autoComplete="cc-number"
-        placeholder="4242 4242 4242 4242"
-        value={cardNumber}
-        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-        required
-      />
+      <div className="relative">
+        <Input
+          label="Card number"
+          inputMode="numeric"
+          autoComplete="cc-number"
+          placeholder="4242 4242 4242 4242"
+          value={cardNumber}
+          onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+          className={cardBrand ? "pr-14" : undefined}
+          required
+        />
+        {cardBrand && <CardBrandBadge brand={cardBrand} />}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <Input
           label="Expiry (MM/YY)"

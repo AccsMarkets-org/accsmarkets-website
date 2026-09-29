@@ -3,7 +3,7 @@ import { getTagada } from "@/lib/tagada";
 import { prisma } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
 import { sendEmail } from "@/lib/email";
-import { depositConfirmedTemplate } from "@/lib/email-templates";
+import { depositConfirmedTemplate, depositFailedTemplate } from "@/lib/email-templates";
 import { formatCurrency, round2 } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
@@ -127,10 +127,32 @@ async function handleWebhook(
   if (FAILURE_EVENTS.has(eventType)) {
     const payment = extractPayment(event);
     if (payment) {
-      await prisma.fiatPayment.updateMany({
-        where: { providerPaymentId: payment.id, status: "PENDING" },
-        data: { status: "FAILED" },
-      });
+      // findUnique + conditional update (not updateMany) because notifying the
+      // user requires the row's userId -- updateMany reports a count, never
+      // which record it touched, so a webhook-only failure would otherwise
+      // never reach the user at all (only a synchronous-response failure did).
+      const fiat = await prisma.fiatPayment.findUnique({ where: { providerPaymentId: payment.id } });
+      if (fiat && fiat.status === "PENDING") {
+        await prisma.fiatPayment.update({ where: { id: fiat.id }, data: { status: "FAILED" } });
+        const user = await prisma.user.findUnique({ where: { id: fiat.userId } });
+        if (user) {
+          const amountUsd = round2(Number(fiat.amountUsd));
+          await createNotification({
+            userId: user.id,
+            type: "PAYMENT",
+            title: "Card deposit failed",
+            body: `We couldn't charge your card for ${formatCurrency(amountUsd)}. ${eventType === "payment/rejected" ? "The payment was rejected." : "The charge failed."}`,
+            link: "/dashboard/wallet",
+          }).catch(() => null);
+          const { subject, html } = depositFailedTemplate(
+            user.name ?? "there",
+            formatCurrency(amountUsd),
+            "Card (TagadaPay)",
+            eventType === "payment/rejected" ? "Payment was rejected" : "Charge failed",
+          );
+          await sendEmail({ to: user.email, subject, html, slug: "deposit_failed" }).catch(() => null);
+        }
+      }
     }
     return NextResponse.json({ received: true });
   }

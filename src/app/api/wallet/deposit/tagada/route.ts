@@ -10,7 +10,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { RATE_LIMITS } from "@/lib/constants";
 import { createNotification } from "@/lib/notifications";
 import { sendEmail } from "@/lib/email";
-import { depositConfirmedTemplate } from "@/lib/email-templates";
+import { depositConfirmedTemplate, depositFailedTemplate } from "@/lib/email-templates";
 import { formatCurrency, round2 } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
@@ -129,13 +129,12 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
     instrument = result.paymentInstrument;
   } catch (err) {
     await prisma.fiatPayment.update({ where: { id: fiatPayment.id }, data: { status: "FAILED" } }).catch(() => null);
+    const reason = err instanceof Error ? err.message : "Could not verify card";
     logger.error("tagada.deposit.instrument_failed", {
       userId: user.id, fiatPaymentId: fiatPayment.id, idempotencyKey, ...describeTagadaError(err),
     });
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Could not verify card" },
-      { status: 400 },
-    );
+    await notifyDepositFailed(user, amountUsd, reason);
+    return NextResponse.json({ error: reason }, { status: 400 });
   }
 
   let payment: Payment;
@@ -159,13 +158,12 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
     payment = result.payment;
   } catch (err) {
     await prisma.fiatPayment.update({ where: { id: fiatPayment.id }, data: { status: "FAILED" } }).catch(() => null);
+    const reason = err instanceof Error ? err.message : "Card charge failed";
     logger.error("tagada.deposit.charge_failed", {
       userId: user.id, fiatPaymentId: fiatPayment.id, idempotencyKey, ...describeTagadaError(err),
     });
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Card charge failed" },
-      { status: 502 },
-    );
+    await notifyDepositFailed(user, amountUsd, reason);
+    return NextResponse.json({ error: reason }, { status: 502 });
   }
 
   // TODO: 3DS continuation — if a processor returns a client-side "requires
@@ -253,8 +251,27 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
     // logging it whole here beats guessing at a property name.
     payment,
   });
-  return NextResponse.json(
-    { error: `Card charge ${payment.status === "declined" ? "was declined" : "failed"}. Please try another card.` },
-    { status: 402 },
-  );
+  const declineMessage = `Card charge ${payment.status === "declined" ? "was declined" : "failed"}. Please try another card.`;
+  await notifyDepositFailed(user, amountUsd, declineMessage);
+  return NextResponse.json({ error: declineMessage }, { status: 402 });
+}
+
+// Best-effort — a notification/email failure must never mask the real error
+// response already decided above, so every call site awaits this but never
+// lets it change the HTTP outcome.
+async function notifyDepositFailed(
+  user: { id: string; email: string; name: string | null },
+  amountUsd: number,
+  reason: string,
+): Promise<void> {
+  await createNotification({
+    userId: user.id,
+    type: "PAYMENT",
+    title: "Card deposit failed",
+    body: `We couldn't charge your card for ${formatCurrency(amountUsd)}. ${reason}`,
+    link: "/dashboard/wallet",
+  }).catch(() => null);
+
+  const { subject, html } = depositFailedTemplate(user.name ?? "there", formatCurrency(amountUsd), "Card (TagadaPay)", reason);
+  await sendEmail({ to: user.email, subject, html, slug: "deposit_failed" }).catch(() => null);
 }

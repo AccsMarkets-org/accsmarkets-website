@@ -24,6 +24,18 @@ const TagadaCardForm = dynamic(() => import("./TagadaCardForm").then((m) => m.Ta
   ),
 });
 
+// Same lazy-load rationale as TagadaCardForm above — this additionally
+// renders nothing of its own once loaded unless Apple Pay/Google Pay are
+// both configured AND the current device/browser actually supports one.
+const DigitalWalletButtons = dynamic(() => import("./DigitalWalletButtons").then((m) => m.DigitalWalletButtons), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-8">
+      <svg className="h-5 w-5 animate-spin text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+    </div>
+  ),
+});
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const NETWORKS = [
@@ -665,7 +677,10 @@ export function DepositWidget() {
             <div className="flex flex-col gap-5">
               <AmountInput value={amount} onChange={setAmount} label="Amount (USD)" />
               {amountNum >= 1 && (
-                <TagadaCardForm amountUsd={amountNum} onSuccess={handleTagadaResult} />
+                <>
+                  <DigitalWalletButtons amountUsd={amountNum} onSuccess={handleTagadaResult} />
+                  <TagadaCardForm amountUsd={amountNum} onSuccess={handleTagadaResult} />
+                </>
               )}
             </div>
           )

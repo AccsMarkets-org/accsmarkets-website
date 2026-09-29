@@ -361,6 +361,18 @@ export function depositConfirmedTemplate(name: string, amount: string, newBalanc
   };
 }
 
+export function depositFailedTemplate(name: string, amount: string, paymentMethod = "", failureReason = "Card was declined"): EmailContent {
+  return {
+    subject: "Deposit Failed — Card Not Charged",
+    html: renderTemplate("deposit_failed", {
+      user_name: name,
+      amount,
+      payment_method: paymentMethod,
+      failure_reason: failureReason,
+    }),
+  };
+}
+
 export function kycApprovedTemplate(name: string, level: string): EmailContent {
   return {
     subject: "Identity Verification Approved",
