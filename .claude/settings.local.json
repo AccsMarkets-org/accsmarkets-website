@@ -234,7 +234,22 @@
       "PowerShell(cd \"C:\\\\Users\\\\PC\\\\Downloads\\\\accsmarkets\"; $env:NEXTAUTH_URL=\"http://localhost:3000\"; node server.js 2>&1 | Select-Object -First 40)",
       "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\nodejs\"; node --version)",
       "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\nodejs\"; $env:NEXTAUTH_URL=\"http://localhost:3000\"; cd \"C:\\\\Users\\\\PC\\\\Downloads\\\\accsmarkets\"; node server.js 2>&1 | Select-Object -First 50)",
-      "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\nodejs\"; Invoke-WebRequest -Uri \"http://localhost:3000/sitemap.xml\" -UseBasicParsing -TimeoutSec 15 | Select-Object StatusCode, @{N=\"ContentType\";E={$_.Headers[\"Content-Type\"]}}, @{N=\"Preview\";E={$_.Content.Substring\\(0,[Math]::Min\\(200,$_.Content.Length\\)\\)}})"
+      "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\nodejs\"; Invoke-WebRequest -Uri \"http://localhost:3000/sitemap.xml\" -UseBasicParsing -TimeoutSec 15 | Select-Object StatusCode, @{N=\"ContentType\";E={$_.Headers[\"Content-Type\"]}}, @{N=\"Preview\";E={$_.Content.Substring\\(0,[Math]::Min\\(200,$_.Content.Length\\)\\)}})",
+      "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\nodejs\"; netstat -ano | findstr \":3000\" | Select-Object -First 5)",
+      "PowerShell(Stop-Process -Id 2804 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\nodejs\"; $env:NEXTAUTH_URL = \"http://localhost:3000\"; Set-Location \"C:\\\\Users\\\\PC\\\\Downloads\\\\accsmarkets\"; Start-Process -FilePath \"node\" -ArgumentList \"server.js\" -WorkingDirectory \"C:\\\\Users\\\\PC\\\\Downloads\\\\accsmarkets\" -RedirectStandardOutput \"C:\\\\Users\\\\PC\\\\AppData\\\\Local\\\\Temp\\\\server-out.txt\" -RedirectStandardError \"C:\\\\Users\\\\PC\\\\AppData\\\\Local\\\\Temp\\\\server-err.txt\" -NoNewWindow; Write-Host \"Server starting...\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\PC\\\\Downloads\\\\accsmarkets\\\\src\\\\app\\\\\\(public\\)\\\\kyc-policy\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d['version']\\)\")",
+      "PowerShell(Get-Command plink -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command ssh -ErrorAction SilentlyContinue)",
+      "Bash(grep -v \"\\\\/\\\\/\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(grep -rn '$queryRawUnsafe\\\\|$executeRawUnsafe' C:/Users/PC/Downloads/accsmarkets/src/app/api)",
+      "Bash(pscp -pw \"drFZDseX5fS52wb\" -batch \"src/app/api/internal/sweep/route.ts\" \"root@202.61.195.76:/var/www/accsmarkets/src/app/api/internal/sweep/route.ts\")",
+      "Bash(plink -pw \"drFZDseX5fS52wb\" -batch root@202.61.195.76 \"find /var/www -name 'accsmarkets' -maxdepth 3 -type d 2>/dev/null | head -5; pm2 list 2>/dev/null | grep -i accs | head -5\")",
+      "Bash(plink -pw \"drFZDseX5fS52wb\" root@202.61.195.76 \"ls /var/www/ && pm2 list\")",
+      "Bash(tar -czf 'C:\\\\Users\\\\PC\\\\AppData\\\\Local\\\\Temp\\\\v202-batch.tar.gz' src/app/api/escrows/[id]/complete/route.ts src/app/api/escrows/[id]/confirm-handover/route.ts src/app/api/escrows/[id]/dispute/route.ts src/app/api/escrows/[id]/milestones/[milestoneId]/release/route.ts src/app/api/intelligence/route.ts src/app/api/internal/sweep/route.ts src/app/api/kyc/verify/route.ts src/app/api/listings/route.ts src/app/api/offers/[id]/route.ts src/app/api/payments/subscribe-balance/route.ts src/app/api/upload/kyc/route.ts src/app/api/wallet/withdraw/route.ts src/app/api/webhooks/autoseo/route.ts src/app/api/webhooks/nowpayments/route.ts src/lib/email-templates.ts src/lib/risk.ts)"
     ]
   }
 }
