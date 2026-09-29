@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getTagada } from "@/lib/tagada";
-import type { Payment, PaymentInstrument } from "@tagadapay/node-sdk";
+import { TagadaAPIError, type Payment, type PaymentInstrument } from "@tagadapay/node-sdk";
 import { prisma } from "@/lib/db";
 import { tagadaDepositSchema } from "@/lib/validation/wallet";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -15,6 +15,24 @@ import { formatCurrency, round2 } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
+
+// TagadaAPIError.raw carries the underlying processor's own error payload
+// (decline code, gateway message, etc.) -- without this, a real card's
+// rejection is a dead end: the SDK's own message is often just "Card charge
+// failed" with the actual reason nowhere the server ever looks.
+function describeTagadaError(err: unknown): Record<string, unknown> {
+  if (err instanceof TagadaAPIError) {
+    return {
+      errorMessage: err.message,
+      code: err.code,
+      statusCode: err.statusCode,
+      requestId: err.requestId,
+      param: err.param,
+      raw: err.raw,
+    };
+  }
+  return { errorMessage: err instanceof Error ? err.message : String(err) };
+}
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -111,6 +129,9 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
     instrument = result.paymentInstrument;
   } catch (err) {
     await prisma.fiatPayment.update({ where: { id: fiatPayment.id }, data: { status: "FAILED" } }).catch(() => null);
+    logger.error("tagada.deposit.instrument_failed", {
+      userId: user.id, fiatPaymentId: fiatPayment.id, idempotencyKey, ...describeTagadaError(err),
+    });
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Could not verify card" },
       { status: 400 },
@@ -132,6 +153,9 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
     payment = result.payment;
   } catch (err) {
     await prisma.fiatPayment.update({ where: { id: fiatPayment.id }, data: { status: "FAILED" } }).catch(() => null);
+    logger.error("tagada.deposit.charge_failed", {
+      userId: user.id, fiatPaymentId: fiatPayment.id, idempotencyKey, ...describeTagadaError(err),
+    });
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Card charge failed" },
       { status: 502 },
@@ -209,6 +233,13 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
   await prisma.fiatPayment.update({
     where: { id: fiatPayment.id },
     data: { status: "FAILED", providerPaymentId: payment.id },
+  });
+  logger.error("tagada.deposit.declined", {
+    userId: user.id, fiatPaymentId: fiatPayment.id, paymentId: payment.id, paymentStatus: payment.status,
+    // The full object may carry a decline/failure reason field the .d.ts
+    // doesn't declare (per the SDK's own README caveat noted below) --
+    // logging it whole here beats guessing at a property name.
+    payment,
   });
   return NextResponse.json(
     { error: `Card charge ${payment.status === "declined" ? "was declined" : "failed"}. Please try another card.` },

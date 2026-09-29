@@ -171,6 +171,7 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
         try {
           data = JSON.parse(rawText);
           resOk = res.ok;
+          diagnostic = ""; // an earlier attempt's failed-parse note doesn't apply to this real response
           break;
         } catch {
           diagnostic = `attempt=${attempt}/${MAX_ATTEMPTS} http_status=${res.status} content_type=${res.headers.get("content-type") ?? "?"} body="${rawText.slice(0, 200).replace(/"/g, "'")}"`;
