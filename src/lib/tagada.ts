@@ -68,8 +68,10 @@ export async function creditTagadaFiatPayment(params: {
   userName: string | null;
   amountUsd: number;
   tagadaPaymentId: string;
+  /** What the card was actually charged, if it included a fee on top of amountUsd — recorded for the transaction's own audit trail only, credited amount is always amountUsd. */
+  feeUsd?: number;
 }): Promise<{ credited: boolean; newBalance?: number }> {
-  const { fiatPaymentId, userId, userEmail, userName, amountUsd, tagadaPaymentId } = params;
+  const { fiatPaymentId, userId, userEmail, userName, amountUsd, tagadaPaymentId, feeUsd } = params;
 
   const credited = await prisma.$transaction(async (tx) => {
     const fresh = await tx.fiatPayment.findUniqueOrThrow({ where: { id: fiatPaymentId } });
@@ -95,7 +97,7 @@ export async function creditTagadaFiatPayment(params: {
         amount: amountUsd,
         balanceBefore: freshUser.walletBalance,
         balanceAfter: newBalance,
-        metadata: { provider: "tagadapay", paymentId: tagadaPaymentId },
+        metadata: { provider: "tagadapay", paymentId: tagadaPaymentId, ...(feeUsd ? { feeUsd } : {}) },
       },
     });
 

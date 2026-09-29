@@ -106,8 +106,9 @@ const PAYMENT_METHODS = [
     key: "crypto",
     label: "Crypto",
     sub: "Auto-detect",
+    color: "#f97316",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8}>
         <circle cx="12" cy="12" r="10"/>
         <path d="M9.5 8h3.5a2 2 0 010 4H9.5m0-4v8m0-4h4a2 2 0 010 4H9.5"/>
       </svg>
@@ -117,8 +118,9 @@ const PAYMENT_METHODS = [
     key: "manual",
     label: "Manual USDT",
     sub: "Upload proof",
+    color: "#16a34a",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8}>
         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
       </svg>
     ),
@@ -127,8 +129,9 @@ const PAYMENT_METHODS = [
     key: "bank",
     label: "Bank Wire",
     sub: "1–3 days",
+    color: "#2563eb",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8}>
         <rect x="2" y="7" width="20" height="14" rx="2"/>
         <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
       </svg>
@@ -138,8 +141,9 @@ const PAYMENT_METHODS = [
     key: "card",
     label: "Card",
     sub: "Instant",
+    color: "#7c3aed",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8}>
         <rect x="2" y="5" width="20" height="14" rx="2"/>
         <path d="M2 10h20"/>
       </svg>
@@ -149,8 +153,9 @@ const PAYMENT_METHODS = [
     key: "paypal",
     label: "PayPal",
     sub: "Personal acct",
+    color: "#0070ba",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8}>
         <path d="M7 4h7a4 4 0 014 4c0 3-2 5-5 5H9l-1 6H5l2.5-15z"/>
         <path d="M11 8h5a3 3 0 013 3c0 2.2-1.8 4-4 4h-3"/>
       </svg>
@@ -229,6 +234,26 @@ export function DepositWidget() {
   const [paypalAccounts, setPaypalAccounts] = useState<PayPalAccountOption[]>([]);
   const [paypalAccountsLoaded, setPaypalAccountsLoaded] = useState(false);
   const [selectedPaypalId, setSelectedPaypalId] = useState<string>("");
+
+  // Crypto (auto + manual share the same fee schedule) and Card
+  const [cryptoFeeConfig, setCryptoFeeConfig] = useState<FeeConfig | null>(null);
+  const [cardFeeConfig, setCardFeeConfig] = useState<FeeConfig | null>(null);
+
+  useEffect(() => {
+    if (method !== "crypto" && method !== "manual") return;
+    fetch("/api/wallet/deposit/fee-config")
+      .then((r) => r.json())
+      .then((d) => setCryptoFeeConfig(d))
+      .catch(() => null);
+  }, [method]);
+
+  useEffect(() => {
+    if (method !== "card") return;
+    fetch("/api/wallet/deposit/tagada/fee-config")
+      .then((r) => r.json())
+      .then((d) => setCardFeeConfig(d))
+      .catch(() => null);
+  }, [method]);
 
   useEffect(() => {
     if (method !== "paypal") return;
@@ -310,6 +335,28 @@ export function DepositWidget() {
   const paypalFeeLabel = paypalFeeConfig
     ? `PayPal fee (${(paypalFeeConfig.feeRate * 100).toFixed(0)}%${paypalFeeConfig.minFee > 0 ? `, min $${paypalFeeConfig.minFee}` : ""})`
     : "PayPal fee";
+
+  const cryptoFee = cryptoFeeConfig
+    ? (() => {
+        const raw = Math.max(amountNum * cryptoFeeConfig.feeRate, cryptoFeeConfig.minFee);
+        return cryptoFeeConfig.maxFee != null ? Math.min(raw, cryptoFeeConfig.maxFee) : raw;
+      })()
+    : 0;
+  const cryptoTotal = amountNum + cryptoFee;
+  const cryptoFeeLabel = cryptoFeeConfig
+    ? `Processing fee (${(cryptoFeeConfig.feeRate * 100).toFixed(0)}%${cryptoFeeConfig.minFee > 0 ? `, min $${cryptoFeeConfig.minFee}` : ""})`
+    : "Processing fee";
+
+  const cardFee = cardFeeConfig
+    ? (() => {
+        const raw = Math.max(amountNum * cardFeeConfig.feeRate, cardFeeConfig.minFee);
+        return cardFeeConfig.maxFee != null ? Math.min(raw, cardFeeConfig.maxFee) : raw;
+      })()
+    : 0;
+  const cardTotal = amountNum + cardFee;
+  const cardFeeLabel = cardFeeConfig
+    ? `Card processing fee (${(cardFeeConfig.feeRate * 100).toFixed(0)}%${cardFeeConfig.minFee > 0 ? `, min $${cardFeeConfig.minFee}` : ""})`
+    : "Card processing fee";
 
   const selectedNetwork = NETWORKS.find((n) => n.value === network) ?? NETWORKS[0];
   // Card stays visible even without TagadaPay configured: users searching for
@@ -403,24 +450,30 @@ export function DepositWidget() {
   return (
     <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-surface-border bg-background shadow-card">
       {/* ── Method picker ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-surface-border">
-        {visibleMethods.map((m) => (
-          <button
-            key={m.key}
-            type="button"
-            onClick={() => { setMethod(m.key as typeof method); setResult(null); setManualSubmitted(false); setCardSuccess(false); setCardPending(false); }}
-            className={cn(
-              "flex flex-col items-center gap-1.5 py-4 px-2 text-xs font-semibold transition border-b-2",
-              method === m.key
-                ? "border-brand-500 text-brand-600 bg-brand-50/60 dark:bg-brand-950/30"
-                : "border-transparent text-muted hover:text-foreground hover:bg-surface/60",
-            )}
-          >
-            <span className={method === m.key ? "text-brand-500" : "text-muted"}>{m.icon}</span>
-            <span className="font-bold tracking-tight">{m.label}</span>
-            <span className={cn("text-[10px] font-normal", method === m.key ? "text-brand-400" : "text-muted/70")}>{m.sub}</span>
-          </button>
-        ))}
+      <div className="grid grid-cols-3 gap-1.5 border-b border-surface-border bg-surface/40 p-2 sm:grid-cols-5">
+        {visibleMethods.map((m) => {
+          const active = method === m.key;
+          return (
+            <button
+              key={m.key}
+              type="button"
+              onClick={() => { setMethod(m.key as typeof method); setResult(null); setManualSubmitted(false); setCardSuccess(false); setCardPending(false); }}
+              className={cn(
+                "flex flex-col items-center gap-1.5 rounded-xl py-3 px-2 text-xs font-semibold transition",
+                active ? "bg-background shadow-sm ring-1 ring-surface-border" : "text-muted hover:bg-background/60",
+              )}
+            >
+              <span
+                className="flex h-9 w-9 items-center justify-center rounded-full transition"
+                style={active ? { backgroundColor: `${m.color}1a`, color: m.color } : undefined}
+              >
+                <span className={active ? "" : "text-muted"}>{m.icon}</span>
+              </span>
+              <span className={cn("font-bold tracking-tight", active ? "text-foreground" : "text-muted")}>{m.label}</span>
+              <span className={cn("text-[10px] font-normal", active ? "text-muted" : "text-muted/70")}>{m.sub}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="p-6">
@@ -449,14 +502,24 @@ export function DepositWidget() {
             <form onSubmit={handleCryptoDeposit} className="flex flex-col gap-5">
               <AmountInput value={amount} onChange={setAmount} label="Amount (USD)" />
               <NetworkPicker value={network} onChange={setNetwork} />
-              <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 text-xs text-green-700 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400">
-                <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>
-                No platform fee · Full amount credited after network confirmation
+              {amountNum >= 1 && (
+                <FeeBreakdown
+                  rows={[
+                    { label: "Deposit amount", value: `$${amountNum.toFixed(2)}` },
+                    { label: cryptoFeeLabel, value: cryptoFee === 0 ? "Free" : `$${cryptoFee.toFixed(2)}`, green: cryptoFee === 0 },
+                  ]}
+                  total={`$${cryptoTotal.toFixed(2)}`}
+                  totalLabel="Total to send"
+                />
+              )}
+              <div className="flex items-center gap-2 rounded-xl border border-surface-border bg-surface px-3 py-2.5 text-xs text-muted">
+                <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Your ${amountNum > 0 ? amountNum.toFixed(2) : "0.00"} is credited automatically after network confirmation
               </div>
-              <Button type="submit" isLoading={loading} disabled={amountNum < 1} className="h-12 w-full text-base font-bold">
+              <PrimaryButton type="submit" isLoading={loading} disabled={amountNum < 1}>
                 Generate Deposit Address
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Button>
+                <ArrowRight className="h-5 w-5" strokeWidth={2.5} aria-hidden />
+              </PrimaryButton>
             </form>
           )
         )}
@@ -528,10 +591,6 @@ export function DepositWidget() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 text-xs text-green-700 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400">
-                <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>
-                No platform fee · Full amount credited after admin verification
-              </div>
               <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-400">
                 <svg className="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 Make sure the TX hash matches the exact network you selected. Wrong hash or network = delayed review.
@@ -547,7 +606,7 @@ export function DepositWidget() {
                     <div className="flex items-center justify-between px-4 py-3">
                       <span className="text-sm text-muted">You must send</span>
                       <span className="text-xl font-black tabular-nums text-brand-700 dark:text-brand-400">
-                        {amountNum.toFixed(2)} <span className="text-sm font-bold">USDT</span>
+                        {cryptoTotal.toFixed(2)} <span className="text-sm font-bold">USDT</span>
                       </span>
                     </div>
                     <div className="flex items-center justify-between px-4 py-3 text-sm">
@@ -556,6 +615,10 @@ export function DepositWidget() {
                         <span className="h-2 w-2 rounded-full inline-block" style={{ backgroundColor: selectedNetwork.color }} />
                         {selectedNetwork.label}
                       </span>
+                    </div>
+                    <div className="flex items-center justify-between px-4 py-3 text-sm">
+                      <span className="text-muted">{cryptoFeeLabel}</span>
+                      <span className="font-medium text-foreground">{cryptoFee === 0 ? "Free" : `$${cryptoFee.toFixed(2)}`}</span>
                     </div>
                     <div className="flex items-center justify-between px-4 py-3 text-sm">
                       <span className="text-muted">Network fee</span>
@@ -569,10 +632,10 @@ export function DepositWidget() {
                 </div>
               )}
 
-              <Button type="submit" isLoading={loading} disabled={amountNum < 1 || !txHash.trim()} className="h-12 w-full text-base font-bold">
+              <PrimaryButton type="submit" isLoading={loading} disabled={amountNum < 1 || !txHash.trim()}>
                 Submit for Review
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Button>
+                <ArrowRight className="h-5 w-5" strokeWidth={2.5} aria-hidden />
+              </PrimaryButton>
             </form>
           )
         )}
@@ -604,10 +667,10 @@ export function DepositWidget() {
               <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               Processing time: 1–3 business days after payment received
             </div>
-            <Button type="submit" isLoading={bankLoading} disabled={amountNum < 10 || (bankAccountsLoaded && bankAccounts.length === 0) || (bankAccounts.length > 0 && !selectedBankId)} className="h-12 w-full text-base font-bold">
+            <PrimaryButton type="submit" isLoading={bankLoading} disabled={amountNum < 10 || (bankAccountsLoaded && bankAccounts.length === 0) || (bankAccounts.length > 0 && !selectedBankId)}>
               Get Bank Details
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Button>
+              <ArrowRight className="h-5 w-5" strokeWidth={2.5} aria-hidden />
+            </PrimaryButton>
           </form>
         )}
 
@@ -625,7 +688,7 @@ export function DepositWidget() {
               {[
                 { n: 1, title: "Buy USDT with your card", sub: "Use any major app — Binance, Coinbase, Kraken, Bybit, or the buy button inside Trust Wallet / MetaMask." },
                 { n: 2, title: "Get your deposit address here", sub: "Switch to the Crypto tab, enter your amount, and we generate a USDT address for you." },
-                { n: 3, title: "Send & get credited automatically", sub: "Withdraw the USDT to your deposit address. Your wallet is credited as soon as the network confirms — no fee from us." },
+                { n: 3, title: "Send & get credited automatically", sub: "Withdraw the USDT to your deposit address. Your wallet is credited as soon as the network confirms." },
               ].map((s) => (
                 <li key={s.n} className="flex items-start gap-3 rounded-xl border border-surface-border bg-surface px-3.5 py-3">
                   <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-500 text-xs font-bold text-white">{s.n}</span>
@@ -640,14 +703,10 @@ export function DepositWidget() {
               <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
               Tip: TRC-20 has the lowest withdrawal fee (~$1) on most exchanges.
             </div>
-            <Button
-              type="button"
-              onClick={() => { setMethod("crypto"); setResult(null); }}
-              className="h-12 w-full text-base font-bold"
-            >
+            <PrimaryButton onClick={() => { setMethod("crypto"); setResult(null); }}>
               Continue with Crypto Deposit
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Button>
+              <ArrowRight className="h-5 w-5" strokeWidth={2.5} aria-hidden />
+            </PrimaryButton>
           </div>
         )}
 
@@ -672,6 +731,14 @@ export function DepositWidget() {
               <AmountInput value={amount} onChange={setAmount} label="Amount (USD)" />
               {amountNum >= 1 && (
                 <>
+                  <FeeBreakdown
+                    rows={[
+                      { label: "Deposit amount", value: `$${amountNum.toFixed(2)}` },
+                      { label: cardFeeLabel, value: cardFee === 0 ? "Free" : `$${cardFee.toFixed(2)}`, green: cardFee === 0 },
+                    ]}
+                    total={`$${cardTotal.toFixed(2)}`}
+                    totalLabel="Total charged to your card"
+                  />
                   <TagadaWalletButtons amountUsd={amountNum} onSuccess={handleTagadaResult} />
                   <TagadaCardForm amountUsd={amountNum} onSuccess={handleTagadaResult} />
                 </>
@@ -707,10 +774,10 @@ export function DepositWidget() {
               <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               Send as Friends &amp; Family · Processing: a few hours to 1 business day
             </div>
-            <Button type="submit" isLoading={paypalLoading} disabled={amountNum < 5 || (paypalAccountsLoaded && paypalAccounts.length === 0) || (paypalAccounts.length > 0 && !selectedPaypalId)} className="h-12 w-full text-base font-bold">
+            <PrimaryButton type="submit" isLoading={paypalLoading} disabled={amountNum < 5 || (paypalAccountsLoaded && paypalAccounts.length === 0) || (paypalAccounts.length > 0 && !selectedPaypalId)}>
               Get PayPal Details
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Button>
+              <ArrowRight className="h-5 w-5" strokeWidth={2.5} aria-hidden />
+            </PrimaryButton>
           </form>
         )}
 
@@ -980,6 +1047,32 @@ function PayPalAccountPicker({ accounts, value, onChange }: { accounts: PayPalAc
         })}
       </div>
     </div>
+  );
+}
+
+/** Bold gradient CTA matching the Withdraw page's premium button treatment — used for every deposit method's primary submit action for a consistent, upgraded feel across the whole Add Funds flow. */
+function PrimaryButton({ children, isLoading, disabled, type = "button", onClick }: { children: React.ReactNode; isLoading?: boolean; disabled?: boolean; type?: "button" | "submit"; onClick?: () => void }) {
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled || isLoading}
+      className={cn(
+        "flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-black transition",
+        !disabled && !isLoading
+          ? "bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-[1.01]"
+          : "cursor-not-allowed bg-surface text-muted",
+      )}
+    >
+      {isLoading ? (
+        <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+      ) : (
+        children
+      )}
+    </button>
   );
 }
 

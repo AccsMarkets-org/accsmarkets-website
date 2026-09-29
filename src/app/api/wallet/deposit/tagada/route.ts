@@ -11,7 +11,8 @@ import { RATE_LIMITS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { sendEmail } from "@/lib/email";
 import { depositRejectedTemplate } from "@/lib/email-templates";
-import { formatCurrency } from "@/lib/utils";
+import { calculateDepositFee } from "@/lib/fees";
+import { formatCurrency, round2 } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +74,17 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
   const { amountUsd, tagadaToken } = parsed.data;
 
   const user = await prisma.user.findUniqueOrThrow({ where: { id: sessionUserId } });
+
+  const feeConfig = await prisma.depositMethodFee.findUnique({ where: { method: "card" } });
+  const feeRate = feeConfig ? Number(feeConfig.feeRate) : 0;
+  const minFee = feeConfig ? Number(feeConfig.minFee) : 0;
+  const maxFee = feeConfig?.maxFee != null ? Number(feeConfig.maxFee) : null;
+  const feeUsd = calculateDepositFee(amountUsd, feeRate, minFee, maxFee);
+  // The card is charged totalDue; the wallet is credited exactly amountUsd
+  // (via creditTagadaFiatPayment below) -- same "fee added on top" model as
+  // bank transfer and PayPal, not a deduction from what the customer asked
+  // to have credited.
+  const totalDue = round2(amountUsd + feeUsd);
 
   // Prefer the client's key so it stays stable across that submission's own
   // automatic retries (see TagadaCardForm) -- a request that dies in transit
@@ -143,7 +155,7 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
       {
         paymentInstrumentId: instrument.id,
         customerId: instrument.customerId,
-        amount: Math.round(amountUsd * 100),
+        amount: Math.round(totalDue * 100),
         currency: "USD",
         storeId,
         // Enum, not a user id ("customer" | "merchant") -- describes who
@@ -189,8 +201,9 @@ async function handleDeposit(req: Request, sessionUserId: string): Promise<NextR
       userName: user.name,
       amountUsd,
       tagadaPaymentId: payment.id,
+      feeUsd,
     });
-    return NextResponse.json({ status: "completed", paymentId: payment.id });
+    return NextResponse.json({ status: "completed", paymentId: payment.id, feeUsd, totalDue });
   }
 
   if (payment.status === "pending") {

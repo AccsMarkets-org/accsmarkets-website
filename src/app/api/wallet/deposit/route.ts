@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { cryptoDepositSchema } from "@/lib/validation/wallet";
 import { createNowPayment } from "@/lib/nowpayments";
 import { createNotification } from "@/lib/notifications";
+import { calculateDepositFee } from "@/lib/fees";
 import { formatCurrency } from "@/lib/utils";
 import { emitToAdmins } from "@/lib/socket";
 
@@ -56,11 +57,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Crypto deposits are temporarily unavailable. Please use Manual USDT or Bank Wire." }, { status: 503 });
     }
 
-    const settings = await prisma.platformSettings.findUnique({ where: { id: "singleton" } });
+    const [settings, feeConfig] = await Promise.all([
+      prisma.platformSettings.findUnique({ where: { id: "singleton" } }),
+      prisma.depositMethodFee.findUnique({ where: { method: "crypto" } }),
+    ]);
     const minDeposit = Number(settings?.minDeposit ?? 10);
     if (amountUsd < minDeposit) {
       return NextResponse.json({ error: `Minimum deposit is $${minDeposit}` }, { status: 400 });
     }
+
+    const feeRate = feeConfig ? Number(feeConfig.feeRate) : 0;
+    const minFee = feeConfig ? Number(feeConfig.minFee) : 0;
+    const maxFee = feeConfig?.maxFee != null ? Number(feeConfig.maxFee) : null;
+    const feeUsd = calculateDepositFee(amountUsd, feeRate, minFee, maxFee);
+    // wallet.amountUsd stays the credit target (what the webhook pays into the
+    // balance) -- only the amount actually requested from NOWPayments below
+    // includes the fee, so the customer sends totalDue in crypto but is
+    // credited exactly amountUsd once it's confirmed.
+    const totalDue = amountUsd + feeUsd;
 
     const wallet = await prisma.cryptoWallet.create({
       data: {
@@ -74,7 +88,7 @@ export async function POST(req: Request) {
 
     let payment;
     try {
-      payment = await createNowPayment(amountUsd, network, wallet.id);
+      payment = await createNowPayment(totalDue, network, wallet.id);
     } catch (err) {
       await prisma.cryptoWallet.update({ where: { id: wallet.id }, data: { status: "failed" } }).catch(() => null);
       return NextResponse.json(
@@ -103,7 +117,7 @@ export async function POST(req: Request) {
         balanceBefore: currentUser.walletBalance,
         balanceAfter: currentUser.walletBalance,
         cryptoPaymentId: payment.paymentId,
-        metadata: { cryptoWalletId: wallet.id, network },
+        metadata: { cryptoWalletId: wallet.id, network, feeUsd, totalDue },
       },
     });
 
@@ -123,6 +137,8 @@ export async function POST(req: Request) {
       address: updated.address,
       amountCrypto: updated.amountCrypto,
       currency: updated.currency,
+      feeUsd,
+      totalDue,
     });
   } catch (err) {
     console.error("[wallet/deposit]", err);
