@@ -40,6 +40,55 @@ function normalizeExpiry(raw: string): string {
   return `${month}/${year}`;
 }
 
+type CardBrand = "visa" | "mastercard" | "amex" | "discover" | null;
+
+// Standard IIN/BIN-range prefix checks — same ranges Stripe/Braintree Elements
+// use for live brand detection. Order matters: check longer/more specific
+// prefixes (Amex, Discover) before broader ones.
+function detectCardBrand(digits: string): CardBrand {
+  if (/^3[47]/.test(digits)) return "amex";
+  if (/^(6011|65|64[4-9]|622)/.test(digits)) return "discover";
+  if (/^5[1-5]/.test(digits) || /^2(2[2-9]|[3-6]\d|7[01]|720)/.test(digits)) return "mastercard";
+  if (/^4/.test(digits)) return "visa";
+  return null;
+}
+
+function CardBrandIcon({ brand }: { brand: CardBrand }) {
+  if (!brand) return null;
+  if (brand === "visa") {
+    return (
+      <svg viewBox="0 0 48 32" className="h-6 w-9" aria-label="Visa">
+        <rect width="48" height="32" rx="4" fill="#1A1F71" />
+        <text x="24" y="21" textAnchor="middle" fill="#fff" fontSize="13" fontWeight="700" fontStyle="italic" fontFamily="Arial, sans-serif">VISA</text>
+      </svg>
+    );
+  }
+  if (brand === "mastercard") {
+    return (
+      <svg viewBox="0 0 48 32" className="h-6 w-9" aria-label="Mastercard">
+        <rect width="48" height="32" rx="4" fill="#f8f9fb" stroke="#e8ebef" />
+        <circle cx="20" cy="16" r="9" fill="#EB001B" />
+        <circle cx="28" cy="16" r="9" fill="#F79E1B" fillOpacity="0.9" />
+      </svg>
+    );
+  }
+  if (brand === "amex") {
+    return (
+      <svg viewBox="0 0 48 32" className="h-6 w-9" aria-label="American Express">
+        <rect width="48" height="32" rx="4" fill="#2E77BC" />
+        <text x="24" y="20" textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="Arial, sans-serif">AMEX</text>
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 48 32" className="h-6 w-9" aria-label="Discover">
+      <rect width="48" height="32" rx="4" fill="#f8f9fb" stroke="#e8ebef" />
+      <circle cx="34" cy="16" r="7" fill="#FF6000" />
+      <text x="19" y="20" textAnchor="middle" fill="#111827" fontSize="8" fontWeight="700" fontFamily="Arial, sans-serif">DISC</text>
+    </svg>
+  );
+}
+
 function validateCardFields(cardNumber: string, expiryDate: string, cvc: string): string | null {
   const digits = cardNumber.replace(/\D/g, "");
   if (digits.length < 12 || digits.length > 19) return "Enter a valid card number.";
@@ -86,6 +135,7 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
   const [expiryDate, setExpiryDate] = useState("");
   const [cvc, setCvc] = useState("");
   const [cardholderName, setCardholderName] = useState("");
+  const cardBrand = detectCardBrand(cardNumber.replace(/\s+/g, ""));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -238,15 +288,23 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
         )}
       </div>
 
-      <Input
-        label="Card number"
-        inputMode="numeric"
-        autoComplete="cc-number"
-        placeholder="4242 4242 4242 4242"
-        value={cardNumber}
-        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-        required
-      />
+      <div className="relative">
+        <Input
+          label="Card number"
+          inputMode="numeric"
+          autoComplete="cc-number"
+          placeholder="4242 4242 4242 4242"
+          value={cardNumber}
+          onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+          className={cardBrand ? "pr-12" : undefined}
+          required
+        />
+        {cardBrand && (
+          <div className="pointer-events-none absolute bottom-0 right-3 flex h-10 items-center">
+            <CardBrandIcon brand={cardBrand} />
+          </div>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <Input
           label="Expiry (MM/YY)"

@@ -24,6 +24,12 @@ const TagadaCardForm = dynamic(() => import("./TagadaCardForm").then((m) => m.Ta
   ),
 });
 
+// Renders nothing until isApplePayAvailable()/isGooglePayAvailable() resolve
+// (see TagadaWalletButtons), so no loading spinner needed here — an empty
+// state is the correct default on the many browsers/devices that support
+// neither.
+const TagadaWalletButtons = dynamic(() => import("./TagadaWalletButtons").then((m) => m.TagadaWalletButtons), { ssr: false });
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const NETWORKS = [
@@ -665,7 +671,10 @@ export function DepositWidget() {
             <div className="flex flex-col gap-5">
               <AmountInput value={amount} onChange={setAmount} label="Amount (USD)" />
               {amountNum >= 1 && (
-                <TagadaCardForm amountUsd={amountNum} onSuccess={handleTagadaResult} />
+                <>
+                  <TagadaWalletButtons amountUsd={amountNum} onSuccess={handleTagadaResult} />
+                  <TagadaCardForm amountUsd={amountNum} onSuccess={handleTagadaResult} />
+                </>
               )}
             </div>
           )
