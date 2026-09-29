@@ -11,6 +11,49 @@ import { ShieldCheck } from "lucide-react";
 // isTagadaTestMode() in src/lib/tagada.ts when actually charging the card.
 const TEST_MODE = process.env.NEXT_PUBLIC_TAGADA_TEST_MODE === "true";
 
+// Groups digits into "4242 4242 4242 4242" as the user types — display only,
+// handleSubmit strips spaces before tokenizing.
+function formatCardNumber(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 19);
+  return digits.replace(/(.{4})/g, "$1 ").trim();
+}
+
+// Auto-inserts the "/" as the user types so a real MM/YY value reaches the
+// tokenizer every time — this is the actual, proven cause of the bulk of
+// live "Invalid or expired expiry date" failures: nothing here was rejecting
+// or reformatting a slash-less "0427", so it was sent to BasisTheory exactly
+// as typed and correctly rejected as unparseable.
+function formatExpiry(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  if (digits.length < 3) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+}
+
+// Defensive normalization right before the value ever leaves the component —
+// covers paste and autofill, which can hand back "04 / 27", "04-2027", or a
+// 4-digit year, none of which formatExpiry's live typing handler would see.
+function normalizeExpiry(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length <= 2) return digits;
+  const month = digits.slice(0, 2);
+  const year = digits.length >= 4 ? digits.slice(-2) : digits.slice(2);
+  return `${month}/${year}`;
+}
+
+function validateCardFields(cardNumber: string, expiryDate: string, cvc: string): string | null {
+  const digits = cardNumber.replace(/\D/g, "");
+  if (digits.length < 12 || digits.length > 19) return "Enter a valid card number.";
+  const [month, year] = expiryDate.split("/");
+  const monthNum = Number(month);
+  if (!month || !year || year.length !== 2 || !Number.isInteger(monthNum) || monthNum < 1 || monthNum > 12) {
+    return "Enter the expiry as MM/YY.";
+  }
+  const expiry = new Date(2000 + Number(year), monthNum); // first day of the month after expiry
+  if (expiry.getTime() <= Date.now()) return "This card has expired.";
+  if (!/^\d{3,4}$/.test(cvc)) return "Enter a valid CVC.";
+  return null;
+}
+
 export interface TagadaChargeResult {
   status: "completed" | "pending";
   paymentId: string;
@@ -48,8 +91,23 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    // Normalize before validating/sending — covers paste and browser autofill,
+    // which can hand back a 4-digit year or a differently-spaced value that
+    // the live-typing formatter above never touched.
+    const normalizedExpiry = normalizeExpiry(expiryDate);
+    if (normalizedExpiry !== expiryDate) setExpiryDate(normalizedExpiry);
+    const normalizedCardNumber = cardNumber.replace(/\s+/g, "");
+
+    const validationError = validateCardFields(normalizedCardNumber, normalizedExpiry, cvc.trim());
+    if (validationError) {
+      setError(validationError);
+      toast.error(validationError);
+      return;
+    }
+
+    setLoading(true);
 
     // Tracked so a failure can be attributed to a specific step instead of
     // surfacing as one indistinguishable "something went wrong" — this stage
@@ -72,8 +130,8 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
       // is the only thing that leaves the browser for our backend.
       stage = "tokenize_card";
       const tagadaToken = await tokenizer.tokenizeCard({
-        cardNumber: cardNumber.replace(/\s+/g, ""),
-        expiryDate: expiryDate.trim(), // "MM/YY"
+        cardNumber: normalizedCardNumber,
+        expiryDate: normalizedExpiry, // "MM/YY"
         cvc: cvc.trim(),
         cardholderName: cardholderName.trim() || undefined,
       });
@@ -159,7 +217,7 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
         autoComplete="cc-number"
         placeholder="4242 4242 4242 4242"
         value={cardNumber}
-        onChange={(e) => setCardNumber(e.target.value)}
+        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
         required
       />
       <div className="grid grid-cols-2 gap-3">
@@ -169,7 +227,8 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
           autoComplete="cc-exp"
           placeholder="12/29"
           value={expiryDate}
-          onChange={(e) => setExpiryDate(e.target.value)}
+          onChange={(e) => setExpiryDate(formatExpiry(e.target.value))}
+          maxLength={5}
           required
         />
         <Input
@@ -178,7 +237,8 @@ export function TagadaCardForm({ amountUsd, endpoint = "/api/wallet/deposit/taga
           autoComplete="cc-csc"
           placeholder="123"
           value={cvc}
-          onChange={(e) => setCvc(e.target.value)}
+          onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
+          maxLength={4}
           required
         />
       </div>
